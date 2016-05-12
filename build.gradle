@@ -1,0 +1,42 @@
+buildscript {
+    repositories {
+        maven { url = 'http://nexus.rooxintra.net/content/repositories/public' }
+        maven { url = 'http://nexus.rooxintra.net/content/repositories/releases' }
+    }
+    dependencies {
+        classpath('com.rooxteam.corporate:gradle-plugins:26.1.+')
+    }
+}
+
+apply plugin: 'roox-doc'
+apply plugin: 'roox-jar'
+apply plugin: 'roox-sonar'
+
+
+dependencies {
+    compile("com.rooxteam.sso:roox-openam-clientsdk:$rooxOpenamClientVersion")
+    compile("org.forgerock.commons:json-web-token:$jsonWebTokenVesrion")
+    compile("commons-configuration:commons-configuration:$apacheConfigurationVersion")
+    compile("org.apache.httpcomponents:httpclient:$apacheHttpClientVersion")
+    compile("org.jboss.logging:jboss-logging:$jbossLoggingVersion")
+    compile("org.jboss.logging:jboss-logging-processor:$jbossLoggingExtensionsVersion")
+    compile("org.jboss.logging:jboss-logging-annotations:$jbossLoggingExtensionsVersion")
+    compile("com.google.guava:guava:$guavaVersion")
+    compile("io.dropwizard.metrics:metrics-core:${metricsVersion}")
+    compile("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
+    compile("com.nimbusds:nimbus-jose-jwt:${nimbusJoseJwtVersion}")
+
+    provided("org.projectlombok:lombok:${lombokVersion}")
+
+    testCompile("junit:junit:$junitVersion")
+    testCompile("org.mockito:mockito-all:$mockitoVersion")
+    testCompile('javax.servlet:servlet-api:2.5')
+}
+
+javadoc {
+    options.charSet = 'UTF-8'
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.6'
+}

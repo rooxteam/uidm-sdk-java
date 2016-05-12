@@ -1,0 +1,120 @@
+= Библиотека авторизации и аутентификации
+:toc:
+:toc-title: Содержание документа
+:toclevels: 4
+:sectlinks:
+:numbered:
+:icons: font
+:header_footer:
+:homepage: http://rooxteam.com
+:revnumber: 1.0.0
+:version-label: Версия
+
+
+<<<
+= История изменений
+
+[options="header"]
+|===
+|Версия документа|Дата изменения|Комментарий
+|v1.0.0|2015-07-21|Создание документа.
+|v1.0.0|2015-07-22|Обновление контракта.
+|===
+
+
+
+<<<
+== Запрос OTP
+Возвращает POJO, содержащую текущий шаг, состояние, форму отправки OTP, дополнительные параметры и результат аутентификации (Principal) в случае успеха
+
+
+=== Формат запроса OTP:
+[source,java]
+----
+    public OtpResponse sendOtp(Principal principal);
+----
+* +principal+ - принципал, которому отправляется уведомление
+
+
+=== Формат повторного запроса OTP:
+[source,java]
+----
+    public OtpResponse resendOtp(OtpFlowState otpFlowState);
+----
+* +otpFlowState+ - состояние сценария получения OTP при повторном запросе
+
+
+
+
+==== Формат ответа (OtpResponse)
+[source,java]
+----
+class OtpResponse {
+    OtpFlowState otpFlowState;
+    Set<String> requiredFieldNames;
+    OtpStatus status;
+    int availableAttempts;
+    Principal principal;
+    long blockedFor;
+}
+
+----
+* +otpFlowState+ - текущее состояние запроса.
+* +requiredFieldNames+ - поля для заполнения
+* +status+ - текущий статус валидности OTP
+* +availableAttempts+ - количество оставшихся попыток ввода OTP
+* +principal+ - принципал в случае подтверждения OTP
+* +blockedFor+ - отрезока времени, на который произошла блокирова возможности отправки OTP для данного принципала
+
+
+=== Текущее состояние OTP (OtpFlowState)
+[source,java]
+----
+class OtpFlowState {
+    String execution;
+    String csrf;
+    String serverUrl; 
+    String sessionId; 
+}
+----
+* +execution+ - текущая фаза сценария
+* +csrf+ - CSRF токен
+* +serverUrl+ - url сервера 
+* +sessionId+ - идентификатор сессии
+
+
+=== Текущий статус OTP (OtpStatus)
+[source,java]
+----
+enum OtpStatus {
+    SUCCESS, 
+    SEND_OTP_FAIL,
+    EXCEPTION,
+    TOO_MANY_OTP,
+    OTP_REQUIRED,
+    OTP_MISSING,
+    TOO_MANY_WRONG_CODE
+}
+----
+* +SUCCESS+ - верный OTP
+* +SEND_OTP_FAIL+ - ошибка отправки OTP
+* +EXCEPTION+ - неизвестная ошибка
+* +TOO_MANY_OTP+ - слишком много запроосв на отправку OTP
+* +OTP_REQUIRED+ - ожидание подтверждения OTP после его отправки
+* +OTP_MISSING+ - OTP отсутствует в запросе
+* +TOO_MANY_WRONG_CODE+ - количество попыток ввода OTP изчерпано, повышение уровня заблокировано 
+
+
+
+<<<
+== Владиция OTP
+Получает OTP, возвращает результат валидации: или форму для заполнения (не успешная валидация) или принципала (успешная валидация)
+
+
+=== Формат запроса на валидацию OTP:
+[source,java]
+----
+    public OtpResponse validateOtp(OtpFlowState otpState, Map<String, String> fields);
+----
+* +otpState+ - состояние запроса
+* +fields+ - заполненные поля
