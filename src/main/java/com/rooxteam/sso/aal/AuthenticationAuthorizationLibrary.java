@@ -150,8 +150,7 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
      * @throws java.lang.IllegalArgumentException Если {@code jwt} равен null
      * @throws java.lang.IllegalStateException Если параметры iat, nbf и другие с неправильными значениями
      */
-    @Deprecated
-    ValidationStatus validate(String jwt);
+    Principal validate(String jwt);
 
     /**
      * Зарегистрировать PrincipalEventListener для обработки событий Principal.

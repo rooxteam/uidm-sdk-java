@@ -1,8 +1,6 @@
 package com.rooxteam.sso.aal;
 
 /**
- * auth-lib-yota moved to common project
- *
  * @deprecated use {@link PrincipalKey} instead.
  */
 @Deprecated

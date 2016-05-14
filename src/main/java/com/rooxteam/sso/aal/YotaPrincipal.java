@@ -5,8 +5,6 @@ import java.util.Calendar;
 /**
  * Представляет авторизационную информацию о пользователе.
  *
- * auth-lib-yota moved to common project
- *
  * @deprecated use {@link Principal} instead.
  */
 @Deprecated
@@ -46,6 +44,7 @@ public interface YotaPrincipal {
      * Получить свёртку JWT-токена для отдачи клиенту.
      * Если текущий принципал был получен по ранее выданному токену, возвращается "ранее выданный токен".
      * Для остальных случаев возвращается текущий JWT-токен, созданный SSO как результат текущей аутентификации.*
+     *
      * @return свертка JWT-токена.
      */
     String getJwtToken();

@@ -410,8 +410,8 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     }
 
     @Override
-    public ValidationStatus validate(String jwt) {
-        throw new AuthenticationException("for token validation by jwt use AAL.authenticate");
+    public Principal validate(String jwt) {
+        return ssoAuthorizationClient.validate(jwt);
     }
 
     @Override

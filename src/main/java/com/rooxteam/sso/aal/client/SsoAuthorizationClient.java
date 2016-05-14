@@ -4,8 +4,9 @@ import com.iplanet.sso.SSOException;
 import com.iplanet.sso.SSOToken;
 import com.iplanet.sso.SSOTokenManager;
 import com.rooxteam.sso.aal.ConfigKeys;
-import com.rooxteam.sso.aal.PropertyScope;
 import com.rooxteam.sso.aal.Principal;
+import com.rooxteam.sso.aal.PrincipalImpl;
+import com.rooxteam.sso.aal.PropertyScope;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
 import com.rooxteam.sso.aal.exception.AuthorizationException;
 import com.sun.identity.authentication.AuthContext;
@@ -16,12 +17,16 @@ import com.sun.identity.policy.PolicyException;
 import com.sun.identity.policy.client.PolicyEvaluator;
 import com.sun.identity.policy.client.PolicyEvaluatorFactory;
 import com.sun.identity.shared.locale.L10NMessageImpl;
+import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.configuration.Configuration;
+import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -53,6 +58,7 @@ public class SsoAuthorizationClient {
     private static final String DENY_POLICY_DECISION = "Deny";
 
     private static final String IS_ALLOWED_PATH = "/api/policyEvaluation/isAllowed";
+    private static final String TOKEN_INFO_PATH = "/oauth2/tokeninfo";
     private final Configuration config;
     private CloseableHttpClient httpClient;
     private JsonNode localPolicies = NullNode.getInstance();
@@ -159,6 +165,63 @@ public class SsoAuthorizationClient {
             SSOTokenManager.getInstance().destroyToken(ssoToken);
         } catch (Exception e) {
             LOG.traceFailedToInvalidateSSOToken(e);
+        }
+    }
+
+    /**
+     * Token validation
+     *
+     * @param jwtToken Token value
+     * @return True if token is valid
+     */
+    public Principal validate(final String jwtToken) {
+
+        if (jwtToken == null) {
+            LOG.warnNullSsoToken();
+            return null;
+        }
+
+        try {
+            String url = config.getString(ConfigKeys.SSO_URL) + TOKEN_INFO_PATH;
+            List<NameValuePair> params = new ArrayList<>();
+            params.add(new BasicNameValuePair("access_token", jwtToken));
+            HttpPost post = HttpHelper.getHttpPost(url, params);
+            HttpClientContext context = new HttpClientContext();
+            CloseableHttpResponse response = httpClient.execute(post, context);
+
+            int statusCode = response.getStatusLine().getStatusCode();
+            Principal principal = null;
+
+            if (statusCode == HttpStatus.SC_OK) {
+                String responseJson = EntityUtils.toString(response.getEntity());
+                JsonNode jsonNode = new ObjectMapper().readTree(responseJson);
+
+                Map<String, Object> sharedIdentityProperties = new HashedMap();
+                Object cn = jsonNode.get("cn");
+                sharedIdentityProperties.put("prn", cn.toString());
+                sharedIdentityProperties.put("sub", cn.toString());
+                sharedIdentityProperties.put("realm", jsonNode.get("realm").toString());
+
+                List<String> authLevel = new ArrayList<>();
+                authLevel.add(jsonNode.get("auth_level").toString());
+                sharedIdentityProperties.put("authLevel", authLevel);
+                Calendar expiresIn = new GregorianCalendar();
+                expiresIn.set(Calendar.HOUR, 0);
+                expiresIn.set(Calendar.MINUTE, jsonNode.get("expires_in").asInt());
+                expiresIn.set(Calendar.SECOND, 0);
+                principal = new PrincipalImpl(jwtToken, sharedIdentityProperties, expiresIn);
+            }
+
+            StringBuilder stringBuilder = new StringBuilder("Validation token code is ");
+            stringBuilder.append(response.getStatusLine().getStatusCode());
+            LOG.debug(stringBuilder.toString());
+            return principal;
+        } catch (IOException e) {
+            LOG.errorAuthentication(e);
+            throw new AuthorizationException("Failed to authorize because of communication or protocol error", e);
+        } catch (Exception e) {
+            LOG.errorAuthentication(e);
+            throw e;
         }
     }
 

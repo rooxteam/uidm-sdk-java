@@ -16,9 +16,6 @@ import static com.rooxteam.sso.aal.AalLogger.LOG;
 
 /**
  * @author Dmitry Tikhonov
-
- * auth-lib-yota moved to common project
- *
  * @deprecated use {@link PrincipalImpl} instead.
  */
 @Deprecated
