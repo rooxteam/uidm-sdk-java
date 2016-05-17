@@ -13,9 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static com.rooxteam.sso.aal.AALInvalidationTest.IP_229_213_38_0;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 @SuppressWarnings("unchecked")
@@ -25,7 +23,7 @@ public class AALIsAllowedTest {
     public static final TimeUnit DEFAULT_TIMEUNIT = TimeUnit.MILLISECONDS;
     private RooxAuthenticationAuthorizationLibrary aal;
     private final Cache<PolicyDecisionKey, Boolean> mockPolicyDecisionsCache = mock(Cache.class);
-    private final Cache<YotaPrincipalKey, YotaPrincipal> mockPrincipalCache = (Cache<YotaPrincipalKey, YotaPrincipal>) mock(Cache.class);
+    private final Cache<PrincipalKey, Principal> mockPrincipalCache = (Cache<PrincipalKey, Principal>) mock(Cache.class);
     private final SsoAuthorizationClient mockSsoAuthorizationClient = mock(SsoAuthorizationClient.class);
     private final SsoAuthenticationClient mockSsoAuthenticationClient = mock(SsoAuthenticationClient.class);
 
@@ -39,7 +37,7 @@ public class AALIsAllowedTest {
 
     @Test
     public void aal_should_allow_test_request() {
-        YotaPrincipal mockPrincipal = mock(YotaPrincipal.class);
+        Principal mockPrincipal = mock(Principal.class);
         SSOToken mockSsoToken = mock(SSOToken.class);
         final String testToken = "Test JWT Token";
         when(mockPrincipal.getJwtToken())
@@ -61,7 +59,7 @@ public class AALIsAllowedTest {
 
     @Test
     public void aal_should_NOT_allow_test_request() {
-        YotaPrincipal mockPrincipal = mock(YotaPrincipal.class);
+        Principal mockPrincipal = mock(Principal.class);
         SSOToken mockSsoToken = mock(SSOToken.class);
         final String testToken = "Test JWT Token";
         when(mockPrincipal.getJwtToken())
@@ -83,7 +81,7 @@ public class AALIsAllowedTest {
 
     @Test
     public void aal_should_allow_test_request_after_invalidation() {
-        YotaPrincipal mockPrincipal = mock(YotaPrincipal.class);
+        Principal mockPrincipal = mock(Principal.class);
         SSOToken mockSsoToken = mock(SSOToken.class);
         final String testToken = "Test JWT Token";
         when(mockPrincipal.getJwtToken())
@@ -92,11 +90,11 @@ public class AALIsAllowedTest {
                 .thenReturn(mockSsoToken);
         when(mockSsoAuthorizationClient.isActionOnResourceAllowedByPolicy(mockSsoToken, "/TestResource", "GET"))
                 .thenReturn(true);
-        ConcurrentHashMap<YotaPrincipalKey, YotaPrincipal> yotaPrincipalCacheMap = new ConcurrentHashMap<>();
-        YotaPrincipalKey yotaPrincipalKey = new YotaPrincipalKey(AuthParamType.IP, IP_229_213_38_0);
-        yotaPrincipalCacheMap.put(yotaPrincipalKey, mockPrincipal);
+        ConcurrentHashMap<PrincipalKey, Principal> PrincipalCacheMap = new ConcurrentHashMap<>();
+        PrincipalKey PrincipalKey = new PrincipalKey(AuthParamType.IP, IP_229_213_38_0);
+        PrincipalCacheMap.put(PrincipalKey, mockPrincipal);
         when(mockPrincipalCache.asMap())
-                .thenReturn(yotaPrincipalCacheMap);
+                .thenReturn(PrincipalCacheMap);
         when(mockPolicyDecisionsCache.asMap())
                 .thenReturn(new ConcurrentHashMap<PolicyDecisionKey, Boolean>());
 
@@ -116,15 +114,15 @@ public class AALIsAllowedTest {
 
     @Test
     public void aal_should_use_policy_decision_cache_to_allow_test_request() {
-        YotaPrincipal mockPrincipal = mock(YotaPrincipal.class);
+        Principal mockPrincipal = mock(Principal.class);
         PolicyDecisionKey key = new PolicyDecisionKey(mockPrincipal, "/TestResource", "GET");
         when(mockPolicyDecisionsCache.getIfPresent(key))
                 .thenReturn(true);
-        ConcurrentHashMap<YotaPrincipalKey, YotaPrincipal> yotaPrincipalCacheMap = new ConcurrentHashMap<>();
-        YotaPrincipalKey yotaPrincipalKey = new YotaPrincipalKey(AuthParamType.IP, IP_229_213_38_0);
-        yotaPrincipalCacheMap.put(yotaPrincipalKey, mockPrincipal);
+        ConcurrentHashMap<PrincipalKey, Principal> PrincipalCacheMap = new ConcurrentHashMap<>();
+        PrincipalKey PrincipalKey = new PrincipalKey(AuthParamType.IP, IP_229_213_38_0);
+        PrincipalCacheMap.put(PrincipalKey, mockPrincipal);
         when(mockPrincipalCache.asMap())
-                .thenReturn(yotaPrincipalCacheMap);
+                .thenReturn(PrincipalCacheMap);
 
         Map<String, Object> envParameters = Collections.emptyMap();
         boolean isAllowed = aal.isAllowed(mockPrincipal, "/TestResource", "GET", envParameters, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
@@ -137,15 +135,15 @@ public class AALIsAllowedTest {
 
     @Test
     public void aal_should_use_policy_decision_cache_to_disallow_test_request() {
-        YotaPrincipal mockPrincipal = mock(YotaPrincipal.class);
+        Principal mockPrincipal = mock(Principal.class);
         PolicyDecisionKey key = new PolicyDecisionKey(mockPrincipal, "/TestResource", "GET");
         when(mockPolicyDecisionsCache.getIfPresent(key))
                 .thenReturn(false);
-        ConcurrentHashMap<YotaPrincipalKey, YotaPrincipal> yotaPrincipalCacheMap = new ConcurrentHashMap<>();
-        YotaPrincipalKey yotaPrincipalKey = new YotaPrincipalKey(AuthParamType.IP, IP_229_213_38_0);
-        yotaPrincipalCacheMap.put(yotaPrincipalKey, mockPrincipal);
+        ConcurrentHashMap<PrincipalKey, Principal> PrincipalCacheMap = new ConcurrentHashMap<>();
+        PrincipalKey PrincipalKey = new PrincipalKey(AuthParamType.IP, IP_229_213_38_0);
+        PrincipalCacheMap.put(PrincipalKey, mockPrincipal);
         when(mockPrincipalCache.asMap())
-                .thenReturn(yotaPrincipalCacheMap);
+                .thenReturn(PrincipalCacheMap);
 
         Map<String, Object> envParameters = Collections.emptyMap();
         boolean isAllowed = aal.isAllowed(mockPrincipal, "/TestResource", "GET", envParameters, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
@@ -158,7 +156,7 @@ public class AALIsAllowedTest {
 
     @Test
     public void aal_should_reset_policy_decision_from_cache() {
-        YotaPrincipal mockPrincipal = mock(YotaPrincipal.class);
+        Principal mockPrincipal = mock(Principal.class);
         PolicyDecisionKey key = new PolicyDecisionKey(mockPrincipal, "/TestResource", "GET");
         ConcurrentHashMap<PolicyDecisionKey, Boolean> policyDecisionsCacheMap = new ConcurrentHashMap<>();
         policyDecisionsCacheMap.put(key, true);
@@ -172,14 +170,14 @@ public class AALIsAllowedTest {
 
     @Test
     public void aal_should_reset_policy_decision_from_cache_on_invalidate() {
-        YotaPrincipal mockPrincipal = mock(YotaPrincipal.class);
+        Principal mockPrincipal = mock(Principal.class);
         PolicyDecisionKey key = new PolicyDecisionKey(mockPrincipal, "/TestResource", "GET");
         ConcurrentHashMap<PolicyDecisionKey, Boolean> policyDecisionsCacheMap = new ConcurrentHashMap<>();
         policyDecisionsCacheMap.put(key, true);
         when(mockPolicyDecisionsCache.asMap())
                 .thenReturn(policyDecisionsCacheMap);
         when(mockPrincipalCache.asMap())
-                .thenReturn(new ConcurrentHashMap<YotaPrincipalKey, YotaPrincipal>());
+                .thenReturn(new ConcurrentHashMap<PrincipalKey, Principal>());
 
         aal.invalidate(mockPrincipal);
 

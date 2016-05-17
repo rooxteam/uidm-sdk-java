@@ -141,21 +141,4 @@ public class OtpClientTest {
         verify(mockHttpEntity, times(1)).getContent();
         verify(mockHttpClient, times(1)).execute(any(HttpPost.class), any(HttpContext.class));
     }
-
-
-    @Test
-    public void otpFormAction_validateValidOtp_statusSuccess() {
-    }
-
-    @Test
-    public void otpFormAction_validateWrongOtp_statusOtpRequired() {
-    }
-
-    @Test
-    public void otpFormAction_resendOtp_validForm() {
-    }
-
-    @Test
-    public void otpFormAction_resendOtpAfterLatestAttemtp_validForm() {
-    }
 }

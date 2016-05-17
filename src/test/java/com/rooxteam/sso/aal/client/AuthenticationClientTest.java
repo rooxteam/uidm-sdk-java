@@ -16,7 +16,6 @@ import java.nio.charset.Charset;
 import java.util.HashMap;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.*;
 
 public class AuthenticationClientTest {
@@ -35,13 +34,13 @@ public class AuthenticationClientTest {
 
         when(entity.getContent()).thenReturn(new ByteArrayInputStream(testTokenContent.getBytes(Charset.forName("UTF-8"))));
         when(response.getEntity()).thenReturn(entity);
-        when(client.execute(any(HttpUriRequest.class),any(HttpClientContext.class))).thenReturn(response);
+        when(client.execute(any(HttpUriRequest.class), any(HttpClientContext.class))).thenReturn(response);
 
         SsoAuthenticationClient instance = new SsoAuthenticationClient(config, client);
 
         HashMap<String, Object> params = new HashMap<>();
         params.put("ip", "10.0.0.0");
-        String token = instance.authenticate(params);
+        String token = instance.authenticate(params).getPublicToken();
 
         assertEquals(token, "123123");
     }
@@ -60,7 +59,7 @@ public class AuthenticationClientTest {
 
         when(entity.getContent()).thenReturn(new ByteArrayInputStream(testTokenContent.getBytes(Charset.forName("UTF-8"))));
         when(response.getEntity()).thenReturn(entity);
-        when(client.execute(any(HttpUriRequest.class),any(HttpClientContext.class))).thenReturn(response);
+        when(client.execute(any(HttpUriRequest.class), any(HttpClientContext.class))).thenReturn(response);
 
         SsoAuthenticationClient instance = new SsoAuthenticationClient(config, client);
 
@@ -68,10 +67,10 @@ public class AuthenticationClientTest {
         params.put("ip", "229.213.38.10");
         String token = null;
         try {
-            token = instance.authenticate(params);
+            token = instance.authenticate(params).getPublicToken();
         } catch (AuthenticationException e) {
-            assertEquals("invalid_grant",e.getError());
-            assertEquals("Not Found",e.getErrorSubtype());
+            assertEquals("invalid_grant", e.getError());
+            assertEquals("Not Found", e.getErrorSubtype());
             throw e;
         }
 

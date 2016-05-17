@@ -3,18 +3,18 @@ package com.rooxteam.sso.aal.client;
 import com.rooxteam.sso.aal.ConfigKeys;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
+import org.apache.http.ProtocolVersion;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicStatusLine;
-import org.apache.http.ProtocolVersion;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 
 import java.io.IOException;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
 public class SsoTokenClientTest {
@@ -82,7 +82,7 @@ public class SsoTokenClientTest {
 
     @Test
     public void testQueryExistenceIOError() throws Exception {
-        
+
         CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
 
         when(httpClient.execute(requestMatcher(TOKEN_ID)))
@@ -112,7 +112,7 @@ public class SsoTokenClientTest {
 
             @Override
             public boolean matches(Object argument) {
-                HttpGet get = (HttpGet)argument;
+                HttpGet get = (HttpGet) argument;
                 String uri = get.getRequestLine().getUri();
                 String expectedParam = SsoTokenClient.TOKEN_ID_PARAM_NAME + "=" + tokenId;
                 return uri.contains(expectedParam);

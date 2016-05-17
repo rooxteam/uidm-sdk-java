@@ -5,7 +5,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class YotaPrincipalTest {
+public class PrincipalTest {
 
     /**
      * {
@@ -34,28 +34,17 @@ public class YotaPrincipalTest {
             "YmJlNzkiLCAiaW1zaSI6ICIyNTAxMTAxMDAwMTQ0OCIsICJhdGgiOiAxNDM4NzAzMjczIH0.pMqdpoGQisd2EPmF3duzftWG0v6U_LtM5qXV186-5xM";
 
     @Test(expected = IllegalArgumentException.class)
-    public void should_throw_illegalArgumentException_when_jwt_is_null_for_yotaPrincipal() {
-        new YotaPrincipalImpl(null);
+    public void should_throw_illegalArgumentException_when_jwt_is_null_for_principal() {
+        new PrincipalImpl(null, null);
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void should_throw_illegalArgumentException_when_jwt_is_empty_for_yotaPrincipal() {
-        new YotaPrincipalImpl("");
+    public void should_throw_illegalArgumentException_when_jwt_is_empty_for_principal() {
+        new PrincipalImpl("", "");
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void should_throw_illegalArgumentException_when_jwt_is_empty_with_spaces_for_yotaPrincipal() {
-        new YotaPrincipalImpl("   ");
+    public void should_throw_illegalArgumentException_when_jwt_is_empty_with_spaces_for_principal() {
+        new PrincipalImpl("   ", "   ");
     }
-
-    @Test
-    public void should_parse_jwt_correctly() {
-        YotaPrincipal yotaPrincipal = new YotaPrincipalImpl(TOKEN);
-        assertNotNull(yotaPrincipal);
-        assertNotNull(yotaPrincipal.getExpirationTime());
-        Object msisdn = yotaPrincipal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "msisdn");
-        assertNotNull(msisdn);
-        assertEquals(msisdn, "25011010001448");
-    }
-
 }

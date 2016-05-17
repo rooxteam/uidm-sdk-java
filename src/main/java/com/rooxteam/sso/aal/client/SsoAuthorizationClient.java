@@ -197,13 +197,13 @@ public class SsoAuthorizationClient {
                 JsonNode jsonNode = new ObjectMapper().readTree(responseJson);
 
                 Map<String, Object> sharedIdentityProperties = new HashedMap();
-                Object cn = jsonNode.get("cn");
-                sharedIdentityProperties.put("prn", cn.toString());
-                sharedIdentityProperties.put("sub", cn.toString());
-                sharedIdentityProperties.put("realm", jsonNode.get("realm").toString());
+                Object cn = jsonNode.get("cn").asText();
+                sharedIdentityProperties.put("prn", cn);
+                sharedIdentityProperties.put("sub", cn);
+                sharedIdentityProperties.put("realm", jsonNode.get("realm").asText());
 
                 List<String> authLevel = new ArrayList<>();
-                authLevel.add(jsonNode.get("auth_level").toString());
+                authLevel.add(jsonNode.get("auth_level").asText());
                 sharedIdentityProperties.put("authLevel", authLevel);
                 Calendar expiresIn = new GregorianCalendar();
                 expiresIn.set(Calendar.HOUR, 0);

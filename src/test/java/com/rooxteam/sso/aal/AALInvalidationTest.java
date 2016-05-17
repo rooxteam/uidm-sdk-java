@@ -1,20 +1,13 @@
 package com.rooxteam.sso.aal;
 
-import com.iplanet.sso.SSOException;
 import com.rooxteam.sso.aal.client.SsoAuthenticationClient;
-import com.sun.identity.policy.PolicyException;
 import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.internal.util.reflection.Whitebox;
 
-import java.util.HashMap;
-
-import static com.rooxteam.sso.aal.AALTest.DEFAULT_TIMEOUT;
-import static com.rooxteam.sso.aal.AALTest.DEFAULT_TIMEUNIT;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
 
 
 public class AALInvalidationTest {
@@ -30,74 +23,6 @@ public class AALInvalidationTest {
     @Before
     public void setUp() {
         mockSsoAuthenticationClient = mock(SsoAuthenticationClient.class);
-    }
-
-    @Test
-    public void invalidateAll_authenticateTwoPrincipals_twoExtraHardcalls() throws SSOException, PolicyException {
-        Configuration config = new BaseConfiguration();
-        config.setProperty("com.rooxteam.aal.jwt.issuer", "TEST_ISSUER");
-        config.setProperty("com.rooxteam.aal.cacheStatEnabled", true);
-        HashMap<String, Object> params = new HashMap<>();
-        params.put("ip", "229.213.38.0");
-
-        when(mockSsoAuthenticationClient.authenticate(params))
-                .thenReturn(TOKEN_FOR_229_213_38_0);
-
-        params = new HashMap<>();
-        params.put("ip", "229.213.38.1");
-        when(mockSsoAuthenticationClient.authenticate(params))
-                .thenReturn(TOKEN_FOR_229_213_38_1);
-        AuthenticationAuthorizationLibrary aal = AalFactory.create(config);
-        Whitebox.setInternalState(aal, "ssoAuthenticationClient", mockSsoAuthenticationClient);
-
-        params = new HashMap<>();
-        params.put("ip", IP_229_213_38_0);
-        aal.authenticate(params);
-
-        params = new HashMap<>();
-        params.put("ip", IP_229_213_38_1);
-        aal.authenticate(params);
-
-        verify(mockSsoAuthenticationClient, times(2)).authenticate(anyMap());
-
-        aal.invalidate();
-
-        params = new HashMap<>();
-        params.put("ip", IP_229_213_38_0);
-        aal.authenticate(params);
-
-        params = new HashMap<>();
-        params.put("ip", IP_229_213_38_1);
-        aal.authenticate(params);
-
-        verify(mockSsoAuthenticationClient, times(4)).authenticate(anyMap());
-    }
-
-    @Test
-    public void invalidate_authenticateInvalidateAuthenticateSamePrincipal_TwoHardRequests() throws SSOException, PolicyException {
-        Configuration config = new BaseConfiguration();
-        config.setProperty("com.rooxteam.aal.jwt.issuer", "TEST_ISSUER");
-        config.setProperty("com.rooxteam.aal.cacheStatEnabled", true);
-
-        HashMap<String, Object> params = new HashMap<>();
-        params.put("ip", "229.213.38.0");
-
-        when(mockSsoAuthenticationClient.authenticate(params))
-                .thenReturn(TOKEN_FOR_229_213_38_0);
-        AuthenticationAuthorizationLibrary aal = AalFactory.create(config);
-        Whitebox.setInternalState(aal, "ssoAuthenticationClient", mockSsoAuthenticationClient);
-        params = new HashMap<>();
-        params.put("ip", IP_229_213_38_0);
-        YotaPrincipal yotaPrincipal = aal.authenticate(params, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
-
-        aal.invalidate(yotaPrincipal);
-
-        YotaPrincipal yotaPrincipalFromHardRequest = aal.authenticate(params, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
-
-        aal.authenticate(params, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
-
-        assertEquals(yotaPrincipal, yotaPrincipalFromHardRequest);
-        verify(mockSsoAuthenticationClient, times(2)).authenticate(anyMap());
     }
 
     @Test(expected = IllegalArgumentException.class)

@@ -228,7 +228,7 @@ public class JwtValidatorTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void should_throw_IllegalArgumentException_when_jwt_parser_is_null() throws NoSuchAlgorithmException, JOSEException, InvalidKeySpecException, ParseException {
-        new JwtValidator(null, (JwtParser)null, (Checker)null);
+        new JwtValidator(null, (JwtParser) null, (Checker) null);
     }
 
     @Test(expected = AalException.class)

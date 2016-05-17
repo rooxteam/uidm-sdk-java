@@ -60,50 +60,9 @@ public class AALTest {
         AuthenticationAuthorizationLibrary aal = new RooxAuthenticationAuthorizationLibrary(null, null, mockSsoAuthenticationClient,
                 null, null, null, null, null, AuthorizationType.SSO_TOKEN);
 
-        YotaPrincipal yotaPrincipal = aal.authenticate(params, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
+        Principal yotaPrincipal = aal.authenticate(params, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
 
         assertNull(yotaPrincipal);
-    }
-
-    @Test
-    public void authenticate_byIpReturnToken_YotaPrincipalWithToken() throws SSOException, PolicyException {
-
-        final SsoAuthenticationClient mockSsoAuthenticationClient = mock(SsoAuthenticationClient.class);
-        HashMap<String, Object> params = new HashMap<>();
-        params.put("ip", "229.213.38.0");
-        when(mockSsoAuthenticationClient.authenticate(params)).thenReturn("eyAiYWxnIjogIkhTMjU2IiwgImN0eSI6ICJKV1QiLCAidHlwIjogImp3dCIgfQ.eyAidG9rZW5OYW1lIjogImlkX3Rva2VuIiwgImF6cCI6ICJ3ZWJhcGkiLCAic3ViIjogIjI1MDExMDEwMDAxNDQ4IiwgIm1zaXNkbiI6ICIyNTAxMTAxMDAwMTQ0OCIsICJpc3MiOiAiUGNyZkF1dGhlbnRpY2F0aW9uU2VydmljZSIsICJ2ZXIiOiAiMS4wIiwgImlhdCI6IDE0MzU1Njk1MzAsICJleHAiOiAxNDM1NTY5NTkwLCAidG9rZW5UeXBlIjogIkpXVFRva2VuIiwgInJlYWxtIjogIi9jdXN0b21lciIsICJhdXRoTGV2ZWwiOiBbICIyIiBdLCAiYXVkIjogWyAid2ViYXBpIiBdLCAicmVuIjogMTQzNTU2OTU5MCwgImp0aSI6ICIyYzYzMmQxYS0yNTM1LTQzNjEtOGU5MC1iYzQ5YjRlNDkxMmIiLCAiaW1zaSI6ICIyNTAxMTAxMDAwMTQ0OCIsICJhdGgiOiAxNDM1NTY5NTMwIH0.CTZDy6K3LzP6iUBrH5NXobEQHo6ziq03p9RV3ugz3xg");
-
-        params = new HashMap<>();
-        params.put("ip", "229.213.38.0");
-        AuthenticationAuthorizationLibrary aal = new RooxAuthenticationAuthorizationLibrary(null, null, mockSsoAuthenticationClient,
-                null, null, null, null, null, AuthorizationType.SSO_TOKEN);
-
-        YotaPrincipal yotaPrincipal = aal.authenticate(params, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
-
-        assertNotNull(yotaPrincipal.getJwtToken());
-        verify(mockSsoAuthenticationClient, times(1)).authenticate(anyMap());
-    }
-
-    @Test
-    public void authenticate_forSamePrincipalCalledTwice_oneHardRequest() throws SSOException, PolicyException {
-        Configuration config = new BaseConfiguration();
-        config.setProperty("com.rooxteam.aal.cacheStatEnabled", true);
-        final SsoAuthenticationClient mockSsoAuthenticationClient = mock(SsoAuthenticationClient.class);
-        HashMap<String, Object> params = new HashMap<>();
-        params.put("ip", "229.213.38.0");
-        when(mockSsoAuthenticationClient.authenticate(params)).thenReturn("eyAiYWxnIjogIkhTMjU2IiwgImN0eSI6ICJKV1QiLCAidHlwIjogImp3dCIgfQ.eyAidG9rZW5OYW1lIjogImlkX3Rva2VuIiwgImF6cCI6ICJ3ZWJhcGkiLCAic3ViIjogIjI1MDExMDEwMDAxNDQ4IiwgIm1zaXNkbiI6ICIyNTAxMTAxMDAwMTQ0OCIsICJpc3MiOiAiUGNyZkF1dGhlbnRpY2F0aW9uU2VydmljZSIsICJ2ZXIiOiAiMS4wIiwgImlhdCI6IDE0MzU1Njk1MzAsICJleHAiOiAxNDM1NTY5NTkwLCAidG9rZW5UeXBlIjogIkpXVFRva2VuIiwgInJlYWxtIjogIi9jdXN0b21lciIsICJhdXRoTGV2ZWwiOiBbICIyIiBdLCAiYXVkIjogWyAid2ViYXBpIiBdLCAicmVuIjogMTQzNTU2OTU5MCwgImp0aSI6ICIyYzYzMmQxYS0yNTM1LTQzNjEtOGU5MC1iYzQ5YjRlNDkxMmIiLCAiaW1zaSI6ICIyNTAxMTAxMDAwMTQ0OCIsICJhdGgiOiAxNDM1NTY5NTMwIH0.CTZDy6K3LzP6iUBrH5NXobEQHo6ziq03p9RV3ugz3xg");
-        params = new HashMap<>();
-        params.put("ip", "229.213.38.0");
-        AuthenticationAuthorizationLibrary aal = new RooxAuthenticationAuthorizationLibrary(null, null, mockSsoAuthenticationClient,
-                null, null, null, null, null, AuthorizationType.SSO_TOKEN);
-
-        YotaPrincipal yotaPrincipal = aal.authenticate(params, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
-        YotaPrincipal yotaPrincipalFromCache = aal.authenticate(params, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
-
-        assertNotNull(yotaPrincipal.getJwtToken());
-        assertNotNull(yotaPrincipalFromCache.getJwtToken());
-        assertEquals(yotaPrincipal, yotaPrincipalFromCache);
-        verify(mockSsoAuthenticationClient, times(1)).authenticate(anyMap());
     }
 
     @Test
@@ -127,7 +86,7 @@ public class AALTest {
 
         String token = "eyJhbGciOiJIUzI1NiIsImN0eSI6IkpXVCIsInR5cCI6Imp3dCJ9.eyJ0b2tlbk5hbWUiOiJpZF90b2tlbiIsImF6cCI6IndlYmFwaSIsInN1YiI6IjI1MDExMDEwMDAxNDQ4IiwiaXNzIjoiUGNyZkF1dGhlbnRpY2F0aW9uU2VydmljZSIsInZlciI6IjEuMCIsImlhdCI6MTQzODk1NTkzOSwiZXhwIjoxNDM4OTU1OTk5LCJ0b2tlblR5cGUiOiJKV1RUb2tlbiIsInJlYWxtIjoiL2N1c3RvbWVyIiwiYXV0aExldmVsIjpbIjIiXSwiYXVkIjpbIndlYmFwaSJdLCJyZW4iOjE0Mzg5NTU5OTksImp0aSI6ImQ4OTg4YzcwLTI1MTQtNDI1YS1iMTMzLTFkMmY1YTRiZWJhNyIsImltc2kiOiIyNTAxMTAxMDAwMTQ0OCIsImF0aCI6MTQzODk1NTkzOX0.MN_kJ2BPGdkDntmjzoOdRekrAgRHooCJKjrtgX6d5ic";
 
-        YotaPrincipal mockYotaPrincipal = mock(YotaPrincipal.class);
+        Principal mockYotaPrincipal = mock(Principal.class);
         when(mockYotaPrincipal.getJwtToken()).thenReturn(token);
 
         final OtpClient mockOtpClient = mock(OtpClient.class);
@@ -147,7 +106,7 @@ public class AALTest {
 
         String token = "eyAiYWxnIjogIkhTMjU2IiwgImN0eSI6ICJKV1QiLCAidHlwIjogImp3dCIgfQ.eyAidG9rZW5OYW1lIjogImlkX3Rva2VuIiwgImF6cCI6ICJ3ZWJhcGkiLCAic3ViIjogIjI1MDExMDEwMDAxNDQ4IiwgIm1zaXNkbiI6ICIyNTAxMTAxMDAwMTQ0OCIsICJpc3MiOiAiUGNyZkF1dGhlbnRpY2F0aW9uU2VydmljZSIsICJ2ZXIiOiAiMS4wIiwgImlhdCI6IDE0Mzg3MDMyNzMsICJleHAiOiAxNDM4NzAzMzMzLCAidG9rZW5UeXBlIjogIkpXVFRva2VuIiwgInJlYWxtIjogIi9jdXN0b21lciIsICJhdXRoTGV2ZWwiOiBbICIyIiBdLCAiYXVkIjogWyAid2ViYXBpIiBdLCAicmVuIjogMTQzODcwMzMzMywgImp0aSI6ICIzZTI2MjEzOC1lNjc4LTQ0MDYtODBjNy04M2I0NzJmYmJlNzkiLCAiaW1zaSI6ICIyNTAxMTAxMDAwMTQ0OCIsICJhdGgiOiAxNDM4NzAzMjczIH0.pMqdpoGQisd2EPmF3duzftWG0v6U_LtM5qXV186-5xM";
 
-        YotaPrincipal mockYotaPrincipal = mock(YotaPrincipal.class);
+        Principal mockYotaPrincipal = mock(Principal.class);
         when(mockYotaPrincipal.getJwtToken()).thenReturn(token);
 
         final OtpClient mockOtpClient = mock(OtpClient.class);
