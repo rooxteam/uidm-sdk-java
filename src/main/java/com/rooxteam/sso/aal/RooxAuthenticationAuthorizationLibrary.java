@@ -259,9 +259,9 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         for (Map.Entry<PrincipalKey, Principal> entry : principalMap.entrySet()) {
             Principal principal = entry.getValue();
             String token;
-            if(principal instanceof PrincipalImpl){
-                token = ((PrincipalImpl)principal).getPrivateJwtToken();
-            }else {
+            if (principal instanceof PrincipalImpl) {
+                token = ((PrincipalImpl) principal).getPrivateJwtToken();
+            } else {
                 token = principal.getJwtToken();
             }
             SignedJwt jwt = new JwtReconstruction().reconstructJwt(token, SignedJwt.class);
@@ -306,7 +306,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
             throw new IllegalArgumentException(ACTION_SHOULD_BE_SPECIFIED);
         }
 
-        PolicyDecisionKey key = new PolicyDecisionKey(subject, resourceName, actionName);
+        PolicyDecisionKey key = new PolicyDecisionKey(subject, resourceName, actionName, envParameters);
         LOG.traceGetPolicyDecision(key);
         Boolean result = isAllowedPolicyDecisionsCache.getIfPresent(key);
         if (result != null) {
@@ -366,15 +366,15 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
                         subject.setProperty(PropertyScope.PRIVATE_IDENTITY_PARAMS, Principal.SESSION_PARAM, ssoToken);
                     }
                 }
-                result = ssoAuthorizationClient.isActionOnResourceAllowedByPolicy(ssoToken, key.resourceName, key.actionName);
+                result = ssoAuthorizationClient.isActionOnResourceAllowedByPolicy(ssoToken, key.getResourceName(), key.getActionName());
                 break;
             }
             case JWT: {
-                result = ssoAuthorizationClient.isActionOnResourceAllowedByPolicy(jwt, key.resourceName, key.actionName, new HashMap<>());
+                result = ssoAuthorizationClient.isActionOnResourceAllowedByPolicy(jwt, key.getResourceName(), key.getActionName(), key.getEnvParameters());
                 break;
             }
             case CONFIG: {
-                result = ssoAuthorizationClient.isActionOnResourceAllowedByConfigPolicy(subject, key.resourceName, key.actionName);
+                result = ssoAuthorizationClient.isActionOnResourceAllowedByConfigPolicy(subject, key.getResourceName(), key.getActionName());
                 break;
             }
         }

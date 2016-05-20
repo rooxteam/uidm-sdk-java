@@ -39,7 +39,7 @@ public final class PrincipalImpl implements Principal {
     }
 
     public PrincipalImpl(String publicJwtToken, Map<String, Object> sharedIdentityProperties, Calendar expirationTime) {
-        this.policyContextJwtToken = null;
+        this.policyContextJwtToken = publicJwtToken;
         this.publicJwtToken = publicJwtToken;
         this.sharedIdentityProperties.putAll(sharedIdentityProperties);
         this.expirationTime = expirationTime;
