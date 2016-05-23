@@ -52,7 +52,7 @@ public class PollingBean extends TimerTask {
             addCacheKey(cachedPrincipals, entry.getValue(), entry.getKey());
         }
         for (PolicyDecisionKey policyDecisionKey : isAllowedPolicyDecisionsCache.asMap().keySet()) {
-            addCacheKey(cachedPrincipals, policyDecisionKey.subject, policyDecisionKey);
+            addCacheKey(cachedPrincipals, policyDecisionKey.getSubject(), policyDecisionKey);
         }
         return cachedPrincipals;
     }
