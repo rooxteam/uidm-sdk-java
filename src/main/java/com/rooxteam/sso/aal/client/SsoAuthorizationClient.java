@@ -304,6 +304,14 @@ public class SsoAuthorizationClient {
     }
 
     public boolean isActionOnResourceAllowedByConfigPolicy(Principal subject, String resourceName, String actionName) {
+
+        Integer requiredLevel = getRequiredLevel(resourceName, actionName);
+
+        if (requiredLevel != null && requiredLevel == 0) {
+            // special handling for 0 level - allow unauthorized access
+            return true;
+        }
+
         List<String> authLevels = (List<String>) subject.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "authLevel");
         if (authLevels == null || authLevels.isEmpty()) {
             // TODO: log
@@ -311,15 +319,22 @@ public class SsoAuthorizationClient {
         }
         int userAuthLevel = Integer.valueOf(authLevels.get(0));
 
-        JsonNode policyAuthLevelNode = getAuthLevelFromLocalPolicies(resourceName, actionName);
         boolean result;
-        if (policyAuthLevelNode == null) {
+        if (requiredLevel == null) {
             result = config.getBoolean(ConfigKeys.ALLOW_ACCESS_WITHOUT_POLICY, ConfigKeys.ALLOW_ACCESS_WITHOUT_POLICY_DEFAULT);
         } else {
-            int requiredAuthLevel = policyAuthLevelNode.getIntValue();
-            result = userAuthLevel >= requiredAuthLevel;
+            result = userAuthLevel >= requiredLevel;
         }
         return result;
+    }
+
+    private Integer getRequiredLevel(String resourceName, String actionName) {
+        JsonNode policyAuthLevelNode = getAuthLevelFromLocalPolicies(resourceName, actionName);
+        if (policyAuthLevelNode != null) {
+            return policyAuthLevelNode.getIntValue();
+        } else {
+            return null;
+        }
     }
 
     private JsonNode getAuthLevelFromLocalPolicies(String resourceName, String actionName) {
