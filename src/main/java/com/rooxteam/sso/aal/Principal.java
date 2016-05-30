@@ -45,4 +45,6 @@ public interface Principal {
      */
     String getJwtToken();
 
+    boolean isAnonymous();
+
 }

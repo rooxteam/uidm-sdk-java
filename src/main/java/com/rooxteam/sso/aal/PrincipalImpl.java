@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static com.rooxteam.sso.aal.AalLogger.LOG;
 
 /**
+ * Represents validated non-anonymous user
  * @author Dmitry Tikhonov
  */
 public final class PrincipalImpl implements Principal {
@@ -84,6 +85,11 @@ public final class PrincipalImpl implements Principal {
         return publicJwtToken;
     }
 
+    @Override
+    public boolean isAnonymous() {
+        return false;
+    }
+
     /**
      * Возвращает JWT токен как результат текущей аутентификации.
      * Является не публичным API методом. Служит только для передачи контекста аутентификации в логин-модуль SSO
@@ -132,4 +138,5 @@ public final class PrincipalImpl implements Principal {
             throw e;
         }
     }
+
 }

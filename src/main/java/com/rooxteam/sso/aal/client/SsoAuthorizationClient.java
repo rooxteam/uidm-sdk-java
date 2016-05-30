@@ -312,12 +312,18 @@ public class SsoAuthorizationClient {
             return true;
         }
 
-        List<String> authLevels = (List<String>) subject.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "authLevel");
-        if (authLevels == null || authLevels.isEmpty()) {
-            // TODO: log
-            return false;
+        int userAuthLevel;
+
+        if(subject.isAnonymous()){
+            userAuthLevel = 0;
+        }else {
+            List<String> authLevels = (List<String>) subject.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "authLevel");
+            if (authLevels == null || authLevels.isEmpty()) {
+                userAuthLevel = 0;
+            }else {
+                userAuthLevel = Integer.valueOf(authLevels.get(0));
+            }
         }
-        int userAuthLevel = Integer.valueOf(authLevels.get(0));
 
         boolean result;
         if (requiredLevel == null) {
