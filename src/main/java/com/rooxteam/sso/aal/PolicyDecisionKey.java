@@ -46,7 +46,7 @@ class PolicyDecisionKey implements AalCacheKey {
             return false;
         }
 
-        if (!envParameters.isEmpty() ? !envParameters.equals(that.getEnvParameters()) : that.getEnvParameters() != null) {
+        if ((envParameters!=null && !envParameters.isEmpty()) ? !envParameters.equals(that.getEnvParameters()) : that.getEnvParameters() != null) {
             return false;
         }
 
