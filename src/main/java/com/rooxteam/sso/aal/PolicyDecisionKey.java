@@ -71,7 +71,7 @@ class PolicyDecisionKey implements AalCacheKey {
                 "subject=" + subject +
                 ", resourceName='" + resourceName + '\'' +
                 ", actionName='" + actionName + '\'' +
-                ", envParameters='" + envParameters.toString() + '\'' +
+                ", envParameters='" + ((envParameters!=null)?envParameters.toString():"") + '\'' +
                 '}';
     }
 }
