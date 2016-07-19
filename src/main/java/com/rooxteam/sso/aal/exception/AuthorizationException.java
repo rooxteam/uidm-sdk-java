@@ -9,26 +9,28 @@ import lombok.Getter;
 @Getter
 public class AuthorizationException extends AalException {
 
-
     /**
-     * Error type (see OAuth2.0 specification for 'error' field).
-     * Mostly used values are 'invalid_grant' - customer provided invalid credentials, is blocked (customer error) and
-     * 'invalid_client' -  application can't authenticate itself, usually configuration  error.
+     * Error type (see OAuth2.0 specification for 'error' field). Mostly used
+     * values are 'invalid_grant' - customer provided invalid credentials, is
+     * blocked (customer error) and 'invalid_client' - application can't
+     * authenticate itself, usually configuration error.
      */
     private String error;
 
     /**
-     * Error human readable description (see OAuth2.0 specification for 'error_description' field)
+     * Error human readable description (see OAuth2.0 specification for
+     * 'error_description' field)
      */
     private String errorDescription;
 
     /**
-     * Error subtype. Machine readable string for reason. AAL client should process only known error subtypes or ignore it completely.
-     * Error subtype may not be specified and contain null or empty string.
+     * Error subtype. Machine readable string for reason. AAL client should
+     * process only known error subtypes or ignore it completely. Error subtype
+     * may not be specified and contain null or empty string.
+     *
      * @see ErrorSubtypes
      */
     private String errorSubtype;
-
 
     public AuthorizationException(Exception e) {
         super(e);
@@ -42,7 +44,6 @@ public class AuthorizationException extends AalException {
         super(message);
     }
 
-
     public AuthorizationException(String error, String errorDescription, String errorSubtype) {
         super(format("Authorization failed with error ''{0}'':''{1}'':''{2}''", error, errorSubtype, errorDescription));
         this.error = error;
@@ -52,10 +53,10 @@ public class AuthorizationException extends AalException {
 
     @Override
     public String toString() {
-        return "AuthorizationException{" +
-                "error='" + error + '\'' +
-                ", errorDescription='" + errorDescription + '\'' +
-                ", errorSubtype='" + errorSubtype + '\'' +
-                '}';
+        return "AuthorizationException{"
+                + "error='" + error + '\''
+                + ", errorDescription='" + errorDescription + '\''
+                + ", errorSubtype='" + errorSubtype + '\''
+                + '}';
     }
 }
