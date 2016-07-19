@@ -1,5 +1,6 @@
 package com.rooxteam.sso.aal.exception;
 
+import static java.text.MessageFormat.format;
 import lombok.Getter;
 
 /**
@@ -43,7 +44,7 @@ public class AuthorizationException extends AalException {
 
 
     public AuthorizationException(String error, String errorDescription, String errorSubtype) {
-        super("Authentication failed, see error and error subtype");
+        super(format("Authorization failed with error ''{0}'':''{1}'':''{2}''", error, errorSubtype, errorDescription));
         this.error = error;
         this.errorDescription = errorDescription;
         this.errorSubtype = errorSubtype;
