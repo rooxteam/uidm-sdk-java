@@ -197,7 +197,7 @@ public class SsoAuthorizationClient {
                 JsonNode jsonNode = new ObjectMapper().readTree(responseJson);
 
                 Map<String, Object> sharedIdentityProperties = new HashedMap();
-                Object cn = jsonNode.get("cn").asText();
+                Object cn = jsonNode.get("sub").asText();
                 sharedIdentityProperties.put("prn", cn);
                 sharedIdentityProperties.put("sub", cn);
                 sharedIdentityProperties.put("realm", jsonNode.get("realm").asText());
