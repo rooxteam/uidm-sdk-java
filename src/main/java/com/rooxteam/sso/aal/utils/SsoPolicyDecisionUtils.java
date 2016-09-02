@@ -7,6 +7,7 @@ import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.sun.identity.policy.ActionDecision;
 import com.sun.identity.policy.PolicyDecision;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,6 +27,9 @@ public class SsoPolicyDecisionUtils {
 
     @SuppressWarnings("unchecked")
     protected static Map<String, String> parseAdvices(Map advices) {
+        if (advices == null || advices.isEmpty()) {
+            return Collections.emptyMap();
+        }
         ImmutableMap.Builder<String, String> result = ImmutableMap.builder();
         for (Map.Entry entry : (Set<Map.Entry>) advices.entrySet()) {
             String name = (String) entry.getKey();
