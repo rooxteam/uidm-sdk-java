@@ -160,6 +160,12 @@ public interface AalLogger extends BasicLogger {
                     "Unexpected status after authentication in SSO: ''{0}''")
     void errorUnexpectedStateAfterAuthenticationInSso(AuthContext.Status status);
 
+    @LogMessage(level = ERROR)
+    @Message(id = 3035, format = MESSAGE_FORMAT,
+            value = "Invalid response obtained from the remote SSO on policy evaluation: name ''{0}'', value ''{1}''")
+    void errorInvalidAdviceContentType(String adviceName, String adviceValue);
+
+
     @LogMessage(level = WARN)
     @Message(id = 4001, format = MESSAGE_FORMAT,
             value = "Token is null.")
