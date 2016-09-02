@@ -19,6 +19,7 @@ import com.sun.identity.policy.client.PolicyEvaluatorFactory;
 import com.sun.identity.shared.locale.L10NMessageImpl;
 import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -112,12 +113,12 @@ public class SsoAuthorizationClient {
             return false;
         }
 
-        if (resource == null || resource.length() == 0) {
+        if (StringUtils.isEmpty(resource)) {
             LOG.warnNullResource();
             return false;
         }
 
-        if (method == null || method.length() == 0) {
+        if (StringUtils.isEmpty(method)) {
             LOG.warnNullMethod();
             return false;
         }
@@ -231,12 +232,12 @@ public class SsoAuthorizationClient {
             return false;
         }
 
-        if (resource == null || resource.length() == 0) {
+        if (StringUtils.isEmpty(resource)) {
             LOG.warnNullResource();
             return false;
         }
 
-        if (method == null || method.length() == 0) {
+        if (StringUtils.isEmpty(method)) {
             LOG.warnNullMethod();
             return false;
         }
