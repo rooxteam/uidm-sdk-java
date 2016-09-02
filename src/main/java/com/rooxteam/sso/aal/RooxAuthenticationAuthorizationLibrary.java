@@ -290,7 +290,13 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     }
 
     @Override
+    @Deprecated
     public boolean isAllowed(Principal subject, String resourceName, String actionName, Map<String, ?> envParameters) {
+        return evaluatePolicy(subject, resourceName, actionName, envParameters).getDecision().isPositive();
+    }
+
+    @Override
+    public EvaluationResponse evaluatePolicy(Principal subject, String resourceName, String actionName, Map<String, ?> envParameters) {
         if (subject == null) {
             LOG.errorIllegalSubjectParameter();
             throw new IllegalArgumentException(SUBJECT_SHOULD_BE_SPECIFIED);
@@ -308,12 +314,12 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
 
         PolicyDecisionKey key = new PolicyDecisionKey(subject, resourceName, actionName, envParameters);
         LOG.traceGetPolicyDecision(key);
-        Boolean result = isAllowedPolicyDecisionsCache.getIfPresent(key);
+        EvaluationResponse result = isAllowedPolicyDecisionsCache.getIfPresent(key);
         if (result != null) {
             AalMetricsHelper.getPolicyCacheHitMeter().mark();
         } else {
             AalMetricsHelper.getPolicyCacheMissMeter().mark();
-            result = isAllowedActionOnResource(key);
+            result = evaluatePolicyOnResource(key);
         }
 
         return result;
@@ -327,7 +333,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
      * @param key policy request
      * @return true if allowed, false if not allowed or session is invalidated
      */
-    private boolean isAllowedActionOnResource(PolicyDecisionKey key) {
+    private EvaluationResponse evaluatePolicyOnResource(PolicyDecisionKey key) {
         LOG.traceHardCallPolicyDecision(key);
 
         Principal subject = key.getSubject();
@@ -338,7 +344,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
             jwt = subject.getJwtToken();
         }
 
-        boolean result = false;
+        EvaluationResponse result;
         switch (authorizationType) {
             default:
             case SSO_TOKEN: {
@@ -361,7 +367,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
                     LOG.traceNoSSOTokenInPrincipal();
                     ssoToken = ssoAuthorizationClient.authenticateByJwt(jwt);
                     if (ssoToken == null) {
-                        return false;
+                        return new EvaluationResponse(Decision.Deny);
                     } else {
                         subject.setProperty(PropertyScope.PRIVATE_IDENTITY_PARAMS, Principal.SESSION_PARAM, ssoToken);
                     }
