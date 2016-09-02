@@ -274,14 +274,14 @@ public class SsoAuthorizationClient {
             result = EntityUtils.toString(response.getEntity());
         }
         if (result == null) {
-            throw new AuthenticationException("No or empty response from server");
+            throw new AuthenticationException("Empty response from the server");
         }
 
         ObjectNode jsonResult = null;
         try {
             jsonResult = (ObjectNode) jsonMapper.readTree(result);
         } catch (IOException e) {
-            throw new AuthorizationException("Failed to read response from server", e);
+            throw new AuthorizationException("Failed to read a response from the server", e);
         }
         if (jsonResult.has("error")) {
             //{"error_description":"Resource owner authentication failed","error":"invalid_grant"}
