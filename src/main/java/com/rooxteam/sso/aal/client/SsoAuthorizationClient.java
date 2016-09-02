@@ -147,25 +147,6 @@ public class SsoAuthorizationClient {
         }
     }
 
-    private String getValueOfPolicyDecisionForMethod(String method, PolicyDecision policyDecision) {
-        ActionDecision actionDecisionForMethod = (ActionDecision) policyDecision.getActionDecisions().get(method);
-        String decision = "";
-        if (actionDecisionForMethod != null) {
-            Set actionDecisionValues = actionDecisionForMethod.getValues();
-            if (actionDecisionValues != null) {
-                Object[] actionDecisions = actionDecisionValues.toArray();
-                if (actionDecisions.length > 0) {
-                    Object actionDecision = actionDecisions[0];
-                    if (actionDecision != null) {
-                        decision = actionDecision.toString();
-                    }
-                }
-            }
-
-        }
-        return decision;
-    }
-
     public void invalidateSSOSession(SSOToken ssoToken) {
         try {
             SSOTokenManager.getInstance().destroyToken(ssoToken);
