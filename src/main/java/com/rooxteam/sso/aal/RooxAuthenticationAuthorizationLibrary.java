@@ -8,6 +8,8 @@ import com.rooxteam.sso.aal.client.SsoAuthenticationClient;
 import com.rooxteam.sso.aal.client.SsoAuthorizationClient;
 import com.rooxteam.sso.aal.client.SsoTokenClient;
 import com.rooxteam.sso.aal.client.model.AuthenticationResponse;
+import com.rooxteam.sso.aal.client.model.Decision;
+import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
 import com.rooxteam.sso.aal.metrics.AalMetricsHelper;
 import com.rooxteam.sso.aal.otp.OtpFlowState;
@@ -49,7 +51,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     private final SsoAuthenticationClient ssoAuthenticationClient;
     private final SsoTokenClient ssoTokenClient;
     private final OtpClient otpClient;
-    private final Cache<PolicyDecisionKey, Boolean> isAllowedPolicyDecisionsCache;
+    private final Cache<PolicyDecisionKey, EvaluationResponse> isAllowedPolicyDecisionsCache;
     private final Cache<PrincipalKey, Principal> PrincipalCache;
 
     private final Timer timer;
@@ -63,7 +65,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
                                            SsoAuthenticationClient ssoAuthenticationClient,
                                            SsoTokenClient ssoTokenClient,
                                            OtpClient otpClient,
-                                           Cache<PolicyDecisionKey, Boolean> policyDecisionsCache,
+                                           Cache<PolicyDecisionKey, EvaluationResponse> policyDecisionsCache,
                                            Cache<PrincipalKey, Principal> principalCache,
                                            JwtValidator jwtValidator,
                                            AuthorizationType authorizationType) {
@@ -230,7 +232,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
             }
         }
 
-        ConcurrentMap<PolicyDecisionKey, Boolean> policyDecisionMap = isAllowedPolicyDecisionsCache.asMap();
+        ConcurrentMap<PolicyDecisionKey, EvaluationResponse> policyDecisionMap = isAllowedPolicyDecisionsCache.asMap();
         for (PolicyDecisionKey key : policyDecisionMap.keySet()) {
             if (key.getSubject().equals(principal)) {
                 isAllowedPolicyDecisionsCache.invalidate(key);
@@ -274,7 +276,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
                 }
             }
         }
-        ConcurrentMap<PolicyDecisionKey, Boolean> policyDecisionMap = isAllowedPolicyDecisionsCache.asMap();
+        ConcurrentMap<PolicyDecisionKey, EvaluationResponse> policyDecisionMap = isAllowedPolicyDecisionsCache.asMap();
         for (PolicyDecisionKey key : policyDecisionMap.keySet()) {
             Object currentImsi = key.getSubject().getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, IMSI_CLAIM_NAME);
             if (imsi.equals(currentImsi)) {
@@ -402,8 +404,8 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
             LOG.errorIllegalSubjectParameter();
             throw new IllegalArgumentException(PRINCIPAL_IS_MISSING_MESSAGE);
         }
-        final ConcurrentMap<PolicyDecisionKey, Boolean> decisionsMap = isAllowedPolicyDecisionsCache.asMap();
-        for (Map.Entry<PolicyDecisionKey, Boolean> entry : decisionsMap.entrySet()) {
+        final ConcurrentMap<PolicyDecisionKey, EvaluationResponse> decisionsMap = isAllowedPolicyDecisionsCache.asMap();
+        for (Map.Entry<PolicyDecisionKey, EvaluationResponse> entry : decisionsMap.entrySet()) {
             if (entry.getKey().getSubject().equals(principal)) {
                 isAllowedPolicyDecisionsCache.invalidate(entry.getKey());
             }
