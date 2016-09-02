@@ -110,17 +110,17 @@ public class SsoAuthorizationClient {
     public boolean isActionOnResourceAllowedByPolicy(SSOToken ssoToken, String resource, String method) {
         if (ssoToken == null) {
             LOG.warnNullSsoToken();
-            return false;
+            throw new IllegalArgumentException("Authorization token is not supplied");
         }
 
         if (StringUtils.isEmpty(resource)) {
             LOG.warnNullResource();
-            return false;
+            throw new IllegalArgumentException("Resource name is not supplied");
         }
 
         if (StringUtils.isEmpty(method)) {
             LOG.warnNullMethod();
-            return false;
+            throw new IllegalArgumentException("Method name is not supplied");
         }
 
         boolean result = false;
@@ -229,17 +229,17 @@ public class SsoAuthorizationClient {
     public boolean isActionOnResourceAllowedByPolicy(String jwtToken, String resource, String method, Map env) {
         if (jwtToken == null) {
             LOG.warnNullSsoToken();
-            return false;
+            throw new IllegalArgumentException("Authorization token is not supplied");
         }
 
         if (StringUtils.isEmpty(resource)) {
             LOG.warnNullResource();
-            return false;
+            throw new IllegalArgumentException("Resource name is not supplied");
         }
 
         if (StringUtils.isEmpty(method)) {
             LOG.warnNullMethod();
-            return false;
+            throw new IllegalArgumentException("Method name is not supplied");
         }
 
         String realm = config.getString(ConfigKeys.REALM, ConfigKeys.REALM_DEFAULT);
