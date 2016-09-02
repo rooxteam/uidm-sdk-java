@@ -101,6 +101,7 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
      * @param timeUnit      единица измерения таймаута.
      * @return true если действие разрешено, false если не разрешено.
      * @throws IllegalArgumentException Если параметры {@code subject}, {@code resourceName} или {@code actionName} равны null
+     * @deprecated Use evaluatePolicy instead.
      */
     @Deprecated
     boolean isAllowed(Principal subject, String resourceName, String actionName, Map<String, ?> envParameters, long timeOut, TimeUnit timeUnit);
