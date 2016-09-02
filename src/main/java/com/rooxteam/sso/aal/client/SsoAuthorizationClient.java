@@ -127,8 +127,8 @@ public class SsoAuthorizationClient {
             PolicyEvaluator policyEvaluator = PolicyEvaluatorFactory.getInstance().getPolicyEvaluator(WEB_AGENT_SERVICE_NAME);
             PolicyDecision policyDecision = policyEvaluator.getPolicyDecision(ssoToken, resource, Collections.singleton(method));
 
-            if (policyDecision.getActionDecisions().size() == 0) {
                 result = config.getBoolean(ConfigKeys.ALLOW_ACCESS_WITHOUT_POLICY, ConfigKeys.ALLOW_ACCESS_WITHOUT_POLICY_DEFAULT);
+            if (policyDecision.getActionDecisions().isEmpty()) {
             } else {
                 String decision = getValueOfPolicyDecisionForMethod(method, policyDecision);
                 result = decision.equals(ALLOW_POLICY_DECISION);
