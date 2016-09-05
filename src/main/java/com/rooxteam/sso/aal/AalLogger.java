@@ -67,21 +67,6 @@ public interface AalLogger extends BasicLogger {
     void errorSsoTokenInvalid(String webAgentServiceName, @Cause SSOException e);
 
     @LogMessage(level = ERROR)
-    @Message(id = 3006, format = MESSAGE_FORMAT,
-            value = "Error during authentication by ip = {0}. For details see cause.")
-    void errorAuthenticationByIp(String ip, @Cause IOException e);
-
-    @LogMessage(level = ERROR)
-    @Message(id = 3007, format = MESSAGE_FORMAT,
-            value = "Yota Principals cache error during get key = {0}. For details see cause.")
-    void errorFetchYotaPrincipalFromCache(String param, @Cause ExecutionException e);
-
-    @LogMessage(level = ERROR)
-    @Message(id = 3008, format = MESSAGE_FORMAT,
-            value = "Policy Decisions cache error during get subject: {0}, resourceName: {1}, actionName: {2}. For details see cause.")
-    void errorFetchPolicyDecisionFromCache(YotaPrincipal subject, String resourceName, String actionName, @Cause ExecutionException e);
-
-    @LogMessage(level = ERROR)
     @Message(id = 3009, format = MESSAGE_FORMAT,
             value = "Subject parameter should be specified.")
     void errorIllegalSubjectParameter();
@@ -97,21 +82,6 @@ public interface AalLogger extends BasicLogger {
     void errorIllegalActionParameter();
 
     @LogMessage(level = ERROR)
-    @Message(id = 3012, format = MESSAGE_FORMAT,
-            value = "Error during authentication by jwt = {0}, updateLifeTime = {1}. For details see cause.")
-    void errorAuthenticationByJwt(String jwt, Boolean updateLifeTime, @Cause IOException e);
-
-    @LogMessage(level = ERROR)
-    @Message(id = 3013, format = MESSAGE_FORMAT,
-            value = "Required parameter is missed. OtpFlowState = {0}")
-    void errorValidateOtpMissedParam(OtpFlowState otpState);
-
-    @LogMessage(level = ERROR)
-    @Message(id = 3014, format = MESSAGE_FORMAT,
-            value = "Wrong params encoding. Params = {0}. See cause for more details.")
-    void errorValidateOtpWrongParamsEncoding(List<NameValuePair> otpState, @Cause UnsupportedEncodingException e);
-
-    @LogMessage(level = ERROR)
     @Message(id = 3015, format = MESSAGE_FORMAT,
             value = "Unable to parse response json = {0}. See cause for more details.")
     void errorSendOtpUnableToParseResponseJson(String json, @Cause IOException e);
@@ -120,16 +90,6 @@ public interface AalLogger extends BasicLogger {
     @Message(id = 3016, format = MESSAGE_FORMAT,
             value = "Unable to close response resource. OtpFlowState = {0}. See cause for more details.")
     void errorValidateOtpUnableToCloseResponse(OtpFlowState otpState, @Cause IOException e);
-
-    @LogMessage(level = ERROR)
-    @Message(id = 3017, format = MESSAGE_FORMAT,
-            value = "Unable to parse response json = {1}. OtpFlowState = {0}. See cause for more details.")
-    void errorValidateOtpUnableToParseResponseJson(OtpFlowState otpState, String json, @Cause IOException e);
-
-    @LogMessage(level = ERROR)
-    @Message(id = 3018, format = MESSAGE_FORMAT,
-            value = "Error during sending OTP request. See cause for more details.")
-    void errorSendOtpByMsisdnError(@Cause IOException e);
 
     @LogMessage(level = ERROR)
     @Message(id = 3019, format = MESSAGE_FORMAT,
@@ -167,21 +127,6 @@ public interface AalLogger extends BasicLogger {
     void errorTokenRequestFailed(@Cause IOException e);
 
     @LogMessage(level = ERROR)
-    @Message(id = 3026, format = MESSAGE_FORMAT,
-            value = "Token API returned too much tokens, response: {0}")
-    void errorTooMuchTokens(String json);
-
-    @LogMessage(level = ERROR)
-    @Message(id = 3027, format = MESSAGE_FORMAT,
-            value = "Token API response has unknown format, consider reviewing API documentation. Response: {0}")
-    void errorInvalidTokenApiResponseFormat(String json);
-
-    @LogMessage(level = ERROR)
-    @Message(id = 3028, format = MESSAGE_FORMAT,
-            value = "Error parsing Token API response: {0}")
-    void errorTokenApiParsingFailed(String json, @Cause Exception e);
-
-    @LogMessage(level = ERROR)
     @Message(id = 3029, format = MESSAGE_FORMAT,
             value = "Unexpected Token API response: {0}")
     void errorUnexpectedTokenApiResponse(HttpResponse response);
@@ -214,6 +159,12 @@ public interface AalLogger extends BasicLogger {
             value = "Got error while authentication.\n" +
                     "Unexpected status after authentication in SSO: ''{0}''")
     void errorUnexpectedStateAfterAuthenticationInSso(AuthContext.Status status);
+
+    @LogMessage(level = ERROR)
+    @Message(id = 3035, format = MESSAGE_FORMAT,
+            value = "Invalid response obtained from the remote SSO on policy evaluation: name ''{0}'', value ''{1}''")
+    void errorInvalidAdviceContentType(String adviceName, String adviceValue);
+
 
     @LogMessage(level = WARN)
     @Message(id = 4001, format = MESSAGE_FORMAT,

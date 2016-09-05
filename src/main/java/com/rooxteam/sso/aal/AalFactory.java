@@ -6,6 +6,7 @@ import com.rooxteam.jwt.IatClaimChecker;
 import com.rooxteam.jwt.NbfClaimChecker;
 import com.rooxteam.jwt.StringClaimChecker;
 import com.rooxteam.sso.aal.client.*;
+import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
@@ -84,7 +85,7 @@ public class AalFactory {
         OtpClient otpClient = new OtpClient(config, httpClient);
 
         Cache<PrincipalKey, Principal> principalCache = initPrincipalsCache(config, authorizationClient);
-        Cache<PolicyDecisionKey, Boolean> isAllowedPolicyDecisionsCache = initPoliciesCache(config);
+        Cache<PolicyDecisionKey, EvaluationResponse> isAllowedPolicyDecisionsCache = initPoliciesCache(config);
 
         String sharedKey = config.getString(SHARED_KEY);
         NbfClaimChecker nbfClaimChecker = new NbfClaimChecker();
@@ -144,10 +145,10 @@ public class AalFactory {
         return principalCache;
     }
 
-    private static Cache<PolicyDecisionKey, Boolean> initPoliciesCache(Configuration config) {
+    private static Cache<PolicyDecisionKey, EvaluationResponse> initPoliciesCache(Configuration config) {
         int policyCacheSize = config.getInt(POLICY_CACHE_LIMIT, POLICY_CACHE_LIMIT_DEFAULT);
         int policyExpireAfterWrite = config.getInt(POLICY_CACHE_EXPIRE_AFTER_WRITE, POLICY_CACHE_EXPIRE_AFTER_WRITE_DEFAULT);
-        Cache<PolicyDecisionKey, Boolean> isAllowedPolicyDecisionsCache =
+        Cache<PolicyDecisionKey, EvaluationResponse> isAllowedPolicyDecisionsCache =
                 CacheBuilder.newBuilder()
                         .maximumSize(policyCacheSize)
                         .expireAfterWrite(policyExpireAfterWrite, TimeUnit.SECONDS)

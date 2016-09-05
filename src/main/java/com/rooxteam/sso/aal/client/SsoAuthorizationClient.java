@@ -1,5 +1,6 @@
 package com.rooxteam.sso.aal.client;
 
+import com.google.common.collect.ImmutableMap;
 import com.iplanet.sso.SSOException;
 import com.iplanet.sso.SSOToken;
 import com.iplanet.sso.SSOTokenManager;
@@ -7,8 +8,11 @@ import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.PrincipalImpl;
 import com.rooxteam.sso.aal.PropertyScope;
+import com.rooxteam.sso.aal.client.model.Decision;
+import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
 import com.rooxteam.sso.aal.exception.AuthorizationException;
+import com.rooxteam.sso.aal.utils.SsoPolicyDecisionUtils;
 import com.sun.identity.authentication.AuthContext;
 import com.sun.identity.authentication.spi.AuthLoginException;
 import com.sun.identity.policy.ActionDecision;
@@ -19,6 +23,7 @@ import com.sun.identity.policy.client.PolicyEvaluatorFactory;
 import com.sun.identity.shared.locale.L10NMessageImpl;
 import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -106,58 +111,40 @@ public class SsoAuthorizationClient {
         return new AuthContext(USER_ORGANIZATION_NAME, httpClient);
     }
 
-    public boolean isActionOnResourceAllowedByPolicy(SSOToken ssoToken, String resource, String method) {
+    public EvaluationResponse isActionOnResourceAllowedByPolicy(SSOToken ssoToken, String resource, String method) {
+
         if (ssoToken == null) {
             LOG.warnNullSsoToken();
-            return false;
+            throw new IllegalArgumentException("Authorization token is not supplied");
         }
 
-        if (resource == null || resource.length() == 0) {
+        if (StringUtils.isEmpty(resource)) {
             LOG.warnNullResource();
-            return false;
+            throw new IllegalArgumentException("Resource name is not supplied");
         }
 
-        if (method == null || method.length() == 0) {
+        if (StringUtils.isEmpty(method)) {
             LOG.warnNullMethod();
-            return false;
+            throw new IllegalArgumentException("Method name is not supplied");
         }
 
-        boolean result = false;
         try {
             PolicyEvaluator policyEvaluator = PolicyEvaluatorFactory.getInstance().getPolicyEvaluator(WEB_AGENT_SERVICE_NAME);
             PolicyDecision policyDecision = policyEvaluator.getPolicyDecision(ssoToken, resource, Collections.singleton(method));
 
-            if (policyDecision.getActionDecisions().size() == 0) {
-                result = config.getBoolean(ConfigKeys.ALLOW_ACCESS_WITHOUT_POLICY, ConfigKeys.ALLOW_ACCESS_WITHOUT_POLICY_DEFAULT);
+            if (policyDecision.getActionDecisions().isEmpty()) {
+                boolean allow = config.getBoolean(ConfigKeys.ALLOW_ACCESS_WITHOUT_POLICY, ConfigKeys.ALLOW_ACCESS_WITHOUT_POLICY_DEFAULT);
+                return new EvaluationResponse(Decision.fromAllow(allow), Collections.<String, String>emptyMap());
             } else {
-                String decision = getValueOfPolicyDecisionForMethod(method, policyDecision);
-                result = decision.equals(ALLOW_POLICY_DECISION);
+                return SsoPolicyDecisionUtils.toEvaluationResponse(policyDecision, method);
             }
         } catch (PolicyException e) {
             LOG.errorCreateEvaluator(WEB_AGENT_SERVICE_NAME, e);
+            throw new IllegalStateException("Unable to create SSO policy evaluator");
         } catch (SSOException e) {
             LOG.errorSsoTokenInvalid(WEB_AGENT_SERVICE_NAME, e);
+            throw new IllegalArgumentException("Invalid SSO token (session expired?)");
         }
-        return result;
-    }
-
-    private String getValueOfPolicyDecisionForMethod(String method, PolicyDecision policyDecision) {
-        ActionDecision actionDecisionForMethod = (ActionDecision) policyDecision.getActionDecisions().get(method);
-        String decision = "";
-        if (actionDecisionForMethod != null) {
-            Set actionDecisionValues = actionDecisionForMethod.getValues();
-            if (actionDecisionValues != null) {
-                Object[] actionDecisions = actionDecisionValues.toArray();
-                if (actionDecisions.length > 0) {
-                    Object actionDecision = actionDecisions[0];
-                    if (actionDecision != null) {
-                        decision = actionDecision.toString();
-                    }
-                }
-            }
-
-        }
-        return decision;
     }
 
     public void invalidateSSOSession(SSOToken ssoToken) {
@@ -225,20 +212,20 @@ public class SsoAuthorizationClient {
         }
     }
 
-    public boolean isActionOnResourceAllowedByPolicy(String jwtToken, String resource, String method, Map env) {
+    public EvaluationResponse isActionOnResourceAllowedByPolicy(String jwtToken, String resource, String method, Map<String, ?> env) {
         if (jwtToken == null) {
             LOG.warnNullSsoToken();
-            return false;
+            throw new IllegalArgumentException("Authorization token is not supplied");
         }
 
-        if (resource == null || resource.length() == 0) {
+        if (StringUtils.isEmpty(resource)) {
             LOG.warnNullResource();
-            return false;
+            throw new IllegalArgumentException("Resource name is not supplied");
         }
 
-        if (method == null || method.length() == 0) {
+        if (StringUtils.isEmpty(method)) {
             LOG.warnNullMethod();
-            return false;
+            throw new IllegalArgumentException("Method name is not supplied");
         }
 
         String realm = config.getString(ConfigKeys.REALM, ConfigKeys.REALM_DEFAULT);
@@ -258,58 +245,81 @@ public class SsoAuthorizationClient {
         }
     }
 
-    private boolean doIsAllowedPost(HttpPost post) throws IOException {
-        String result;
+    private EvaluationResponse doIsAllowedPost(HttpPost post) throws IOException {
+        ObjectNode jsonResult = executeRequest(post);
+        if (jsonResult.has("error")) {
+            processPolicyError(jsonResult);
+        }
+        return parsePolicyDecision(jsonResult);
+    }
 
+    protected ObjectNode executeRequest(HttpPost post) throws IOException {
         HttpClientContext context = new HttpClientContext();
         context.setCookieStore(new BasicCookieStore());
+        String result;
         try (CloseableHttpResponse response = httpClient.execute(post, context)) {
-            if (response.getStatusLine().getStatusCode() == 403) {
-                return false;
-            }
-            if (response.getStatusLine().getStatusCode() == 401) {
-                return false;
-            }
             result = EntityUtils.toString(response.getEntity());
         }
         if (result == null) {
-            throw new AuthenticationException("No or empty response from server");
+            throw new AuthenticationException("Empty response from the server");
         }
 
         ObjectNode jsonResult = null;
         try {
             jsonResult = (ObjectNode) jsonMapper.readTree(result);
         } catch (IOException e) {
-            throw new AuthorizationException("Failed to read response from server", e);
+            throw new AuthorizationException("Failed to read a response from the server", e);
         }
-        if (jsonResult.has("error")) {
-            //{"error_description":"Resource owner authentication failed","error":"invalid_grant"}
-            JsonNode error = jsonResult.get("error");
-            String errorCode = null;
-            if (error.has("code")) {
-                errorCode = error.get("code").asText();
-            }
-            String message = null;
-            if (error.has("message")) {
-                message = error.get("message").asText();
-            }
-            throw new AuthorizationException(message, message, errorCode);
-        }
-        if (jsonResult.has("decision")) {
-            String decision = jsonResult.get("decision").asText();
-            return decision != null && decision.equals(PERMIT_POLICY_DECISION);
-        }
-
-        throw new AuthorizationException("Response from server contains no decision and no error");
+        return jsonResult;
     }
 
-    public boolean isActionOnResourceAllowedByConfigPolicy(Principal subject, String resourceName, String actionName) {
+    protected void processPolicyError(ObjectNode jsonResult) {
+        //{"error_description":"Resource owner authentication failed","error":"invalid_grant"}
+        JsonNode error = jsonResult.get("error");
+        String errorCode = null;
+        if (error.has("code")) {
+            errorCode = error.get("code").asText();
+        }
+        String message = null;
+        if (error.has("message")) {
+            message = error.get("message").asText();
+        }
+        throw new AuthorizationException(message, message, errorCode);
+    }
+
+    protected EvaluationResponse parsePolicyDecision(ObjectNode jsonResult) {
+        if (!jsonResult.has("decision")) {
+            throw new AuthorizationException("Response from server contains no decision and no error");
+        }
+        String decisionString = jsonResult.get("decision").asText();
+        Decision decision = Decision.valueOf(decisionString);
+        ImmutableMap.Builder<String, String> advicesResult = ImmutableMap.builder();
+        if (jsonResult.has("advices")) {
+            JsonNode advicesNode = jsonResult.get("advices");
+            if (!advicesNode.isObject()) {
+                throw new AuthorizationException("Unexpected advices format sent from the server");
+            }
+            ObjectNode advices = (ObjectNode) advicesNode;
+            Iterator<Map.Entry<String, JsonNode>> fields = advices.getFields();
+            while (fields.hasNext()) {
+                Map.Entry<String, JsonNode> field = fields.next();
+                if (!field.getValue().isTextual()) {
+                    LOG.errorInvalidAdviceContentType(field.getKey(), field.getValue().toString());
+                    throw new AuthorizationException("Invalid advice content type");
+                }
+                advicesResult.put(field.getKey(), field.getValue().getTextValue());
+            }
+        }
+        return new EvaluationResponse(decision, advicesResult.build());
+    }
+
+    public EvaluationResponse isActionOnResourceAllowedByConfigPolicy(Principal subject, String resourceName, String actionName) {
 
         Integer requiredLevel = getRequiredLevel(resourceName, actionName);
 
         if (requiredLevel != null && requiredLevel == 0) {
             // special handling for 0 level - allow unauthorized access
-            return true;
+            return new EvaluationResponse(Decision.Permit);
         }
 
         int userAuthLevel;
@@ -331,7 +341,7 @@ public class SsoAuthorizationClient {
         } else {
             result = userAuthLevel >= requiredLevel;
         }
-        return result;
+        return new EvaluationResponse(Decision.fromAllow(result));
     }
 
     private Integer getRequiredLevel(String resourceName, String actionName) {

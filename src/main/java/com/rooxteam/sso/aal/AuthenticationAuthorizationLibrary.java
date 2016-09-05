@@ -1,5 +1,6 @@
 package com.rooxteam.sso.aal;
 
+import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.otp.OtpFlowState;
 import com.rooxteam.sso.aal.otp.OtpResponse;
 
@@ -100,6 +101,7 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
      * @param timeUnit      единица измерения таймаута.
      * @return true если действие разрешено, false если не разрешено.
      * @throws IllegalArgumentException Если параметры {@code subject}, {@code resourceName} или {@code actionName} равны null
+     * @deprecated Use evaluatePolicy instead.
      */
     @Deprecated
     boolean isAllowed(Principal subject, String resourceName, String actionName, Map<String, ?> envParameters, long timeOut, TimeUnit timeUnit);
@@ -113,8 +115,22 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
      * @param envParameters контекст
      * @return true если действие разрешено, false если не разрешено.
      * @throws IllegalArgumentException Если параметры {@code subject}, {@code resourceName} или {@code actionName} равны null
+     * @deprecated Use evaluatePolicy instead.
      */
+    @Deprecated
     boolean isAllowed(Principal subject, String resourceName, String actionName, Map<String, ?> envParameters);
+
+    /**
+     * Вычислить политики относительно действий (actionName) над ресурсом (actionName) в контексте (envParameters).
+     *
+     * @param subject       Principal для которого запрашивается доступ
+     * @param resourceName  имя запрашиваемого ресурса
+     * @param actionName    имя дейтсвия
+     * @param envParameters контекст
+     * @return ответ о возможности выполнения указанных действий, а также список advices, который может содержать причины отказа.
+     * @throws IllegalArgumentException Если параметры {@code subject}, {@code resourceName} или {@code actionName} равны null
+     */
+    EvaluationResponse evaluatePolicy(Principal subject, String resourceName, String actionName, Map<String, ?> envParameters);
 
     /**
      * Сбросить все авторизационные решения в кеше.

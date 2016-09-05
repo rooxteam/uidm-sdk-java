@@ -3,6 +3,7 @@ package com.rooxteam.sso.aal;
 import com.google.common.cache.Cache;
 import com.rooxteam.sso.aal.client.SsoTokenClient;
 import com.rooxteam.sso.aal.client.TokenHelper;
+import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -17,7 +18,7 @@ public class PollingBean extends TimerTask {
     @NonNull
     private SsoTokenClient ssoTokenClient;
     @NonNull
-    private Cache<PolicyDecisionKey, Boolean> isAllowedPolicyDecisionsCache;
+    private Cache<PolicyDecisionKey, EvaluationResponse> isAllowedPolicyDecisionsCache;
     @NonNull
     private Cache<PrincipalKey, Principal> principalCache;
     @NonNull
