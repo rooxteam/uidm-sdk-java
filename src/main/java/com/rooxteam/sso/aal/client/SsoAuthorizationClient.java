@@ -201,6 +201,12 @@ public class SsoAuthorizationClient {
                 sharedIdentityProperties.put("prn", cn);
                 sharedIdentityProperties.put("sub", cn);
                 sharedIdentityProperties.put("realm", jsonNode.get("realm").asText());
+                if (jsonNode.has("sn")) {
+                    sharedIdentityProperties.put("sn", jsonNode.get("sn").asText());
+                }
+                if (jsonNode.has("givenname")) {
+                    sharedIdentityProperties.put("givenname", jsonNode.get("givenname").asText());
+                }
 
                 List<String> authLevel = new ArrayList<>();
                 authLevel.add(jsonNode.get("auth_level").asText());
