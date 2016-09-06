@@ -211,10 +211,6 @@ public class SsoAuthorizationClient {
                 expiresIn.set(Calendar.SECOND, 0);
                 principal = new PrincipalImpl(jwtToken, sharedIdentityProperties, expiresIn);
             }
-
-            StringBuilder stringBuilder = new StringBuilder("Validation token code is ");
-            stringBuilder.append(response.getStatusLine().getStatusCode());
-            LOG.debug(stringBuilder.toString());
             return principal;
         } catch (IOException e) {
             LOG.errorAuthentication(e);
