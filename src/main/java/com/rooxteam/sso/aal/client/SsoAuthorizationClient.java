@@ -194,7 +194,7 @@ public class SsoAuthorizationClient {
 
             if (statusCode == HttpStatus.SC_OK) {
                 String responseJson = EntityUtils.toString(response.getEntity());
-                JsonNode jsonNode = new ObjectMapper().readTree(responseJson);
+                JsonNode jsonNode = jsonMapper.readTree(responseJson);
 
                 Map<String, Object> sharedIdentityProperties = new HashedMap();
                 Object cn = jsonNode.get("sub").asText();
