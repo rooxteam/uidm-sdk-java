@@ -48,7 +48,7 @@ import static com.rooxteam.sso.aal.AalLogger.LOG;
  */
 public class SsoAuthorizationClient {
 
-    private ObjectMapper jsonMapper = new ObjectMapper();
+    private final ObjectMapper jsonMapper = new ObjectMapper();
 
     private static final String USER_ORGANIZATION_NAME = "customer";
     private static final String AUTHENTICATION_INDEX_NAME = "uidm";
@@ -181,13 +181,19 @@ public class SsoAuthorizationClient {
 
             if (statusCode == HttpStatus.SC_OK) {
                 String responseJson = EntityUtils.toString(response.getEntity());
-                JsonNode jsonNode = new ObjectMapper().readTree(responseJson);
+                JsonNode jsonNode = jsonMapper.readTree(responseJson);
 
-                Map<String, Object> sharedIdentityProperties = new HashedMap();
+                Map<String, Object> sharedIdentityProperties = new HashMap<>();
                 Object cn = jsonNode.get("sub").asText();
                 sharedIdentityProperties.put("prn", cn);
                 sharedIdentityProperties.put("sub", cn);
                 sharedIdentityProperties.put("realm", jsonNode.get("realm").asText());
+                if (jsonNode.has("sn")) {
+                    sharedIdentityProperties.put("sn", jsonNode.get("sn").asText());
+                }
+                if (jsonNode.has("givenname")) {
+                    sharedIdentityProperties.put("givenname", jsonNode.get("givenname").asText());
+                }
 
                 List<String> authLevel = new ArrayList<>();
                 authLevel.add(jsonNode.get("auth_level").asText());
@@ -198,10 +204,6 @@ public class SsoAuthorizationClient {
                 expiresIn.set(Calendar.SECOND, 0);
                 principal = new PrincipalImpl(jwtToken, sharedIdentityProperties, expiresIn);
             }
-
-            StringBuilder stringBuilder = new StringBuilder("Validation token code is ");
-            stringBuilder.append(response.getStatusLine().getStatusCode());
-            LOG.debug(stringBuilder.toString());
             return principal;
         } catch (IOException e) {
             LOG.errorAuthentication(e);

@@ -2,6 +2,7 @@ package com.rooxteam.sso.aal;
 
 import com.rooxteam.sso.aal.client.TokenHelper;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
+import lombok.Getter;
 import org.forgerock.json.fluent.JsonValue;
 import org.forgerock.json.jose.common.JwtReconstruction;
 import org.forgerock.json.jose.jws.JwsAlgorithm;
@@ -19,11 +20,14 @@ import static com.rooxteam.sso.aal.AalLogger.LOG;
  * @author Dmitry Tikhonov
  */
 public final class PrincipalImpl implements Principal {
+
     private final String policyContextJwtToken;
     private final String publicJwtToken;
+
     private final Map<String, Object> sharedIdentityProperties = new ConcurrentHashMap<>();
     private final Map<String, Object> privateIdentityProperties = new ConcurrentHashMap<>();
     private final Map<String, Object> sessionProperties = new ConcurrentHashMap<>();
+
     private Calendar expirationTime;
 
     public PrincipalImpl(String policyContextJwtToken, String publicJwtToken) {
@@ -48,13 +52,18 @@ public final class PrincipalImpl implements Principal {
 
     @Override
     public Object getProperty(PropertyScope propertyScope, String name) {
+        return getProperties(propertyScope).get(name);
+    }
+
+    @Override
+    public Map<String, Object> getProperties(PropertyScope propertyScope) {
         switch (propertyScope) {
             case SHARED_IDENTITY_PARAMS:
-                return sharedIdentityProperties.get(name);
+                return sharedIdentityProperties;
             case PRIVATE_IDENTITY_PARAMS:
-                return privateIdentityProperties.get(name);
+                return privateIdentityProperties;
             case SESSION_PARAMS:
-                return sessionProperties.get(name);
+                return sessionProperties;
             default:
                 return null;
         }
@@ -62,17 +71,7 @@ public final class PrincipalImpl implements Principal {
 
     @Override
     public void setProperty(PropertyScope propertyScope, String name, Object value) {
-        switch (propertyScope) {
-            case SHARED_IDENTITY_PARAMS:
-                sharedIdentityProperties.put(name, value);
-                break;
-            case PRIVATE_IDENTITY_PARAMS:
-                privateIdentityProperties.put(name, value);
-                break;
-            case SESSION_PARAMS:
-                sessionProperties.put(name, value);
-                break;
-        }
+        getProperties(propertyScope).put(name, value);
     }
 
     @Override
