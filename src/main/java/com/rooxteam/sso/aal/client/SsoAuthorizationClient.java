@@ -43,7 +43,7 @@ import static com.rooxteam.sso.aal.AalLogger.LOG;
  */
 public class SsoAuthorizationClient {
 
-    private ObjectMapper jsonMapper = new ObjectMapper();
+    private final ObjectMapper jsonMapper = new ObjectMapper();
 
     private static final String USER_ORGANIZATION_NAME = "customer";
     private static final String AUTHENTICATION_INDEX_NAME = "uidm";
@@ -196,7 +196,7 @@ public class SsoAuthorizationClient {
                 String responseJson = EntityUtils.toString(response.getEntity());
                 JsonNode jsonNode = jsonMapper.readTree(responseJson);
 
-                Map<String, Object> sharedIdentityProperties = new HashedMap();
+                Map<String, Object> sharedIdentityProperties = new HashMap<>();
                 Object cn = jsonNode.get("sub").asText();
                 sharedIdentityProperties.put("prn", cn);
                 sharedIdentityProperties.put("sub", cn);
