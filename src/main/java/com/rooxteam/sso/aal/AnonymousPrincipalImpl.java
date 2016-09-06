@@ -2,19 +2,24 @@ package com.rooxteam.sso.aal;
 
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
 
 /**
  * Used for evaluation of anonymous context
  */
 public class AnonymousPrincipalImpl implements com.rooxteam.sso.aal.Principal {
+
+
+
     @Override
     public Object getProperty(PropertyScope propertyScope, String name) {
-        if (Objects.equals(name,"authLevel")){
-            return Collections.singletonList("0");
-        }else{
-            return null;
-        }
+        return getProperties(propertyScope).get(name);
+    }
+
+    @Override
+    public Map<String, Object> getProperties(PropertyScope propertyScope) {
+        return Collections.<String, Object>singletonMap("authLevel", Collections.singletonList("0"));
     }
 
     @Override

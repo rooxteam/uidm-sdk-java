@@ -1,6 +1,7 @@
 package com.rooxteam.sso.aal;
 
 import java.util.Calendar;
+import java.util.Map;
 
 /**
  * Представляет авторизационную информацию о пользователе.
@@ -20,6 +21,14 @@ public interface Principal {
      * @return значение свойства
      */
     Object getProperty(PropertyScope propertyScope, String name);
+
+    /**
+     * Получить свойства принципала.
+     *
+     * @param propertyScope уровень видимости свойств
+     * @return пары имя-значение для всех свойств с данным уровнем видимости
+     */
+    Map<String, Object> getProperties(PropertyScope propertyScope);
 
     /**
      * Установить свойство принципала (значения остаются только в клиентском кеше)
