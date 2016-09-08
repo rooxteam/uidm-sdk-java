@@ -494,8 +494,15 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     }
 
     @Override
+    @Deprecated
     public OtpResponse validateOtp(OtpFlowState otpState, Map<String, String> fields) {
-        return otpClient.validateOtp(otpState, fields);
+        String otpCode = fields.get(OtpClient.OTP_CODE_PARAM_NAME);
+        return validateOtp(otpState, otpCode);
+    }
+
+    @Override
+    public OtpResponse validateOtp(OtpFlowState otpState, String otpCode) {
+        return otpClient.validateOtp(otpState, otpCode);
     }
 
     @Override

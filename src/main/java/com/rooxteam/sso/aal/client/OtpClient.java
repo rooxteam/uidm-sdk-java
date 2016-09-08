@@ -40,8 +40,10 @@ import static com.rooxteam.sso.aal.AalLogger.LOG;
 import static com.rooxteam.sso.aal.client.SsoAuthenticationClient.*;
 
 public class OtpClient {
+
+    public static final String OTP_CODE_PARAM_NAME = "otpCode";
     public static final String OAUTH2_ACCESS_TOKEN_PATH = "/oauth2/access_token";
-    private static final String OTP_CODE_PARAM_NAME = "otpCode";
+
     private static final String EXECUTION_PARAM_NAME = "execution";
     private static final String EVENT_ID_PARAM_NAME = "_eventId";
     private static final String EVENT_ID_VALIDATE = "validate";
@@ -78,8 +80,7 @@ public class OtpClient {
         return sendOtpEvent(otpFlowState, null, EVENT_ID_RESEND);
     }
 
-    public OtpResponse validateOtp(OtpFlowState otpState, Map<String, String> fields) {
-        String otpCode = fields.get(OTP_CODE_PARAM_NAME);
+    public OtpResponse validateOtp(OtpFlowState otpState, String otpCode) {
         return sendOtpEvent(otpState, otpCode, EVENT_ID_VALIDATE);
     }
 
