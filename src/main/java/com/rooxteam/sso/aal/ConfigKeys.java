@@ -83,6 +83,17 @@ public interface ConfigKeys {
     String OTP_SERVICE_DEFAULT = "otp-sms";
 
     /**
+     * {@value} - Имя параметра, в котором в запросе M2M будет передан текущий токен пользователя, запросившего OTP.
+     * По умолчанию: {@value #OTP_CURRENT_TOKEN_PARAM_NAME_DEFAULT}
+     */
+    String OTP_CURRENT_TOKEN_PARAM_NAME = "com.rooxteam.aal.otp.token.current.name";
+
+    /**
+     * Имя параметра, в котором в запросе M2M будет передан текущий токен пользователя, запросившего OTP. (по умолчанию)
+     */
+    String OTP_CURRENT_TOKEN_PARAM_NAME_DEFAULT = "jwt";
+
+    /**
      * {@value} - Разрешать доступ к ресурсу при отсутствии в SSO подходящих политик.
      * По умолчанию: {@value #ALLOW_ACCESS_WITHOUT_POLICY_DEFAULT}
      */

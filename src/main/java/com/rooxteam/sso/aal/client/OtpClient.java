@@ -71,7 +71,7 @@ public class OtpClient {
 
     public OtpResponse sendOtp(String jwt) {
         List<NameValuePair> params = commonOtpParams();
-        params.add(new BasicNameValuePair("jwt", jwt));
+        params.add(new BasicNameValuePair(currentTokenParamName(), jwt));
 
         return makeOtpRequest(params, null);
     }
@@ -82,6 +82,10 @@ public class OtpClient {
 
     public OtpResponse validateOtp(OtpFlowState otpState, String otpCode) {
         return sendOtpEvent(otpState, otpCode, EVENT_ID_VALIDATE);
+    }
+
+    protected String currentTokenParamName() {
+        return config.getString(ConfigKeys.OTP_CURRENT_TOKEN_PARAM_NAME, ConfigKeys.OTP_CURRENT_TOKEN_PARAM_NAME_DEFAULT);
     }
 
     private OtpResponse sendOtpEvent(OtpFlowState otpState, String otpCode, String eventId) {
