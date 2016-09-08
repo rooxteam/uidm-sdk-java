@@ -1,5 +1,6 @@
 package com.rooxteam.sso.aal;
 
+import com.rooxteam.sso.aal.client.EvaluationContext;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.otp.OtpFlowState;
 import com.rooxteam.sso.aal.otp.OtpResponse;
@@ -223,6 +224,16 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
      * @throws IllegalArgumentException Если параметр {@code principal} равен null
      */
     OtpResponse sendOtp(Principal principal);
+
+    /**
+     * Запрос одноразового пароля (One-time password, OTP).
+     *
+     * @param principal Принципал, которому отправляется уведомление
+     * @param context Контекст операции, для которой требуется выдать токен по результатам OTP
+     * @return Возвращает POJO, содержащую текущий шаг, состояние, форму отправки OTP, дополнительные параметры и результат аутентификации (Principal) в случае успеха
+     * @throws IllegalArgumentException Если параметр {@code principal} равен null
+     */
+    OtpResponse sendOtpForOperation(Principal principal, EvaluationContext context);
 
     /**
      * Повторный запрос OTP.

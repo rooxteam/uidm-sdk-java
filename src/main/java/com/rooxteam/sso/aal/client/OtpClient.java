@@ -31,10 +31,7 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.rooxteam.sso.aal.AalLogger.LOG;
 import static com.rooxteam.sso.aal.client.SsoAuthenticationClient.*;
@@ -73,6 +70,21 @@ public class OtpClient {
         List<NameValuePair> params = commonOtpParams();
         params.add(new BasicNameValuePair(currentTokenParamName(), jwt));
 
+        return makeOtpRequest(params, null);
+    }
+
+    public OtpResponse sendOtpForOperation(String jwt, EvaluationContext context) {
+        List<NameValuePair> params = commonOtpParams();
+        params.add(new BasicNameValuePair(currentTokenParamName(), jwt));
+        params.add(new BasicNameValuePair("operation.action", context.getActionName()));
+        params.add(new BasicNameValuePair("operation.resource", context.getResourceName()));
+        params.add(new BasicNameValuePair("operation.realm", context.getRealm()));
+        params.add(new BasicNameValuePair("operation.service", context.getServiceName()));
+        for (Map.Entry entry : (Set<Map.Entry>) context.getEnvParams().entrySet()) {
+            String name = "operation.env." + (String) entry.getKey();
+            String value = (String) entry.getValue();
+            params.add(new BasicNameValuePair(name, value));
+        }
         return makeOtpRequest(params, null);
     }
 
