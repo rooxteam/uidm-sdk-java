@@ -31,17 +31,16 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.rooxteam.sso.aal.AalLogger.LOG;
 import static com.rooxteam.sso.aal.client.SsoAuthenticationClient.*;
 
 public class OtpClient {
+
+    public static final String OTP_CODE_PARAM_NAME = "otpCode";
     public static final String OAUTH2_ACCESS_TOKEN_PATH = "/oauth2/access_token";
-    private static final String OTP_CODE_PARAM_NAME = "otpCode";
+
     private static final String EXECUTION_PARAM_NAME = "execution";
     private static final String EVENT_ID_PARAM_NAME = "_eventId";
     private static final String EVENT_ID_VALIDATE = "validate";
@@ -69,8 +68,23 @@ public class OtpClient {
 
     public OtpResponse sendOtp(String jwt) {
         List<NameValuePair> params = commonOtpParams();
-        params.add(new BasicNameValuePair("jwt", jwt));
+        params.add(new BasicNameValuePair(currentTokenParamName(), jwt));
 
+        return makeOtpRequest(params, null);
+    }
+
+    public OtpResponse sendOtpForOperation(String jwt, EvaluationContext context) {
+        List<NameValuePair> params = commonOtpParams();
+        params.add(new BasicNameValuePair(currentTokenParamName(), jwt));
+        params.add(new BasicNameValuePair("operation.action", context.getActionName()));
+        params.add(new BasicNameValuePair("operation.resource", context.getResourceName()));
+        params.add(new BasicNameValuePair("operation.realm", context.getRealm()));
+        params.add(new BasicNameValuePair("operation.service", context.getServiceName()));
+        for (Map.Entry entry : (Set<Map.Entry>) context.getEnvParams().entrySet()) {
+            String name = "operation.env." + (String) entry.getKey();
+            String value = (String) entry.getValue();
+            params.add(new BasicNameValuePair(name, value));
+        }
         return makeOtpRequest(params, null);
     }
 
@@ -78,9 +92,12 @@ public class OtpClient {
         return sendOtpEvent(otpFlowState, null, EVENT_ID_RESEND);
     }
 
-    public OtpResponse validateOtp(OtpFlowState otpState, Map<String, String> fields) {
-        String otpCode = fields.get(OTP_CODE_PARAM_NAME);
+    public OtpResponse validateOtp(OtpFlowState otpState, String otpCode) {
         return sendOtpEvent(otpState, otpCode, EVENT_ID_VALIDATE);
+    }
+
+    protected String currentTokenParamName() {
+        return config.getString(ConfigKeys.OTP_CURRENT_TOKEN_PARAM_NAME, ConfigKeys.OTP_CURRENT_TOKEN_PARAM_NAME_DEFAULT);
     }
 
     private OtpResponse sendOtpEvent(OtpFlowState otpState, String otpCode, String eventId) {

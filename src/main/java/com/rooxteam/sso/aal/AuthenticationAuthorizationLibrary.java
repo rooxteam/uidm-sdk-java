@@ -1,5 +1,6 @@
 package com.rooxteam.sso.aal;
 
+import com.rooxteam.sso.aal.client.EvaluationContext;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.otp.OtpFlowState;
 import com.rooxteam.sso.aal.otp.OtpResponse;
@@ -225,6 +226,16 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
     OtpResponse sendOtp(Principal principal);
 
     /**
+     * Запрос одноразового пароля (One-time password, OTP).
+     *
+     * @param principal Принципал, которому отправляется уведомление
+     * @param context Контекст операции, для которой требуется выдать токен по результатам OTP
+     * @return Возвращает POJO, содержащую текущий шаг, состояние, форму отправки OTP, дополнительные параметры и результат аутентификации (Principal) в случае успеха
+     * @throws IllegalArgumentException Если параметр {@code principal} равен null
+     */
+    OtpResponse sendOtpForOperation(Principal principal, EvaluationContext context);
+
+    /**
      * Повторный запрос OTP.
      *
      * @param otpFlowState Объект представляющий текущее состояние сценария повышения уровня авторизации.
@@ -263,7 +274,18 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
      * @param otpState Состояние запроса
      * @param fields   Заполненные поля
      * @return Возвращает результат валидации: или форму для заполнения (не успешная валидация) или принципала (успешная валидация)
+     * @deprecated Необходимо использовать версию, принимающую код напрямую
      */
+    @Deprecated
     OtpResponse validateOtp(OtpFlowState otpState, Map<String, String> fields);
+
+    /**
+     * Владиция OTP
+     *
+     * @param otpState Состояние запроса
+     * @param otpCode   Введенный пользователем код
+     * @return Возвращает результат валидации: или форму для заполнения (не успешная валидация) или принципала (успешная валидация)
+     */
+    OtpResponse validateOtp(OtpFlowState otpState, String otpCode);
 
 }

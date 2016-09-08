@@ -3,10 +3,7 @@ package com.rooxteam.sso.aal;
 import com.codahale.metrics.Gauge;
 import com.google.common.cache.Cache;
 import com.iplanet.sso.SSOToken;
-import com.rooxteam.sso.aal.client.OtpClient;
-import com.rooxteam.sso.aal.client.SsoAuthenticationClient;
-import com.rooxteam.sso.aal.client.SsoAuthorizationClient;
-import com.rooxteam.sso.aal.client.SsoTokenClient;
+import com.rooxteam.sso.aal.client.*;
 import com.rooxteam.sso.aal.client.model.AuthenticationResponse;
 import com.rooxteam.sso.aal.client.model.Decision;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
@@ -41,12 +38,14 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
      * how many char to trim when logging JWT
      */
     public static final int TRIM_JWT_CHARS = 50;
+
     private static final String AUTHENTICATE_PARAMS_SHOULDNT_BE_EMPTY = "Authenticate parameters shouldn't be empty.";
     private static final String UNSUPPORTED_AUTHENTICATION_PARAMETER = "Unsupported authentication parameter: ";
     private static final String SUBJECT_SHOULD_BE_SPECIFIED = "Subject should be specified.";
     private static final String RESOURCE_SHOULD_BE_SPECIFIED = "Resource should be specified.";
     private static final String ACTION_SHOULD_BE_SPECIFIED = "Resource should be specified.";
     private static final String IMSI_CLAIM_NAME = "imsi";
+
     private final SsoAuthorizationClient ssoAuthorizationClient;
     private final SsoAuthenticationClient ssoAuthenticationClient;
     private final SsoTokenClient ssoTokenClient;
@@ -472,8 +471,16 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
             LOG.errorSendOtpPrincipalIsMissing();
             throw new IllegalArgumentException(PRINCIPAL_IS_MISSING_MESSAGE);
         }
-
         return otpClient.sendOtp(principal.getJwtToken());
+    }
+
+    @Override
+    public OtpResponse sendOtpForOperation(Principal principal, EvaluationContext context) {
+        if (principal == null) {
+            LOG.errorSendOtpPrincipalIsMissing();
+            throw new IllegalArgumentException(PRINCIPAL_IS_MISSING_MESSAGE);
+        }
+        return otpClient.sendOtpForOperation(principal.getJwtToken(), context);
     }
 
     @Override
@@ -494,8 +501,15 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     }
 
     @Override
+    @Deprecated
     public OtpResponse validateOtp(OtpFlowState otpState, Map<String, String> fields) {
-        return otpClient.validateOtp(otpState, fields);
+        String otpCode = fields.get(OtpClient.OTP_CODE_PARAM_NAME);
+        return validateOtp(otpState, otpCode);
+    }
+
+    @Override
+    public OtpResponse validateOtp(OtpFlowState otpState, String otpCode) {
+        return otpClient.validateOtp(otpState, otpCode);
     }
 
     @Override
