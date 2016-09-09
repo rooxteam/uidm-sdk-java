@@ -188,11 +188,11 @@ public class SsoAuthorizationClient {
                 sharedIdentityProperties.put("prn", cn);
                 sharedIdentityProperties.put("sub", cn);
                 sharedIdentityProperties.put("realm", jsonNode.get("realm").asText());
-                if (jsonNode.has("sn")) {
-                    sharedIdentityProperties.put("sn", jsonNode.get("sn").asText());
-                }
-                if (jsonNode.has("givenname")) {
-                    sharedIdentityProperties.put("givenname", jsonNode.get("givenname").asText());
+                String[] toForward = config.getStringArray(ConfigKeys.TOKEN_INFO_ATTRIBUTES_FORWARD);
+                for (String attr : toForward) {
+                    if (jsonNode.has(attr)) {
+                        sharedIdentityProperties.put(attr, jsonNode.get(attr).asText());
+                    }
                 }
 
                 List<String> authLevel = new ArrayList<>();

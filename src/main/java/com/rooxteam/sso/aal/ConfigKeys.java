@@ -234,4 +234,9 @@ public interface ConfigKeys {
      * {"<resourceName1>": {"<actionName1.1>": {"authLevel": 2},"<actionName1.2>": {"authLevel": 2}},"<resourceName2>":  {"<actionName2.1>": {"authLevel": 2}}}
      */
     String LOCAL_POLICIES = "com.rooxteam.aal.policies";
+
+    /**
+     * Список атрибутов из информации о токене, которые необходимо пробросить в Principal.sharedIdentityProperties.
+     */
+    String TOKEN_INFO_ATTRIBUTES_FORWARD = "com.rooxteam.aal.token.info.forward.attributes";
 }
