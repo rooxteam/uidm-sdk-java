@@ -1,10 +1,9 @@
 package com.rooxteam.sso.aal.client;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,10 +11,12 @@ import java.util.Map;
  * hold all context for policy evaluation
  */
 @Getter
+@ToString
+@EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class EvaluationContext {
+public class EvaluationContext implements Serializable {
     public static final String WEB_AGENT_SERVICE_NAME = "iPlanetAMWebAgentService";
 
     private String serviceName = WEB_AGENT_SERVICE_NAME;
