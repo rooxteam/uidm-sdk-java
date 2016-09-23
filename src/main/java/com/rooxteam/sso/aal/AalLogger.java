@@ -15,6 +15,7 @@ import org.jboss.logging.annotations.*;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import static org.jboss.logging.Logger.Level.*;
@@ -187,11 +188,16 @@ public interface AalLogger extends BasicLogger {
             value = "Skipping auth param {0} because it is set by AAL itself")
     void warnSkippingCommonParamInAuthRequest(String key);
 
-
     @LogMessage(level = WARN)
     @Message(id = 4005, format = MESSAGE_FORMAT,
             value = "Method is null.")
     void warnNullMethod();
+
+    @LogMessage(level = WARN)
+    @Message(id = 4006, format = MESSAGE_FORMAT,
+            value = "Unable to serialize operation context into JSON: {0}")
+    void warnInvalidContextJson(Object evaluationContext, @Cause Exception e);
+
 
     @LogMessage(level = TRACE)
     @Message(id = 9001, format = MESSAGE_FORMAT,
