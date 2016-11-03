@@ -47,7 +47,7 @@ public class OtpClient {
     private static final String EXECUTION_PARAM_NAME = "execution";
     private static final String EVENT_ID_PARAM_NAME = "_eventId";
     private static final String EVENT_ID_VALIDATE = "validate";
-    private static final String EVENT_ID_RESEND = "resend";
+    private static final String EVENT_ID_SEND = "send";
     private static final String SESSION_ID_COOKIE_NAME = "RX_SID";
 
     private Configuration config;
@@ -91,7 +91,7 @@ public class OtpClient {
     }
 
     public OtpResponse resendOtp(OtpFlowState otpFlowState) {
-        return sendOtpEvent(otpFlowState, null, EVENT_ID_RESEND);
+        return sendOtpEvent(otpFlowState, null, EVENT_ID_SEND);
     }
 
     public OtpResponse validateOtp(OtpFlowState otpState, String otpCode) {
