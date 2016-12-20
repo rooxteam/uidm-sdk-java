@@ -1,12 +1,19 @@
 buildscript {
     repositories {
-        maven { url = 'http://nexus.rooxintra.net/content/repositories/public' }
-        maven { url = 'http://nexus.rooxintra.net/content/repositories/releases' }
+        if(project.hasProperty('rooxExternalAccess')){
+            mavenLocal()
+            mavenCentral()
+            maven { url 'http://repo.springsource.org/plugins-release/' }
+        }else {
+            maven { url 'http://nexus.rooxintra.net/content/repositories/releases' }
+            maven { url 'http://nexus.rooxintra.net/content/repositories/public' }
+        }
     }
     dependencies {
-        classpath('com.rooxteam.corporate:gradle-plugins:26.1.+')
+        classpath('com.rooxteam.corporate:gradle-plugins:27.1.+')
     }
 }
+
 
 apply plugin: 'roox-doc'
 apply plugin: 'roox-jar'
