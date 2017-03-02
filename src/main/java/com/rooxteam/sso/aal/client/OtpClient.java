@@ -77,15 +77,25 @@ public class OtpClient {
     }
 
     public OtpResponse sendOtpForOperation(String jwt, EvaluationContext context) {
+        SendOtpParameter sendOtpParameter = SendOtpParameter.builder()
+                .jwt(jwt)
+                .service(config.getString(ConfigKeys.OTP_SERVICE, ConfigKeys.OTP_SERVICE_DEFAULT))
+                .evaluationContext(context)
+                .build();
+        return sendOtpForOperation(sendOtpParameter);
+    }
+
+    public OtpResponse sendOtpForOperation(SendOtpParameter sendOtpParameter) {
         String contextJson;
         try {
-            contextJson = jsonMapper.writeValueAsString(context);
+            contextJson = jsonMapper.writeValueAsString(sendOtpParameter.getEvaluationContext());
         } catch (IOException e) {
-            LOG.warnInvalidContextJson(context, e);
+            LOG.warnInvalidContextJson(sendOtpParameter.getEvaluationContext(), e);
             return OtpResponseImpl.exception(e);
         }
-        List<NameValuePair> params = commonOtpParams();
-        params.add(new BasicNameValuePair(currentTokenParamName(), jwt));
+        List<NameValuePair> params = commonOtpParams(sendOtpParameter.getService());
+        params.add(new BasicNameValuePair(currentTokenParamName(), sendOtpParameter.getJwt()));
+        params.add(new BasicNameValuePair("msisdn", sendOtpParameter.getMsisdn()));
         params.add(new BasicNameValuePair("operation", contextJson));
         return makeOtpRequest(params, null);
     }
@@ -156,16 +166,24 @@ public class OtpClient {
         }
     }
 
-    private List<NameValuePair> commonOtpParams() {
+    private List<NameValuePair> commonOtpParams(String service) {
+
+        if (service == null){
+            service = config.getString(ConfigKeys.OTP_SERVICE, ConfigKeys.OTP_SERVICE_DEFAULT);
+        }
+
         List<NameValuePair> params = new ArrayList<>();
         params.add(new BasicNameValuePair(REALM_PARAM_NAME, config.getString(ConfigKeys.REALM, ConfigKeys.REALM_DEFAULT)));
         params.add(new BasicNameValuePair(CLIENT_ID_PARAM_NAME, config.getString(ConfigKeys.CLIENT_ID)));
         params.add(new BasicNameValuePair(CLIENT_SECRET, config.getString(ConfigKeys.CLIENT_SECRET)));
         params.add(new BasicNameValuePair(GRANT_TYPE, GRANT_TYPE_M2M));
-        params.add(new BasicNameValuePair(SERVICE_PARAM_NAME, config.getString(ConfigKeys.OTP_SERVICE, ConfigKeys.OTP_SERVICE_DEFAULT)));
+        params.add(new BasicNameValuePair(SERVICE_PARAM_NAME, service));
         return params;
     }
 
+    private List<NameValuePair> commonOtpParams() {
+        return commonOtpParams(null);
+    }
 
     private OtpResponse prepareOtpResponse(String json, String sessionIdCookie) {
         OtpFlowStateJson otpFlowStateJson;

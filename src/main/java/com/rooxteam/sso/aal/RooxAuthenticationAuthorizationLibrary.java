@@ -11,6 +11,7 @@ import com.rooxteam.sso.aal.exception.AuthenticationException;
 import com.rooxteam.sso.aal.metrics.AalMetricsHelper;
 import com.rooxteam.sso.aal.otp.OtpFlowState;
 import com.rooxteam.sso.aal.otp.OtpResponse;
+import com.rooxteam.sso.aal.otp.SendOtpParameter;
 import org.apache.commons.collections.MapUtils;
 import org.forgerock.json.jose.common.JwtReconstruction;
 import org.forgerock.json.jose.jws.SignedJwt;
@@ -34,6 +35,7 @@ import static com.rooxteam.sso.aal.metrics.AalMetricsHelper.*;
 class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizationLibrary {
 
     public static final String PRINCIPAL_IS_MISSING_MESSAGE = "Principal argument is missing.";
+
     /**
      * how many char to trim when logging JWT
      */
@@ -467,20 +469,19 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
 
     @Override
     public OtpResponse sendOtp(Principal principal) {
-        if (principal == null) {
-            LOG.errorSendOtpPrincipalIsMissing();
-            throw new IllegalArgumentException(PRINCIPAL_IS_MISSING_MESSAGE);
-        }
-        return otpClient.sendOtp(principal.getJwtToken());
+        String jwtToken = principal != null ? principal.getJwtToken() : null;
+        return otpClient.sendOtp(jwtToken);
     }
 
     @Override
     public OtpResponse sendOtpForOperation(Principal principal, EvaluationContext context) {
-        if (principal == null) {
-            LOG.errorSendOtpPrincipalIsMissing();
-            throw new IllegalArgumentException(PRINCIPAL_IS_MISSING_MESSAGE);
-        }
-        return otpClient.sendOtpForOperation(principal.getJwtToken(), context);
+        String jwtToken = principal != null ? principal.getJwtToken() : null;
+        return otpClient.sendOtpForOperation(jwtToken, context);
+    }
+
+    @Override
+    public OtpResponse sendOtpForOperation(SendOtpParameter sendOtpParameter){
+        return otpClient.sendOtpForOperation(sendOtpParameter);
     }
 
     @Override

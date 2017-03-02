@@ -7,16 +7,11 @@ import com.sun.identity.authentication.spi.AuthLoginException;
 import com.sun.identity.policy.PolicyException;
 import com.sun.identity.shared.locale.L10NMessageImpl;
 import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.*;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 import static org.jboss.logging.Logger.Level.*;
 import static org.jboss.logging.annotations.Message.Format.MESSAGE_FORMAT;
@@ -108,11 +103,6 @@ public interface AalLogger extends BasicLogger {
     void errorSendOtpPrincipalNotContainsMsisdn();
 
     @LogMessage(level = ERROR)
-    @Message(id = 3022, format = MESSAGE_FORMAT,
-            value = RooxAuthenticationAuthorizationLibrary.PRINCIPAL_IS_MISSING_MESSAGE)
-    void errorSendOtpPrincipalIsMissing();
-
-    @LogMessage(level = ERROR)
     @Message(id = 3023, format = MESSAGE_FORMAT,
             value = "Cannot parse JWT {0}")
     void errorCannotParseJwt(String jwt, @Cause Exception e);
@@ -165,7 +155,6 @@ public interface AalLogger extends BasicLogger {
     @Message(id = 3035, format = MESSAGE_FORMAT,
             value = "Invalid response obtained from the remote SSO on policy evaluation: name ''{0}'', value ''{1}''")
     void errorInvalidAdviceContentType(String adviceName, String adviceValue);
-
 
     @LogMessage(level = WARN)
     @Message(id = 4001, format = MESSAGE_FORMAT,
