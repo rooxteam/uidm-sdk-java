@@ -94,8 +94,12 @@ public class OtpClient {
             return OtpResponseImpl.exception(e);
         }
         List<NameValuePair> params = commonOtpParams(sendOtpParameter.getService());
-        params.add(new BasicNameValuePair(currentTokenParamName(), sendOtpParameter.getJwt()));
-        params.add(new BasicNameValuePair("msisdn", sendOtpParameter.getMsisdn()));
+        if (!StringUtils.isEmpty(sendOtpParameter.getJwt())) {
+            params.add(new BasicNameValuePair(currentTokenParamName(), sendOtpParameter.getJwt()));
+        }
+        if (!StringUtils.isEmpty(sendOtpParameter.getMsisdn())) {
+            params.add(new BasicNameValuePair("msisdn", sendOtpParameter.getMsisdn()));
+        }
         params.add(new BasicNameValuePair("operation", contextJson));
         return makeOtpRequest(params, null);
     }
