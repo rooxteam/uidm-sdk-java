@@ -2,9 +2,7 @@ package com.rooxteam.sso.aal;
 
 import com.rooxteam.sso.aal.client.EvaluationContext;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
-import com.rooxteam.sso.aal.otp.OtpFlowState;
-import com.rooxteam.sso.aal.otp.OtpResponse;
-import com.rooxteam.sso.aal.otp.SendOtpParameter;
+import com.rooxteam.sso.aal.otp.*;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -265,7 +263,16 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
     OtpResponse resendOtp(OtpFlowState otpFlowState);
 
     /**
-     * Владиция OTP
+     * Повторный запрос OTP.
+     *
+     * @param resendOtpParameter Параметры для повторного запроса OTP.
+     * @return OtpResponse POJO, содержащую текущий шаг, состояние, форму отправки OTP,
+     * дополнительные параметры и результат аутентификации (Principal) в случае успеха
+     */
+    OtpResponse resendOtp(ResendOtpParameter resendOtpParameter);
+
+    /**
+     * Валидация OTP
      *
      * @param otpState Состояние запроса
      * @param fields   Заполненные поля
@@ -277,7 +284,7 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
     OtpResponse validateOtp(OtpFlowState otpState, Map<String, String> fields, long timeOut, TimeUnit timeUnit);
 
     /**
-     * Владиция OTP
+     * Валидация OTP
      *
      * @param otpState Состояние запроса
      * @param fields   Заполненные поля
@@ -288,7 +295,7 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
     OtpResponse validateOtp(OtpFlowState otpState, Map<String, String> fields);
 
     /**
-     * Владиция OTP
+     * Валидация OTP
      *
      * @param otpState Состояние запроса
      * @param otpCode   Введенный пользователем код
@@ -296,4 +303,11 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
      */
     OtpResponse validateOtp(OtpFlowState otpState, String otpCode);
 
+    /**
+     * Валидация OTP
+     *
+     * @param validateOtpParameter Параметры для валидации OTP
+     * @return Возвращает результат валидации: или форму для заполнения (не успешная валидация) или принципала (успешная валидация)
+     */
+    OtpResponse validateOtp(ValidateOtpParameter validateOtpParameter);
 }

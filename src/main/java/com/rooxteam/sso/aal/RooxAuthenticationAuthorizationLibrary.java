@@ -9,9 +9,7 @@ import com.rooxteam.sso.aal.client.model.Decision;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
 import com.rooxteam.sso.aal.metrics.AalMetricsHelper;
-import com.rooxteam.sso.aal.otp.OtpFlowState;
-import com.rooxteam.sso.aal.otp.OtpResponse;
-import com.rooxteam.sso.aal.otp.SendOtpParameter;
+import com.rooxteam.sso.aal.otp.*;
 import org.apache.commons.collections.MapUtils;
 import org.forgerock.json.jose.common.JwtReconstruction;
 import org.forgerock.json.jose.jws.SignedJwt;
@@ -496,6 +494,11 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     }
 
     @Override
+    public OtpResponse resendOtp(ResendOtpParameter resendOtpParameter) {
+        return otpClient.resendOtp(resendOtpParameter);
+    }
+
+    @Override
     @Deprecated
     public OtpResponse validateOtp(OtpFlowState otpState, Map<String, String> fields, long timeOut, TimeUnit timeUnit) {
         return validateOtp(otpState, fields);
@@ -511,6 +514,11 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     @Override
     public OtpResponse validateOtp(OtpFlowState otpState, String otpCode) {
         return otpClient.validateOtp(otpState, otpCode);
+    }
+
+    @Override
+    public OtpResponse validateOtp(ValidateOtpParameter validateOtpParameter){
+        return otpClient.validateOtp(validateOtpParameter);
     }
 
     @Override
