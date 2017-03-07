@@ -23,7 +23,7 @@ public class ValidateOtpParameter {
      */
     private String msisdn;
     /**
-     * Имя цепочки повышения уровня авторизации в Customer SSO для AAL
+     * Имя сценария в Customer SSO для AAL
      */
     private String service;
 

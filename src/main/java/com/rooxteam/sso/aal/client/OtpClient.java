@@ -111,8 +111,7 @@ public class OtpClient {
     }
 
     public OtpResponse resendOtp(ResendOtpParameter resendOtpParameter) {
-        return sendOtpEvent(resendOtpParameter.getOtpFlowState(), null, EVENT_ID_SEND,
-                resendOtpParameter.getMsisdn(), resendOtpParameter.getService());
+        return sendOtpEvent(resendOtpParameter.getOtpFlowState(), null, EVENT_ID_SEND, resendOtpParameter.getService());
     }
 
     public OtpResponse validateOtp(OtpFlowState otpState, String otpCode) {
@@ -123,14 +122,14 @@ public class OtpClient {
 
     public OtpResponse validateOtp(ValidateOtpParameter validateOtpParameter) {
         return sendOtpEvent(validateOtpParameter.getOtpFlowState(), validateOtpParameter.getOtpCode(), EVENT_ID_VALIDATE,
-                validateOtpParameter.getMsisdn(), validateOtpParameter.getService());
+                validateOtpParameter.getService());
     }
 
     protected String currentTokenParamName() {
         return config.getString(ConfigKeys.OTP_CURRENT_TOKEN_PARAM_NAME, ConfigKeys.OTP_CURRENT_TOKEN_PARAM_NAME_DEFAULT);
     }
 
-    private OtpResponse sendOtpEvent(OtpFlowState otpState, String otpCode, String eventId, String msisdn, String service) {
+    private OtpResponse sendOtpEvent(OtpFlowState otpState, String otpCode, String eventId, String service) {
         if (StringUtils.isEmpty(otpState.getSessionId()) ||
                 StringUtils.isEmpty(otpState.getExecution()) ||
                 StringUtils.isEmpty(otpState.getServerUrl())) {
@@ -142,9 +141,6 @@ public class OtpClient {
         params.add(new BasicNameValuePair(EVENT_ID_PARAM_NAME, eventId));
         if (!StringUtils.isEmpty(otpCode)) {
             params.add(new BasicNameValuePair(OTP_CODE_PARAM_NAME, otpCode));
-        }
-        if (!StringUtils.isEmpty(msisdn)) {
-            params.add(new BasicNameValuePair(MSISDN_PARAM_NAME, msisdn));
         }
         return makeOtpRequest(params, otpState);
     }

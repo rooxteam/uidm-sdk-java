@@ -72,13 +72,13 @@ public interface ConfigKeys {
     String AUTH_SERVICE_DEFAULT = "dispatcher";
 
     /**
-     * {@value} - Имя цепочки повышения уровня авторизации в Customer SSO для AAL.
+     * {@value} - Имя сценария в Customer SSO для AAL.
      * По умолчанию: {@value #OTP_SERVICE_DEFAULT}
      */
     String OTP_SERVICE = "com.rooxteam.aal.otp.service";
 
     /**
-     * Имя цепочки повышения уровня авторизации в Customer SSO для AAL по умолчанию
+     * Имя сценария в Customer SSO для AAL по умолчанию
      */
     String OTP_SERVICE_DEFAULT = "otp-sms";
 
