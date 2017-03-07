@@ -45,6 +45,7 @@ public class OtpClient {
     public static final String OAUTH2_ACCESS_TOKEN_PATH = "/oauth2/access_token";
 
     private static final String EXECUTION_PARAM_NAME = "execution";
+    public static final String MSISDN_PARAM_NAME = "msisdn";
     private static final String EVENT_ID_PARAM_NAME = "_eventId";
     private static final String EVENT_ID_VALIDATE = "validate";
     private static final String EVENT_ID_SEND = "send";
@@ -79,7 +80,7 @@ public class OtpClient {
     public OtpResponse sendOtpForOperation(String jwt, EvaluationContext context) {
         SendOtpParameter sendOtpParameter = SendOtpParameter.builder()
                 .jwt(jwt)
-                .service(config.getString(ConfigKeys.OTP_SERVICE, ConfigKeys.OTP_SERVICE_DEFAULT))
+                .service(getDefaultService())
                 .evaluationContext(context)
                 .build();
         return sendOtpForOperation(sendOtpParameter);
@@ -98,38 +99,49 @@ public class OtpClient {
             params.add(new BasicNameValuePair(currentTokenParamName(), sendOtpParameter.getJwt()));
         }
         if (!StringUtils.isEmpty(sendOtpParameter.getMsisdn())) {
-            params.add(new BasicNameValuePair("msisdn", sendOtpParameter.getMsisdn()));
+            params.add(new BasicNameValuePair(MSISDN_PARAM_NAME, sendOtpParameter.getMsisdn()));
         }
         params.add(new BasicNameValuePair("operation", contextJson));
         return makeOtpRequest(params, null);
     }
 
     public OtpResponse resendOtp(OtpFlowState otpFlowState) {
-        return sendOtpEvent(otpFlowState, null, EVENT_ID_SEND);
+        ResendOtpParameter resendOtpParameter = ResendOtpParameter.builder().otpFlowState(otpFlowState).build();
+        return resendOtp(resendOtpParameter);
+    }
+
+    public OtpResponse resendOtp(ResendOtpParameter resendOtpParameter) {
+        return sendOtpEvent(resendOtpParameter.getOtpFlowState(), null, EVENT_ID_SEND, resendOtpParameter.getService());
     }
 
     public OtpResponse validateOtp(OtpFlowState otpState, String otpCode) {
-        return sendOtpEvent(otpState, otpCode, EVENT_ID_VALIDATE);
+        ValidateOtpParameter validateOtpParameter = ValidateOtpParameter.builder()
+                .otpFlowState(otpState).otpCode(otpCode).build();
+        return validateOtp(validateOtpParameter);
+    }
+
+    public OtpResponse validateOtp(ValidateOtpParameter validateOtpParameter) {
+        return sendOtpEvent(validateOtpParameter.getOtpFlowState(), validateOtpParameter.getOtpCode(), EVENT_ID_VALIDATE,
+                validateOtpParameter.getService());
     }
 
     protected String currentTokenParamName() {
         return config.getString(ConfigKeys.OTP_CURRENT_TOKEN_PARAM_NAME, ConfigKeys.OTP_CURRENT_TOKEN_PARAM_NAME_DEFAULT);
     }
 
-    private OtpResponse sendOtpEvent(OtpFlowState otpState, String otpCode, String eventId) {
+    private OtpResponse sendOtpEvent(OtpFlowState otpState, String otpCode, String eventId, String service) {
         if (StringUtils.isEmpty(otpState.getSessionId()) ||
                 StringUtils.isEmpty(otpState.getExecution()) ||
                 StringUtils.isEmpty(otpState.getServerUrl())) {
             throw new IllegalStateException("OtpFlowState should contain all fields");
         }
 
-        List<NameValuePair> params = commonOtpParams();
+        List<NameValuePair> params = commonOtpParams(service);
         params.add(new BasicNameValuePair(EXECUTION_PARAM_NAME, otpState.getExecution()));
         params.add(new BasicNameValuePair(EVENT_ID_PARAM_NAME, eventId));
-        if (otpCode != null) {
+        if (!StringUtils.isEmpty(otpCode)) {
             params.add(new BasicNameValuePair(OTP_CODE_PARAM_NAME, otpCode));
         }
-
         return makeOtpRequest(params, otpState);
     }
 
@@ -172,8 +184,8 @@ public class OtpClient {
 
     private List<NameValuePair> commonOtpParams(String service) {
 
-        if (service == null){
-            service = config.getString(ConfigKeys.OTP_SERVICE, ConfigKeys.OTP_SERVICE_DEFAULT);
+        if (StringUtils.isEmpty(service)) {
+            service = getDefaultService();
         }
 
         List<NameValuePair> params = new ArrayList<>();
@@ -227,6 +239,10 @@ public class OtpClient {
         otpResponse.setBlockedFor(otpFlowStateJson.getView().getBlockedFor());
 
         return otpResponse;
+    }
+
+    private String getDefaultService() {
+        return config.getString(ConfigKeys.OTP_SERVICE, ConfigKeys.OTP_SERVICE_DEFAULT);
     }
 
     private OtpStatus getOtpStatus(OtpFlowStateJson otpFlowStateJson) {
