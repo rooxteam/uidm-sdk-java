@@ -11,7 +11,7 @@ import lombok.experimental.Builder;
 public class ValidateOtpParameter {
 
     /**
-     * Объект представляющий текущее состояние сценария повышения уровня авторизации.
+     * Объект представляющий текущее состояние сценария OTP.
      */
     private OtpFlowState otpFlowState;
     /**

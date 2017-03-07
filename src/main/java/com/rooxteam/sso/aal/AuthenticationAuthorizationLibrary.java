@@ -244,7 +244,7 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
     /**
      * Повторный запрос OTP.
      *
-     * @param otpFlowState Объект представляющий текущее состояние сценария повышения уровня авторизации.
+     * @param otpFlowState Объект представляющий текущее состояние сценария OTP.
      * @param timeOut      таймаут выполнения.
      * @param timeUnit     единица измерения таймаута.
      * @return OtpResponse POJO, содержащую текущий шаг, состояние, форму отправки OTP,
@@ -256,7 +256,7 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
     /**
      * Повторный запрос OTP.
      *
-     * @param otpFlowState Объект представляющий текущее состояние сценария повышения уровня авторизации.
+     * @param otpFlowState Объект представляющий текущее состояние сценария OTP.
      * @return OtpResponse POJO, содержащую текущий шаг, состояние, форму отправки OTP,
      * дополнительные параметры и результат аутентификации (Principal) в случае успеха
      */

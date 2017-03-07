@@ -11,7 +11,7 @@ import lombok.experimental.Builder;
 public class ResendOtpParameter {
 
     /**
-     * Объект представляющий текущее состояние сценария повышения уровня авторизации.
+     * Объект представляющий текущее состояние сценария OTP.
      */
     private OtpFlowState otpFlowState;
     /**
