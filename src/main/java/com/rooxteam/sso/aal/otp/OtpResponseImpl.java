@@ -16,6 +16,7 @@ public class OtpResponseImpl implements OtpResponse {
     private Principal principal;
     private Long blockedFor;
     private Exception exception;
+    private Long nextOtpCodeOperationPeriod;
 
     public OtpResponseImpl() {
     }
