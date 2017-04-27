@@ -187,7 +187,6 @@ public class SsoAuthorizationClient {
                 Object cn = jsonNode.get("sub").asText();
                 sharedIdentityProperties.put("prn", cn);
                 sharedIdentityProperties.put("sub", cn);
-                sharedIdentityProperties.put("realm", jsonNode.get("realm").asText());
                 String[] toForward = config.getStringArray(ConfigKeys.TOKEN_INFO_ATTRIBUTES_FORWARD);
                 for (String attr : toForward) {
                     if (jsonNode.has(attr)) {
