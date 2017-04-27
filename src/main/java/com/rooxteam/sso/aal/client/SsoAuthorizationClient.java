@@ -188,9 +188,6 @@ public class SsoAuthorizationClient {
                 sharedIdentityProperties.put("prn", cn);
                 sharedIdentityProperties.put("sub", cn);
                 sharedIdentityProperties.put("realm", jsonNode.get("realm").asText());
-                if (jsonNode.get("authType") != null) {
-                    sharedIdentityProperties.put("authType", jsonNode.get("authType").asText());
-                }
                 String[] toForward = config.getStringArray(ConfigKeys.TOKEN_INFO_ATTRIBUTES_FORWARD);
                 for (String attr : toForward) {
                     if (jsonNode.has(attr)) {
@@ -329,13 +326,13 @@ public class SsoAuthorizationClient {
 
         int userAuthLevel;
 
-        if (subject.isAnonymous()) {
+        if(subject.isAnonymous()){
             userAuthLevel = 0;
-        } else {
+        }else {
             List<String> authLevels = (List<String>) subject.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "authLevel");
             if (authLevels == null || authLevels.isEmpty()) {
                 userAuthLevel = 0;
-            } else {
+            }else {
                 userAuthLevel = Integer.valueOf(authLevels.get(0));
             }
         }
