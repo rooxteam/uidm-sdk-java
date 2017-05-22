@@ -50,6 +50,8 @@ public class OtpClient {
     private static final String EVENT_ID_VALIDATE = "validate";
     private static final String EVENT_ID_SEND = "send";
     private static final String SESSION_ID_COOKIE_NAME = "RX_SID";
+    private static final String NEXT_OTP_OPERATION_PERIOD_PARAM_NAME = "com.rooxteam.uidm.otp.operation.next_otp_period";
+    private static final int NEXT_OTP_OPERATION_PERIOD_DEFAULT_VALUE = 10;
 
     private Configuration config;
 
@@ -237,6 +239,7 @@ public class OtpClient {
         otpResponse.setRequiredFieldNames(otpFlowStateJson.getForm().getFields().keySet());
         otpResponse.setAvailableAttempts(otpFlowStateJson.getView().getOtpCodeAvailableAttempts());
         otpResponse.setBlockedFor(otpFlowStateJson.getView().getBlockedFor());
+        otpResponse.setNextOtpCodeOperationPeriod((long) config.getInt(NEXT_OTP_OPERATION_PERIOD_PARAM_NAME, NEXT_OTP_OPERATION_PERIOD_DEFAULT_VALUE));
 
         return otpResponse;
     }

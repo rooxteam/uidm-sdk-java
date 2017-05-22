@@ -41,4 +41,9 @@ public interface OtpResponse {
      * @return Интервал времени в секундах, на который произошла блокирова возможности отправки OTP для данного принципала.
      */
     Long getBlockedFor();
+
+    /**
+     * @return Время в секундах через которой можно будет заказать OTP под операцию.`
+     */
+    Long getNextOtpCodeOperationPeriod();
 }
