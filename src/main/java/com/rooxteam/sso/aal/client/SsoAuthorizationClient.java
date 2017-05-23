@@ -15,13 +15,11 @@ import com.rooxteam.sso.aal.exception.AuthorizationException;
 import com.rooxteam.sso.aal.utils.SsoPolicyDecisionUtils;
 import com.sun.identity.authentication.AuthContext;
 import com.sun.identity.authentication.spi.AuthLoginException;
-import com.sun.identity.policy.ActionDecision;
 import com.sun.identity.policy.PolicyDecision;
 import com.sun.identity.policy.PolicyException;
 import com.sun.identity.policy.client.PolicyEvaluator;
 import com.sun.identity.policy.client.PolicyEvaluatorFactory;
 import com.sun.identity.shared.locale.L10NMessageImpl;
-import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpStatus;
@@ -37,6 +35,7 @@ import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.NullNode;
 import org.codehaus.jackson.node.ObjectNode;
+import org.forgerock.json.jose.utils.Utils;
 
 import java.io.IOException;
 import java.util.*;
@@ -181,25 +180,24 @@ public class SsoAuthorizationClient {
 
             if (statusCode == HttpStatus.SC_OK) {
                 String responseJson = EntityUtils.toString(response.getEntity());
-                JsonNode jsonNode = jsonMapper.readTree(responseJson);
-
+                Map<String, Object> tokenClaims = Utils.parseJson(responseJson);
                 Map<String, Object> sharedIdentityProperties = new HashMap<>();
-                Object cn = jsonNode.get("sub").asText();
+                Object cn = tokenClaims.get("sub");
                 sharedIdentityProperties.put("prn", cn);
                 sharedIdentityProperties.put("sub", cn);
                 String[] toForward = config.getStringArray(ConfigKeys.TOKEN_INFO_ATTRIBUTES_FORWARD);
                 for (String attr : toForward) {
-                    if (jsonNode.has(attr)) {
-                        sharedIdentityProperties.put(attr, jsonNode.get(attr).asText());
+                    if (tokenClaims.containsKey(attr)) {
+                        sharedIdentityProperties.put(attr, tokenClaims.get(attr));
                     }
                 }
 
                 List<String> authLevel = new ArrayList<>();
-                authLevel.add(jsonNode.get("auth_level").asText());
+                authLevel.add(tokenClaims.get("auth_level").toString());
                 sharedIdentityProperties.put("authLevel", authLevel);
                 Calendar expiresIn = new GregorianCalendar();
                 expiresIn.set(Calendar.HOUR, 0);
-                expiresIn.set(Calendar.MINUTE, jsonNode.get("expires_in").asInt());
+                expiresIn.set(Calendar.MINUTE, Integer.valueOf(tokenClaims.get("expires_in").toString()));
                 expiresIn.set(Calendar.SECOND, 0);
                 principal = new PrincipalImpl(jwtToken, sharedIdentityProperties, expiresIn);
             }
@@ -325,13 +323,13 @@ public class SsoAuthorizationClient {
 
         int userAuthLevel;
 
-        if(subject.isAnonymous()){
+        if (subject.isAnonymous()) {
             userAuthLevel = 0;
-        }else {
+        } else {
             List<String> authLevels = (List<String>) subject.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "authLevel");
             if (authLevels == null || authLevels.isEmpty()) {
                 userAuthLevel = 0;
-            }else {
+            } else {
                 userAuthLevel = Integer.valueOf(authLevels.get(0));
             }
         }
