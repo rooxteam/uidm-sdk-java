@@ -2,7 +2,6 @@ package com.rooxteam.sso.aal;
 
 import com.rooxteam.sso.aal.client.TokenHelper;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
-import lombok.Getter;
 import org.forgerock.json.fluent.JsonValue;
 import org.forgerock.json.jose.common.JwtReconstruction;
 import org.forgerock.json.jose.jws.JwsAlgorithm;
@@ -17,6 +16,7 @@ import static com.rooxteam.sso.aal.AalLogger.LOG;
 
 /**
  * Represents validated non-anonymous user
+ *
  * @author Dmitry Tikhonov
  */
 public final class PrincipalImpl implements Principal {
@@ -46,7 +46,13 @@ public final class PrincipalImpl implements Principal {
     public PrincipalImpl(String publicJwtToken, Map<String, Object> sharedIdentityProperties, Calendar expirationTime) {
         this.policyContextJwtToken = publicJwtToken;
         this.publicJwtToken = publicJwtToken;
-        this.sharedIdentityProperties.putAll(sharedIdentityProperties);
+        for (Map.Entry<String, Object> entry : sharedIdentityProperties.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            if (key != null && value != null) {
+                this.sharedIdentityProperties.put(key, value);
+            }
+        }
         this.expirationTime = expirationTime;
     }
 
