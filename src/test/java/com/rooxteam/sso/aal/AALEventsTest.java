@@ -3,6 +3,7 @@ package com.rooxteam.sso.aal;
 import com.google.common.cache.Cache;
 import com.rooxteam.sso.aal.client.SsoAuthenticationClient;
 import com.rooxteam.sso.aal.client.SsoAuthorizationClient;
+import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,7 +28,7 @@ public class AALEventsTest {
     private final SsoAuthenticationClient mockSsoAuthenticationClient = mock(SsoAuthenticationClient.class);
     private final SsoAuthorizationClient mockSsoAuthorizationClient = mock(SsoAuthorizationClient.class);
     private final Cache<PrincipalKey, Principal> mockPrincipalCache = (Cache<PrincipalKey, Principal>) mock(Cache.class);
-    private final Cache<PolicyDecisionKey, Boolean> mockPolicyDecisionsCache = (Cache<PolicyDecisionKey, Boolean>) mock(Cache.class);
+    private final Cache<PolicyDecisionKey, EvaluationResponse> mockPolicyDecisionsCache = mock(Cache.class);
 
     @Before
     public void setUp() {
@@ -52,7 +53,7 @@ public class AALEventsTest {
         when(mockPrincipalCache.asMap())
                 .thenReturn(PrincipalCacheMap);
         when(mockPolicyDecisionsCache.asMap())
-                .thenReturn(new ConcurrentHashMap<PolicyDecisionKey, Boolean>());
+                .thenReturn(new ConcurrentHashMap<PolicyDecisionKey, EvaluationResponse>());
 
         aal.invalidate(mockPrincipal);
         verify(mockListener, times(1)).onInvalidate(mockPrincipal);

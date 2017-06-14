@@ -192,9 +192,18 @@ public class SsoAuthorizationClient {
                     }
                 }
 
-                List<String> authLevel = new ArrayList<>();
-                authLevel.add(tokenClaims.get("auth_level").toString());
-                sharedIdentityProperties.put("authLevel", authLevel);
+                Object authLevel = tokenClaims.get("auth_level");
+                if (authLevel != null) {
+                    sharedIdentityProperties.put("authLevel", Collections.singletonList(authLevel.toString()));
+                } else {
+                    sharedIdentityProperties.put("authLevel", Collections.emptyList());
+                }
+
+                List<String> roles = (List<String>) tokenClaims.get("roles");
+                if (roles != null) {
+                    sharedIdentityProperties.put("roles", roles);
+                }
+
                 Calendar expiresIn = new GregorianCalendar();
                 expiresIn.set(Calendar.HOUR, 0);
                 expiresIn.set(Calendar.MINUTE, Integer.valueOf(tokenClaims.get("expires_in").toString()));

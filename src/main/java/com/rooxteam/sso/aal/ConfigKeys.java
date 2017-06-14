@@ -149,6 +149,17 @@ public interface ConfigKeys {
     int POLICY_CACHE_EXPIRE_AFTER_WRITE_DEFAULT = 60;
 
     /**
+     * {@value} - Должны ли применяться политики для систем.
+     * По умолчанию: {@value #POLICIES_FOR_SYSTEM_DEFAULT}
+     */
+    String POLICIES_FOR_SYSTEM = "com.rooxteam.aal.policy.enabledForSystem";
+
+    /**
+     * Значение по умолчанию для включения политик для систем.
+     */
+    boolean POLICIES_FOR_SYSTEM_DEFAULT = false;
+
+    /**
      * {@value} - Максимальный размер кеша аутентификаций.
      * По умолчанию: {@value #PRINCIPAL_CACHE_LIMIT_DEFAULT}
      */
