@@ -2,9 +2,6 @@ package com.rooxteam.sso.aal;
 
 import com.iplanet.sso.SSOException;
 import com.rooxteam.sso.aal.otp.OtpFlowState;
-import com.sun.identity.authentication.AuthContext;
-import com.sun.identity.authentication.spi.AuthLoginException;
-import com.sun.identity.policy.PolicyException;
 import com.sun.identity.shared.locale.L10NMessageImpl;
 import org.apache.http.HttpResponse;
 import org.jboss.logging.BasicLogger;
@@ -40,7 +37,7 @@ public interface AalLogger extends BasicLogger {
     @LogMessage(level = ERROR)
     @Message(id = 3001, format = MESSAGE_FORMAT,
             value = "Authentication login exception. For details see cause.")
-    void errorAuthLogin(@Cause AuthLoginException e);
+    void errorAuthLogin(@Cause Exception e);
 
     @LogMessage(level = ERROR)
     @Message(id = 3002, format = MESSAGE_FORMAT,
@@ -50,12 +47,12 @@ public interface AalLogger extends BasicLogger {
     @LogMessage(level = ERROR)
     @Message(id = 3003, format = MESSAGE_FORMAT,
             value = "Login exception. For details see cause.")
-    void errorLogin(@Cause AuthLoginException loginException);
+    void errorLogin(@Cause Exception loginException);
 
     @LogMessage(level = ERROR)
     @Message(id = 3004, format = MESSAGE_FORMAT,
             value = "Exception during getting policy evaluator for service {0}. For details see cause.")
-    void errorCreateEvaluator(String webAgentServiceName, @Cause PolicyException e);
+    void errorCreateEvaluator(String webAgentServiceName, @Cause Exception e);
 
     @LogMessage(level = ERROR)
     @Message(id = 3005, format = MESSAGE_FORMAT,
@@ -149,7 +146,7 @@ public interface AalLogger extends BasicLogger {
     @Message(id = 3034, format = MESSAGE_FORMAT,
             value = "Got error while authentication.\n" +
                     "Unexpected status after authentication in SSO: ''{0}''")
-    void errorUnexpectedStateAfterAuthenticationInSso(AuthContext.Status status);
+    void errorUnexpectedStateAfterAuthenticationInSso(String status);
 
     @LogMessage(level = ERROR)
     @Message(id = 3035, format = MESSAGE_FORMAT,

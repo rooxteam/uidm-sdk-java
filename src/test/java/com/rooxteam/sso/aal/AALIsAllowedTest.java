@@ -3,7 +3,7 @@ package com.rooxteam.sso.aal;
 import com.google.common.cache.Cache;
 import com.iplanet.sso.SSOToken;
 import com.rooxteam.sso.aal.client.SsoAuthenticationClient;
-import com.rooxteam.sso.aal.client.SsoAuthorizationClient;
+import com.rooxteam.sso.aal.client.SsoAuthorizationClientByToken;
 import com.rooxteam.sso.aal.client.model.Decision;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import org.junit.Before;
@@ -26,7 +26,7 @@ public class AALIsAllowedTest {
     private RooxAuthenticationAuthorizationLibrary aal;
     private final Cache<PolicyDecisionKey, EvaluationResponse> mockPolicyDecisionsCache = mock(Cache.class);
     private final Cache<PrincipalKey, Principal> mockPrincipalCache = (Cache<PrincipalKey, Principal>) mock(Cache.class);
-    private final SsoAuthorizationClient mockSsoAuthorizationClient = mock(SsoAuthorizationClient.class);
+    private final SsoAuthorizationClientByToken mockSsoAuthorizationClient = mock(SsoAuthorizationClientByToken.class);
     private final SsoAuthenticationClient mockSsoAuthenticationClient = mock(SsoAuthenticationClient.class);
 
     @Before

@@ -381,7 +381,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
                 break;
             }
             case CONFIG: {
-                result = ssoAuthorizationClient.isActionOnResourceAllowedByConfigPolicy(subject, key.getResourceName(), key.getActionName());
+                result = ssoAuthorizationClient.isActionOnResourceAllowedByPolicy(subject, key.getResourceName(), key.getActionName());
                 break;
             }
         }

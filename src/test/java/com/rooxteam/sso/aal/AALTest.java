@@ -3,14 +3,12 @@ package com.rooxteam.sso.aal;
 import com.iplanet.sso.SSOException;
 import com.rooxteam.sso.aal.client.OtpClient;
 import com.rooxteam.sso.aal.client.SsoAuthenticationClient;
-import com.rooxteam.sso.aal.client.SsoAuthorizationClient;
+import com.rooxteam.sso.aal.client.SsoAuthorizationClientByToken;
 import com.rooxteam.sso.aal.otp.OtpFlowState;
 import com.rooxteam.sso.aal.otp.OtpFlowStateImpl;
 import com.rooxteam.sso.aal.otp.OtpResponse;
 import com.rooxteam.sso.aal.otp.OtpResponseImpl;
 import com.sun.identity.policy.PolicyException;
-import org.apache.commons.configuration.BaseConfiguration;
-import org.apache.commons.configuration.Configuration;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -31,7 +29,7 @@ public class AALTest {
     @Test
     public void authenticate_EmptyParamMap_IllegalArgumentException() throws SSOException, PolicyException {
 
-        final SsoAuthorizationClient mockSsoAuthorizationClient = mock(SsoAuthorizationClient.class);
+        final SsoAuthorizationClientByToken mockSsoAuthorizationClient = mock(SsoAuthorizationClientByToken.class);
         final SsoAuthenticationClient mockSsoAuthenticationClient = mock(SsoAuthenticationClient.class);
         AuthenticationAuthorizationLibrary aal = new RooxAuthenticationAuthorizationLibrary(null, mockSsoAuthorizationClient, mockSsoAuthenticationClient,
                 null, null, null, null, null, AuthorizationType.SSO_TOKEN);

@@ -2,7 +2,7 @@ package com.rooxteam.sso.aal;
 
 import com.google.common.cache.RemovalNotification;
 import com.iplanet.sso.SSOToken;
-import com.rooxteam.sso.aal.client.SsoAuthorizationClient;
+import com.rooxteam.sso.aal.client.SsoAuthorizationClientByToken;
 
 /**
  * Invalidates cached SSO session on YotaPrincipal removal from cache
@@ -10,9 +10,9 @@ import com.rooxteam.sso.aal.client.SsoAuthorizationClient;
 public class SSOSessionInvalidator implements com.google.common.cache.RemovalListener<YotaPrincipalKey, YotaPrincipal> {
 
 
-    SsoAuthorizationClient authorizationClient;
+    SsoAuthorizationClientByToken authorizationClient;
 
-    public SSOSessionInvalidator(SsoAuthorizationClient authorizationClient) {
+    public SSOSessionInvalidator(SsoAuthorizationClientByToken authorizationClient) {
         this.authorizationClient = authorizationClient;
     }
 

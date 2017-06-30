@@ -8,6 +8,7 @@ import com.rooxteam.jwt.StringClaimChecker;
 import com.rooxteam.sso.aal.client.*;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.NoConnectionReuseStrategy;
@@ -15,6 +16,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 
@@ -32,6 +34,12 @@ public class AalFactory {
     public static final String MISSING_PROPERTY_IN_CONFIGURATION = "Missing property ''{0}'' in configuration.";
     private static final String OPENAM_CACHE_MODE = "com.sun.identity.policy.client.cacheMode";
     private static final String OPENAM_CACHE_MODE_SELF = "self";
+
+    /**
+     * Значение переменной должно быть указано в целевом проекте.
+     * Значением является одна из реализаций интерфейса {@link SsoAuthorizationClient}
+     */
+    private static final String SSO_AUTHORIZATION_CLIENT_CLASS_NAME = "com.rooxteam.sso.aal.authorization_client_class_name";
 
     private AalFactory() {
     }
@@ -51,51 +59,25 @@ public class AalFactory {
 
         Timer pollingTimer = new Timer("RX Polling Timer", true);
 
-        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-        connectionManager.setMaxTotal(config.getInt(HTTP_CONNECTION_POOL_SIZE, HTTP_CONNECTION_POOL_SIZE_DEFAULT));
-        connectionManager.setDefaultMaxPerRoute(config.getInt(HTTP_CONNECTION_POOL_SIZE_PER_ROUTE, HTTP_CONNECTION_POOL_SIZE_PER_ROUTE_DEFAULT));
-        RequestConfig requestConfig = RequestConfig.custom()
-                .setSocketTimeout(config.getInt(HTTP_SOCKET_TIMEOUT, HTTP_SOCKET_TIMEOUT_DEFAULT))
-                .setConnectTimeout(config.getInt(HTTP_CONNECTION_TIMEOUT, HTTP_CONNECTION_TIMEOUT_DEFAULT))
-                .build();
+        PoolingHttpClientConnectionManager connectionManager = createConnectionManager(config);
 
-        org.apache.http.ConnectionReuseStrategy reuseStrategy = null;
+        RequestConfig requestConfig = createRequestConfig(config);
 
-
-        String reuseStrategyString = config.getString(CONNECTION_REUSE_STRATEGY, CONNECTION_REUSE_STRATEGY_DEFAULT);
-        ConnectionReuseStrategy connectionReuseStrategy = ConnectionReuseStrategy.valueOf(reuseStrategyString);
-        if (connectionReuseStrategy == ConnectionReuseStrategy.NO_REUSE) {
-            reuseStrategy = new NoConnectionReuseStrategy();
+        org.apache.http.ConnectionReuseStrategy reuseStrategy = createReuseStrategy(config);
+        if (reuseStrategy == null) {
+            throw new IllegalArgumentException();
         }
 
-        if (connectionReuseStrategy == ConnectionReuseStrategy.KEEP_ALIVE) {
-            reuseStrategy = new DefaultConnectionReuseStrategy();
-        }
+        CloseableHttpClient httpClient = createHttpClient(reuseStrategy, config, requestConfig, connectionManager);
 
-        CloseableHttpClient httpClient = HttpClientBuilder.create()
-                .setConnectionManager(connectionManager)
-                .setDefaultRequestConfig(requestConfig)
-                .addInterceptorLast(new MonitoringHttpClientRequestInterceptor(config))
-                .setConnectionReuseStrategy(reuseStrategy)
-                .build();
-
-        SsoAuthorizationClient authorizationClient = new SsoAuthorizationClient(config, httpClient);
+        SsoAuthorizationClient authorizationClient = createSsoAuthorizationClient(config, httpClient);
         SsoAuthenticationClient authenticationClient = new SsoAuthenticationClient(config, httpClient);
         SsoTokenClient tokenClient = new SsoTokenClient(config, httpClient);
         OtpClient otpClient = new OtpClient(config, httpClient);
 
         Cache<PrincipalKey, Principal> principalCache = initPrincipalsCache(config, authorizationClient);
         Cache<PolicyDecisionKey, EvaluationResponse> isAllowedPolicyDecisionsCache = initPoliciesCache(config);
-
-        String sharedKey = config.getString(SHARED_KEY);
-        NbfClaimChecker nbfClaimChecker = new NbfClaimChecker();
-        IatClaimChecker iatClaimChecker = new IatClaimChecker();
-        String issuer = config.getString(JWT_ISSUER);
-        if (issuer == null) {
-            throw new IllegalStateException(format(MISSING_PROPERTY_IN_CONFIGURATION, JWT_ISSUER));
-        }
-        StringClaimChecker issuerClaimChecker = new StringClaimChecker("iss", issuer, true);
-        JwtValidator jwtValidator = new JwtValidator(sharedKey, nbfClaimChecker, iatClaimChecker, issuerClaimChecker);
+        JwtValidator jwtValidator = createJwtValidator(config);
 
         RooxAuthenticationAuthorizationLibrary aal = new RooxAuthenticationAuthorizationLibrary(pollingTimer,
                 authorizationClient,
@@ -113,6 +95,87 @@ public class AalFactory {
         }
 
         return aal;
+    }
+
+
+    private static PoolingHttpClientConnectionManager createConnectionManager(Configuration config) {
+        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+        connectionManager.setMaxTotal(config.getInt(HTTP_CONNECTION_POOL_SIZE, HTTP_CONNECTION_POOL_SIZE_DEFAULT));
+        connectionManager.setDefaultMaxPerRoute(config.getInt(HTTP_CONNECTION_POOL_SIZE_PER_ROUTE, HTTP_CONNECTION_POOL_SIZE_PER_ROUTE_DEFAULT));
+
+        return connectionManager;
+    }
+
+    private static RequestConfig createRequestConfig(Configuration config) {
+        return RequestConfig.custom()
+                .setSocketTimeout(config.getInt(HTTP_SOCKET_TIMEOUT, HTTP_SOCKET_TIMEOUT_DEFAULT))
+                .setConnectTimeout(config.getInt(HTTP_CONNECTION_TIMEOUT, HTTP_CONNECTION_TIMEOUT_DEFAULT))
+                .build();
+    }
+
+    private static org.apache.http.ConnectionReuseStrategy createReuseStrategy(Configuration config) {
+        String reuseStrategyString = config.getString(CONNECTION_REUSE_STRATEGY, CONNECTION_REUSE_STRATEGY_DEFAULT);
+        ConnectionReuseStrategy connectionReuseStrategy = ConnectionReuseStrategy.valueOf(reuseStrategyString);
+        if (connectionReuseStrategy == ConnectionReuseStrategy.NO_REUSE) {
+            return new NoConnectionReuseStrategy();
+        }
+
+        if (connectionReuseStrategy == ConnectionReuseStrategy.KEEP_ALIVE) {
+            return new DefaultConnectionReuseStrategy();
+        }
+
+        return null;
+    }
+
+    private static CloseableHttpClient createHttpClient(org.apache.http.ConnectionReuseStrategy reuseStrategy,
+                                                        Configuration config,
+                                                        RequestConfig requestConfig,
+                                                        PoolingHttpClientConnectionManager connectionManager
+    ) {
+        return HttpClientBuilder.create()
+                .setConnectionManager(connectionManager)
+                .setDefaultRequestConfig(requestConfig)
+                .addInterceptorLast(new MonitoringHttpClientRequestInterceptor(config))
+                .setConnectionReuseStrategy(reuseStrategy)
+                .build();
+    }
+
+    private static JwtValidator createJwtValidator(Configuration config) {
+        String sharedKey = config.getString(SHARED_KEY);
+        NbfClaimChecker nbfClaimChecker = new NbfClaimChecker();
+        IatClaimChecker iatClaimChecker = new IatClaimChecker();
+        String issuer = config.getString(JWT_ISSUER);
+        if (issuer == null) {
+            throw new IllegalStateException(format(MISSING_PROPERTY_IN_CONFIGURATION, JWT_ISSUER));
+        }
+        StringClaimChecker issuerClaimChecker = new StringClaimChecker("iss", issuer, true);
+        return new JwtValidator(sharedKey, nbfClaimChecker, iatClaimChecker, issuerClaimChecker);
+    }
+
+    private static SsoAuthorizationClient createSsoAuthorizationClient(Configuration config, CloseableHttpClient httpClient) {
+        String classNameStringValue = config.getString(SSO_AUTHORIZATION_CLIENT_CLASS_NAME, StringUtils.EMPTY);
+        if (StringUtils.isBlank(classNameStringValue)) {
+            return null;
+        }
+
+        SsoAuthorizationClient ssoAuthorizationClient = null;
+        Class aClass;
+        try {
+            aClass = Class.forName(classNameStringValue);
+        } catch (ClassNotFoundException e) {
+            throw new IllegalArgumentException(e);
+        }
+
+        try {
+            ssoAuthorizationClient =
+                    (SsoAuthorizationClient) aClass
+                            .getConstructor(Configuration.class, CloseableHttpClient.class)
+                            .newInstance(config, httpClient);
+        } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
+            throw new IllegalArgumentException("Fail while creating policy provider. Check authorization_client_class_name property.");
+        }
+
+        return ssoAuthorizationClient;
     }
 
     private static void setOpenamSystemProperties(Configuration config) {
