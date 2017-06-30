@@ -11,4 +11,5 @@ public class View {
     private int otpCodeAvailableAttempts;
     private String msisdn;
     private Long blockedFor;
+    private Long otpCodeNumber;
 }
