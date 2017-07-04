@@ -20,7 +20,7 @@ public class AuthorizationClientTest {
         final AuthContext mockAuthContext = mock(AuthContext.class);
         Configuration config = new BaseConfiguration();
         CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
-        SsoAuthorizationClient client = new SsoAuthorizationClientByToken(config, httpClient) {
+        SsoAuthorizationClientBySSOToken client = new SsoAuthorizationClientBySSOToken(config, httpClient) {
             public AuthContext initAuthContext() {
                 return mockAuthContext;
             }

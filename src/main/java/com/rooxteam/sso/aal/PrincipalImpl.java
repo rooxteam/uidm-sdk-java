@@ -102,7 +102,7 @@ public final class PrincipalImpl implements Principal {
      *
      * @return JWT токен, хранящий текущее состояние аутентификации
      */
-    String getPrivateJwtToken() {
+    public String getPrivateJwtToken() {
         return policyContextJwtToken;
     }
 

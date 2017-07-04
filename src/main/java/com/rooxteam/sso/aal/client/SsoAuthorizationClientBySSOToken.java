@@ -2,10 +2,10 @@ package com.rooxteam.sso.aal.client;
 
 import com.iplanet.sso.SSOException;
 import com.iplanet.sso.SSOToken;
-import com.iplanet.sso.SSOTokenManager;
 import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.PrincipalImpl;
+import com.rooxteam.sso.aal.PropertyScope;
 import com.rooxteam.sso.aal.client.exception.NotSupportedException;
 import com.rooxteam.sso.aal.client.model.Decision;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
@@ -18,6 +18,7 @@ import com.sun.identity.policy.PolicyException;
 import com.sun.identity.policy.client.PolicyEvaluator;
 import com.sun.identity.policy.client.PolicyEvaluatorFactory;
 import com.sun.identity.shared.locale.L10NMessageImpl;
+import com.sun.istack.internal.Nullable;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpStatus;
@@ -28,9 +29,6 @@ import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.node.NullNode;
 import org.forgerock.json.jose.utils.Utils;
 
 import java.io.IOException;
@@ -41,9 +39,7 @@ import static com.rooxteam.sso.aal.AalLogger.LOG;
 /**
  * @author Dmitry Tikhonov
  */
-public class SsoAuthorizationClientByToken implements SsoAuthorizationClient {
-
-    private final ObjectMapper jsonMapper = new ObjectMapper();
+public class SsoAuthorizationClientBySSOToken implements SsoAuthorizationClient {
 
     private static final String USER_ORGANIZATION_NAME = "customer";
     private static final String AUTHENTICATION_INDEX_NAME = "uidm";
@@ -52,26 +48,13 @@ public class SsoAuthorizationClientByToken implements SsoAuthorizationClient {
     private static final String TOKEN_INFO_PATH = "/oauth2/tokeninfo";
     private final Configuration config;
     private CloseableHttpClient httpClient;
-    private JsonNode localPolicies = NullNode.getInstance();
 
-    public SsoAuthorizationClientByToken(Configuration rooxConfig, CloseableHttpClient httpClient) {
+    public SsoAuthorizationClientBySSOToken(Configuration rooxConfig, CloseableHttpClient httpClient) {
         config = rooxConfig;
         this.httpClient = httpClient;
-        initPolicies();
     }
 
-    private void initPolicies() {
-        String policiesStr = config.getString(ConfigKeys.LOCAL_POLICIES);
-        try {
-            if (policiesStr != null) {
-                localPolicies = jsonMapper.readTree(policiesStr);
-            }
-        } catch (IOException e) {
-            throw new AuthorizationException("Failed to read config property '" + ConfigKeys.LOCAL_POLICIES + "'", e);
-        }
-    }
-
-    @Override
+    @Nullable
     public SSOToken authenticateByJwt(String jwt) {
         try {
             AuthContext authContext = initAuthContext();
@@ -99,32 +82,33 @@ public class SsoAuthorizationClientByToken implements SsoAuthorizationClient {
     }
 
     @Override
-    public EvaluationResponse isActionOnResourceAllowedByPolicy(SSOToken ssoToken, String resource, String method) {
+    public EvaluationResponse isActionOnResourceAllowedByPolicy(Principal subject, String resourceName, String actionName) {
+        SSOToken ssoToken = getSsoToken(subject);
 
         if (ssoToken == null) {
             LOG.warnNullSsoToken();
-            throw new IllegalArgumentException("Authorization token is not supplied");
+            return new EvaluationResponse(Decision.Deny);
         }
 
-        if (StringUtils.isEmpty(resource)) {
+        if (StringUtils.isEmpty(resourceName)) {
             LOG.warnNullResource();
             throw new IllegalArgumentException("Resource name is not supplied");
         }
 
-        if (StringUtils.isEmpty(method)) {
+        if (StringUtils.isEmpty(actionName)) {
             LOG.warnNullMethod();
             throw new IllegalArgumentException("Method name is not supplied");
         }
 
         try {
             PolicyEvaluator policyEvaluator = PolicyEvaluatorFactory.getInstance().getPolicyEvaluator(WEB_AGENT_SERVICE_NAME);
-            PolicyDecision policyDecision = policyEvaluator.getPolicyDecision(ssoToken, resource, Collections.singleton(method));
+            PolicyDecision policyDecision = policyEvaluator.getPolicyDecision(ssoToken, resourceName, Collections.singleton(actionName));
 
             if (policyDecision.getActionDecisions().isEmpty()) {
                 boolean allow = config.getBoolean(ConfigKeys.ALLOW_ACCESS_WITHOUT_POLICY, ConfigKeys.ALLOW_ACCESS_WITHOUT_POLICY_DEFAULT);
                 return new EvaluationResponse(Decision.fromAllow(allow), Collections.<String, String>emptyMap());
             } else {
-                return SsoPolicyDecisionUtils.toEvaluationResponse(policyDecision, method);
+                return SsoPolicyDecisionUtils.toEvaluationResponse(policyDecision, actionName);
             }
         } catch (PolicyException e) {
             LOG.errorCreateEvaluator(WEB_AGENT_SERVICE_NAME, e);
@@ -135,25 +119,50 @@ public class SsoAuthorizationClientByToken implements SsoAuthorizationClient {
         }
     }
 
-    @Override
-    public void invalidateSSOSession(SSOToken ssoToken) {
-        try {
-            SSOTokenManager.getInstance().destroyToken(ssoToken);
-        } catch (Exception e) {
-            LOG.traceFailedToInvalidateSSOToken(e);
+    @Nullable
+    private SSOToken getSsoToken(Principal subject) {
+        SSOToken ssoToken = (SSOToken) subject.getProperty(PropertyScope.PRIVATE_IDENTITY_PARAMS, Principal.SESSION_PARAM);
+
+        if (ssoToken != null) {
+            LOG.traceHasSSOTokenInPrincipal();
+            try {
+                if (ssoToken.getTimeLeft() < 0) {
+                    LOG.traceSSOTokenExpired();
+                    ssoToken = null;
+                } else {
+                    LOG.traceSSOTokenInPrincipalNotExpired();
+                }
+            } catch (Exception e) {
+                LOG.traceFailedToGetSSOTimeLeft(e);
+            }
         }
+        if (ssoToken == null) {
+            String jwt = null;
+            if (subject instanceof PrincipalImpl) {
+                jwt = ((PrincipalImpl) subject).getPrivateJwtToken();
+            } else {
+                jwt = subject.getJwtToken();
+            }
+            LOG.traceNoSSOTokenInPrincipal();
+            ssoToken = authenticateByJwt(jwt);
+            if (ssoToken != null) {
+                subject.setProperty(PropertyScope.PRIVATE_IDENTITY_PARAMS, Principal.SESSION_PARAM, ssoToken);
+            }
+        }
+
+        return ssoToken;
     }
 
     /**
      * Token validation
      *
-     * @param jwtToken Token value
+     * @param token Token value
      * @return True if token is valid
      */
     @Override
-    public Principal validate(final String jwtToken) {
+    public Principal validate(final String token) {
 
-        if (jwtToken == null) {
+        if (token == null) {
             LOG.warnNullSsoToken();
             return null;
         }
@@ -161,7 +170,7 @@ public class SsoAuthorizationClientByToken implements SsoAuthorizationClient {
         try {
             String url = config.getString(ConfigKeys.SSO_URL) + TOKEN_INFO_PATH;
             List<NameValuePair> params = new ArrayList<>();
-            params.add(new BasicNameValuePair("access_token", jwtToken));
+            params.add(new BasicNameValuePair("access_token", token));
             HttpPost post = HttpHelper.getHttpPost(url, params);
             HttpClientContext context = new HttpClientContext();
             CloseableHttpResponse response = httpClient.execute(post, context);
@@ -199,7 +208,7 @@ public class SsoAuthorizationClientByToken implements SsoAuthorizationClient {
                 expiresIn.set(Calendar.HOUR, 0);
                 expiresIn.set(Calendar.MINUTE, Integer.valueOf(tokenClaims.get("expires_in").toString()));
                 expiresIn.set(Calendar.SECOND, 0);
-                principal = new PrincipalImpl(jwtToken, sharedIdentityProperties, expiresIn);
+                principal = new PrincipalImpl(token, sharedIdentityProperties, expiresIn);
             }
             return principal;
         } catch (IOException e) {
@@ -212,12 +221,7 @@ public class SsoAuthorizationClientByToken implements SsoAuthorizationClient {
     }
 
     @Override
-    public EvaluationResponse isActionOnResourceAllowedByPolicy(String jwtToken, String resource, String method, Map<String, ?> env) {
-        throw new NotSupportedException();
-    }
-
-    @Override
-    public EvaluationResponse isActionOnResourceAllowedByPolicy(Principal subject, String resourceName, String actionName) {
+    public EvaluationResponse isActionOnResourceAllowedByPolicy(String token, String resource, String method, Map<String, ?> env) {
         throw new NotSupportedException();
     }
 }

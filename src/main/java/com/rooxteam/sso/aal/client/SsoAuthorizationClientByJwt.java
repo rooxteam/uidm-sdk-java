@@ -1,8 +1,6 @@
 package com.rooxteam.sso.aal.client;
 
 import com.google.common.collect.ImmutableMap;
-import com.iplanet.sso.SSOToken;
-import com.iplanet.sso.SSOTokenManager;
 import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.PrincipalImpl;
@@ -24,7 +22,6 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.node.NullNode;
 import org.codehaus.jackson.node.ObjectNode;
 import org.forgerock.json.jose.utils.Utils;
 
@@ -44,49 +41,22 @@ public class SsoAuthorizationClientByJwt implements SsoAuthorizationClient {
     private static final String TOKEN_INFO_PATH = "/oauth2/tokeninfo";
     private final Configuration config;
     private CloseableHttpClient httpClient;
-    private JsonNode localPolicies = NullNode.getInstance();
 
     public SsoAuthorizationClientByJwt(Configuration rooxConfig, CloseableHttpClient httpClient) {
         config = rooxConfig;
         this.httpClient = httpClient;
-        initPolicies();
-    }
-
-    private void initPolicies() {
-        String policiesStr = config.getString(ConfigKeys.LOCAL_POLICIES);
-        try {
-            if (policiesStr != null) {
-                localPolicies = jsonMapper.readTree(policiesStr);
-            }
-        } catch (IOException e) {
-            throw new AuthorizationException("Failed to read config property '" + ConfigKeys.LOCAL_POLICIES + "'", e);
-        }
-    }
-
-    @Override
-    public EvaluationResponse isActionOnResourceAllowedByPolicy(SSOToken ssoToken, String resource, String method) {
-        throw new NotSupportedException();
-    }
-
-    @Override
-    public void invalidateSSOSession(SSOToken ssoToken) {
-        try {
-            SSOTokenManager.getInstance().destroyToken(ssoToken);
-        } catch (Exception e) {
-            LOG.traceFailedToInvalidateSSOToken(e);
-        }
     }
 
     /**
      * Token validation
      *
-     * @param jwtToken Token value
+     * @param token Token value
      * @return True if token is valid
      */
     @Override
-    public Principal validate(final String jwtToken) {
+    public Principal validate(final String token) {
 
-        if (jwtToken == null) {
+        if (token == null) {
             LOG.warnNullSsoToken();
             return null;
         }
@@ -94,7 +64,7 @@ public class SsoAuthorizationClientByJwt implements SsoAuthorizationClient {
         try {
             String url = config.getString(ConfigKeys.SSO_URL) + TOKEN_INFO_PATH;
             List<NameValuePair> params = new ArrayList<>();
-            params.add(new BasicNameValuePair("access_token", jwtToken));
+            params.add(new BasicNameValuePair("access_token", token));
             HttpPost post = HttpHelper.getHttpPost(url, params);
             HttpClientContext context = new HttpClientContext();
             CloseableHttpResponse response = httpClient.execute(post, context);
@@ -132,7 +102,7 @@ public class SsoAuthorizationClientByJwt implements SsoAuthorizationClient {
                 expiresIn.set(Calendar.HOUR, 0);
                 expiresIn.set(Calendar.MINUTE, Integer.valueOf(tokenClaims.get("expires_in").toString()));
                 expiresIn.set(Calendar.SECOND, 0);
-                principal = new PrincipalImpl(jwtToken, sharedIdentityProperties, expiresIn);
+                principal = new PrincipalImpl(token, sharedIdentityProperties, expiresIn);
             }
             return principal;
         } catch (IOException e) {
@@ -145,8 +115,8 @@ public class SsoAuthorizationClientByJwt implements SsoAuthorizationClient {
     }
 
     @Override
-    public EvaluationResponse isActionOnResourceAllowedByPolicy(String jwtToken, String resource, String method, Map<String, ?> env) {
-        if (jwtToken == null) {
+    public EvaluationResponse isActionOnResourceAllowedByPolicy(String token, String resource, String method, Map<String, ?> env) {
+        if (token == null) {
             LOG.warnNullSsoToken();
             throw new IllegalArgumentException("Authorization token is not supplied");
         }
@@ -167,7 +137,7 @@ public class SsoAuthorizationClientByJwt implements SsoAuthorizationClient {
         try {
             String url = config.getString(ConfigKeys.SSO_URL) + IS_ALLOWED_PATH;
             HttpPost post = HttpHelper.getHttpPostWithJsonBody(url, jsonMapper.writeValueAsString(evaluationContext));
-            post.addHeader("Authorization", "Bearer " + jwtToken);
+            post.addHeader("Authorization", "Bearer " + token);
             return doIsAllowedPost(post);
         } catch (IOException e) {
             LOG.errorAuthentication(e);
@@ -250,10 +220,4 @@ public class SsoAuthorizationClientByJwt implements SsoAuthorizationClient {
     public EvaluationResponse isActionOnResourceAllowedByPolicy(Principal subject, String resourceName, String actionName) {
         throw new NotSupportedException();
     }
-
-    @Override
-    public SSOToken authenticateByJwt(String jwt) {
-        throw new NotSupportedException();
-    }
-
 }

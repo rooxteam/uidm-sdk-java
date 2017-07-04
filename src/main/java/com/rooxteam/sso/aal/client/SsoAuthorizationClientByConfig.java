@@ -1,7 +1,5 @@
 package com.rooxteam.sso.aal.client;
 
-import com.iplanet.sso.SSOToken;
-import com.iplanet.sso.SSOTokenManager;
 import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.PrincipalImpl;
@@ -58,30 +56,16 @@ public class SsoAuthorizationClientByConfig implements SsoAuthorizationClient {
         }
     }
 
-    @Override
-    public EvaluationResponse isActionOnResourceAllowedByPolicy(SSOToken ssoToken, String resource, String method) {
-        throw new NotSupportedException();
-    }
-
-    @Override
-    public void invalidateSSOSession(SSOToken ssoToken) {
-        try {
-            SSOTokenManager.getInstance().destroyToken(ssoToken);
-        } catch (Exception e) {
-            LOG.traceFailedToInvalidateSSOToken(e);
-        }
-    }
-
     /**
      * Token validation
      *
-     * @param jwtToken Token value
+     * @param token Token value
      * @return True if token is valid
      */
     @Override
-    public Principal validate(final String jwtToken) {
+    public Principal validate(final String token) {
 
-        if (jwtToken == null) {
+        if (token == null) {
             LOG.warnNullSsoToken();
             return null;
         }
@@ -89,7 +73,7 @@ public class SsoAuthorizationClientByConfig implements SsoAuthorizationClient {
         try {
             String url = config.getString(ConfigKeys.SSO_URL) + TOKEN_INFO_PATH;
             List<NameValuePair> params = new ArrayList<>();
-            params.add(new BasicNameValuePair("access_token", jwtToken));
+            params.add(new BasicNameValuePair("access_token", token));
             HttpPost post = HttpHelper.getHttpPost(url, params);
             HttpClientContext context = new HttpClientContext();
             CloseableHttpResponse response = httpClient.execute(post, context);
@@ -127,7 +111,7 @@ public class SsoAuthorizationClientByConfig implements SsoAuthorizationClient {
                 expiresIn.set(Calendar.HOUR, 0);
                 expiresIn.set(Calendar.MINUTE, Integer.valueOf(tokenClaims.get("expires_in").toString()));
                 expiresIn.set(Calendar.SECOND, 0);
-                principal = new PrincipalImpl(jwtToken, sharedIdentityProperties, expiresIn);
+                principal = new PrincipalImpl(token, sharedIdentityProperties, expiresIn);
             }
             return principal;
         } catch (IOException e) {
@@ -140,7 +124,7 @@ public class SsoAuthorizationClientByConfig implements SsoAuthorizationClient {
     }
 
     @Override
-    public EvaluationResponse isActionOnResourceAllowedByPolicy(String jwtToken, String resource, String method, Map<String, ?> env) {
+    public EvaluationResponse isActionOnResourceAllowedByPolicy(String token, String resource, String method, Map<String, ?> env) {
         throw new NotSupportedException();
     }
 
@@ -195,11 +179,6 @@ public class SsoAuthorizationClientByConfig implements SsoAuthorizationClient {
             }
         }
         return policyAuthLevelNode;
-    }
-
-    @Override
-    public SSOToken authenticateByJwt(String jwt) {
-        throw new NotSupportedException();
     }
 
 }

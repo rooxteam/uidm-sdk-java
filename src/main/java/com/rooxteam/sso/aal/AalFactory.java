@@ -8,7 +8,6 @@ import com.rooxteam.jwt.StringClaimChecker;
 import com.rooxteam.sso.aal.client.*;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import org.apache.commons.configuration.Configuration;
-import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.NoConnectionReuseStrategy;
@@ -34,12 +33,6 @@ public class AalFactory {
     public static final String MISSING_PROPERTY_IN_CONFIGURATION = "Missing property ''{0}'' in configuration.";
     private static final String OPENAM_CACHE_MODE = "com.sun.identity.policy.client.cacheMode";
     private static final String OPENAM_CACHE_MODE_SELF = "self";
-
-    /**
-     * Значение переменной должно быть указано в целевом проекте.
-     * Значением является одна из реализаций интерфейса {@link SsoAuthorizationClient}
-     */
-    private static final String SSO_AUTHORIZATION_CLIENT_CLASS_NAME = "com.rooxteam.sso.aal.authorization_client_class_name";
 
     private AalFactory() {
     }
@@ -70,7 +63,7 @@ public class AalFactory {
 
         CloseableHttpClient httpClient = createHttpClient(reuseStrategy, config, requestConfig, connectionManager);
 
-        SsoAuthorizationClient authorizationClient = createSsoAuthorizationClient(config, httpClient);
+        SsoAuthorizationClient authorizationClient = createSsoAuthorizationClient(authorizationType, config, httpClient);
         SsoAuthenticationClient authenticationClient = new SsoAuthenticationClient(config, httpClient);
         SsoTokenClient tokenClient = new SsoTokenClient(config, httpClient);
         OtpClient otpClient = new OtpClient(config, httpClient);
@@ -152,11 +145,10 @@ public class AalFactory {
         return new JwtValidator(sharedKey, nbfClaimChecker, iatClaimChecker, issuerClaimChecker);
     }
 
-    private static SsoAuthorizationClient createSsoAuthorizationClient(Configuration config, CloseableHttpClient httpClient) {
-        String classNameStringValue = config.getString(SSO_AUTHORIZATION_CLIENT_CLASS_NAME, StringUtils.EMPTY);
-        if (StringUtils.isBlank(classNameStringValue)) {
-            return null;
-        }
+    private static SsoAuthorizationClient createSsoAuthorizationClient(AuthorizationType authorizationType,
+                                                                       Configuration config,
+                                                                       CloseableHttpClient httpClient) {
+        String classNameStringValue = getSsoAuthorizationClientName(authorizationType);
 
         SsoAuthorizationClient ssoAuthorizationClient = null;
         Class aClass;
@@ -176,6 +168,21 @@ public class AalFactory {
         }
 
         return ssoAuthorizationClient;
+    }
+
+    private static String getSsoAuthorizationClientName(AuthorizationType authorizationType) {
+        switch (authorizationType) {
+            default:
+            case SSO_TOKEN: {
+                return "com.rooxteam.sso.aal.client.SsoAuthorizationClientBySSOToken";
+            }
+            case JWT: {
+                return "com.rooxteam.sso.aal.client.SsoAuthorizationClientByJwt";
+            }
+            case CONFIG: {
+                return "com.rooxteam.sso.aal.client.SsoAuthorizationClientByConfig";
+            }
+        }
     }
 
     private static void setOpenamSystemProperties(Configuration config) {

@@ -2,7 +2,10 @@ package com.rooxteam.sso.aal;
 
 import com.google.common.cache.RemovalNotification;
 import com.iplanet.sso.SSOToken;
-import com.rooxteam.sso.aal.client.SsoAuthorizationClientByToken;
+import com.iplanet.sso.SSOTokenManager;
+import com.rooxteam.sso.aal.client.SsoAuthorizationClient;
+
+import static com.rooxteam.sso.aal.AalLogger.LOG;
 
 /**
  * Invalidates cached SSO session on YotaPrincipal removal from cache
@@ -10,9 +13,9 @@ import com.rooxteam.sso.aal.client.SsoAuthorizationClientByToken;
 public class SSOSessionInvalidator implements com.google.common.cache.RemovalListener<YotaPrincipalKey, YotaPrincipal> {
 
 
-    SsoAuthorizationClientByToken authorizationClient;
+    SsoAuthorizationClient authorizationClient;
 
-    public SSOSessionInvalidator(SsoAuthorizationClientByToken authorizationClient) {
+    public SSOSessionInvalidator(SsoAuthorizationClient authorizationClient) {
         this.authorizationClient = authorizationClient;
     }
 
@@ -22,7 +25,11 @@ public class SSOSessionInvalidator implements com.google.common.cache.RemovalLis
         if (principalToBeRemoved == null) return;
         SSOToken ssoToken = (SSOToken) principalToBeRemoved.getProperty(PropertyScope.PRIVATE_IDENTITY_PARAMS, YotaPrincipal.SESSION_PARAM);
         if (ssoToken != null) {
-            authorizationClient.invalidateSSOSession(ssoToken);
+            try {
+                SSOTokenManager.getInstance().destroyToken(ssoToken);
+            } catch (Exception e) {
+                LOG.traceFailedToInvalidateSSOToken(e);
+            }
         }
     }
 }
