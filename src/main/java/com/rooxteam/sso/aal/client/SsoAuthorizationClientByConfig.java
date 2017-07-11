@@ -124,7 +124,7 @@ public class SsoAuthorizationClientByConfig implements SsoAuthorizationClient {
     }
 
     @Override
-    public EvaluationResponse isActionOnResourceAllowedByPolicy(Principal subject, String token, String resource, String method, Map<String, ?> env) {
+    public EvaluationResponse isActionOnResourceAllowedByPolicy(Principal subject, String resource, String method, Map<String, ?> env) {
 
         Integer requiredLevel = getRequiredLevel(resource, method);
 

@@ -115,7 +115,9 @@ public class SsoAuthorizationClientByJwt implements SsoAuthorizationClient {
     }
 
     @Override
-    public EvaluationResponse isActionOnResourceAllowedByPolicy(Principal subject, String token, String resource, String method, Map<String, ?> env) {
+    public EvaluationResponse isActionOnResourceAllowedByPolicy(Principal subject, String resource, String method, Map<String, ?> env) {
+        String token = getJwtToken(subject);
+
         if (token == null) {
             LOG.warnNullSsoToken();
             throw new IllegalArgumentException("Authorization token is not supplied");
@@ -146,6 +148,16 @@ public class SsoAuthorizationClientByJwt implements SsoAuthorizationClient {
             LOG.errorAuthentication(e);
             throw e;
         }
+    }
+
+    private String getJwtToken(Principal subject) {
+        String jwt;
+        if (subject instanceof PrincipalImpl) {
+            jwt = ((PrincipalImpl) subject).getPrivateJwtToken();
+        } else {
+            jwt = subject.getJwtToken();
+        }
+        return jwt;
     }
 
     private EvaluationResponse doIsAllowedPost(HttpPost post) throws IOException {

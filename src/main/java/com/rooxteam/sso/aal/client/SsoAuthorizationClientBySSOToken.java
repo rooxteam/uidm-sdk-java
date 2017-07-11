@@ -73,7 +73,7 @@ public class SsoAuthorizationClientBySSOToken implements SsoAuthorizationClient 
     }
 
     @Override
-    public EvaluationResponse isActionOnResourceAllowedByPolicy(Principal subject, String token, String resource, String method, Map<String, ?> env) {
+    public EvaluationResponse isActionOnResourceAllowedByPolicy(Principal subject, String resource, String method, Map<String, ?> env) {
         SSOToken ssoToken = getSsoToken(subject);
 
         if (ssoToken == null) {

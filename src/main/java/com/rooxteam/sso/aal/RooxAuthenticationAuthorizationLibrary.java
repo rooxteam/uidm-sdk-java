@@ -336,14 +336,8 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         LOG.traceHardCallPolicyDecision(key);
 
         Principal subject = key.getSubject();
-        String jwt = null;
-        if (subject instanceof PrincipalImpl) {
-            jwt = ((PrincipalImpl) subject).getPrivateJwtToken();
-        } else {
-            jwt = subject.getJwtToken();
-        }
 
-        EvaluationResponse result = ssoAuthorizationClient.isActionOnResourceAllowedByPolicy(subject, jwt, key.getResourceName(), key.getActionName(), key.getEnvParameters());
+        EvaluationResponse result = ssoAuthorizationClient.isActionOnResourceAllowedByPolicy(subject, key.getResourceName(), key.getActionName(), key.getEnvParameters());
         isAllowedPolicyDecisionsCache.put(key, result);
         getPolicyCacheAddMeter().mark();
         return result;
