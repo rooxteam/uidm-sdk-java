@@ -4,10 +4,10 @@ import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.PrincipalImpl;
 import com.rooxteam.sso.aal.PropertyScope;
-import com.rooxteam.sso.aal.client.exception.NotSupportedException;
 import com.rooxteam.sso.aal.client.model.Decision;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.exception.AuthorizationException;
+import com.rooxteam.sso.aal.exception.ValidateException;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -20,7 +20,6 @@ import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.NullNode;
-import org.forgerock.json.jose.utils.Utils;
 
 import java.io.IOException;
 import java.util.*;
@@ -38,6 +37,7 @@ public class SsoAuthorizationClientByConfig implements SsoAuthorizationClient {
     private final Configuration config;
     private CloseableHttpClient httpClient;
     private JsonNode localPolicies = NullNode.getInstance();
+    private static ObjectMapper mapper = new ObjectMapper();
 
     public SsoAuthorizationClientByConfig(Configuration rooxConfig, CloseableHttpClient httpClient) {
         config = rooxConfig;
@@ -83,7 +83,7 @@ public class SsoAuthorizationClientByConfig implements SsoAuthorizationClient {
 
             if (statusCode == HttpStatus.SC_OK) {
                 String responseJson = EntityUtils.toString(response.getEntity());
-                Map<String, Object> tokenClaims = Utils.parseJson(responseJson);
+                Map<String, Object> tokenClaims = parseJson(responseJson);
                 Map<String, Object> sharedIdentityProperties = new HashMap<>();
                 Object cn = tokenClaims.get("sub");
                 sharedIdentityProperties.put("prn", cn);
@@ -124,14 +124,9 @@ public class SsoAuthorizationClientByConfig implements SsoAuthorizationClient {
     }
 
     @Override
-    public EvaluationResponse isActionOnResourceAllowedByPolicy(String token, String resource, String method, Map<String, ?> env) {
-        throw new NotSupportedException();
-    }
+    public EvaluationResponse isActionOnResourceAllowedByPolicy(Principal subject, String token, String resource, String method, Map<String, ?> env) {
 
-    @Override
-    public EvaluationResponse isActionOnResourceAllowedByPolicy(Principal subject, String resourceName, String actionName) {
-
-        Integer requiredLevel = getRequiredLevel(resourceName, actionName);
+        Integer requiredLevel = getRequiredLevel(resource, method);
 
         if (requiredLevel != null && requiredLevel == 0) {
             // special handling for 0 level - allow unauthorized access
@@ -179,6 +174,14 @@ public class SsoAuthorizationClientByConfig implements SsoAuthorizationClient {
             }
         }
         return policyAuthLevelNode;
+    }
+
+    private static Map<String, Object> parseJson(String json) {
+        try {
+            return mapper.readValue(json, Map.class);
+        } catch (IOException e) {
+            throw new ValidateException("Failed to parse json", e);
+        }
     }
 
 }

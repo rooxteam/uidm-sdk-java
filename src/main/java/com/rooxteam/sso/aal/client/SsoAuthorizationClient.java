@@ -7,9 +7,7 @@ import java.util.Map;
 
 public interface SsoAuthorizationClient {
 
-    EvaluationResponse isActionOnResourceAllowedByPolicy(String token, String resource, String method, Map<String, ?> env);
-
-    EvaluationResponse isActionOnResourceAllowedByPolicy(Principal subject, String resourceName, String actionName);
+    EvaluationResponse isActionOnResourceAllowedByPolicy(Principal subject, String token, String resource, String method, Map<String, ?> env);
 
     Principal validate(final String token);
 

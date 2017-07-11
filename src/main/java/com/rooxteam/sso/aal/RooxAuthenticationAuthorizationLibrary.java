@@ -343,20 +343,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
             jwt = subject.getJwtToken();
         }
 
-        EvaluationResponse result;
-        switch (authorizationType) {
-            default:
-            case SSO_TOKEN:
-            case CONFIG: {
-                result = ssoAuthorizationClient.isActionOnResourceAllowedByPolicy(subject, key.getResourceName(), key.getActionName());
-                break;
-            }
-            case JWT: {
-                result = ssoAuthorizationClient.isActionOnResourceAllowedByPolicy(jwt, key.getResourceName(), key.getActionName(), key.getEnvParameters());
-                break;
-            }
-        }
-
+        EvaluationResponse result = ssoAuthorizationClient.isActionOnResourceAllowedByPolicy(subject, jwt, key.getResourceName(), key.getActionName(), key.getEnvParameters());
         isAllowedPolicyDecisionsCache.put(key, result);
         getPolicyCacheAddMeter().mark();
         return result;

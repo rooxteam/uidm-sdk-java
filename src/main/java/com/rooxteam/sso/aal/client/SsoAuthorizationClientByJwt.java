@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableMap;
 import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.PrincipalImpl;
-import com.rooxteam.sso.aal.client.exception.NotSupportedException;
 import com.rooxteam.sso.aal.client.model.Decision;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
@@ -116,7 +115,7 @@ public class SsoAuthorizationClientByJwt implements SsoAuthorizationClient {
     }
 
     @Override
-    public EvaluationResponse isActionOnResourceAllowedByPolicy(String token, String resource, String method, Map<String, ?> env) {
+    public EvaluationResponse isActionOnResourceAllowedByPolicy(Principal subject, String token, String resource, String method, Map<String, ?> env) {
         if (token == null) {
             LOG.warnNullSsoToken();
             throw new IllegalArgumentException("Authorization token is not supplied");
@@ -215,11 +214,6 @@ public class SsoAuthorizationClientByJwt implements SsoAuthorizationClient {
             }
         }
         return new EvaluationResponse(decision, advicesResult.build());
-    }
-
-    @Override
-    public EvaluationResponse isActionOnResourceAllowedByPolicy(Principal subject, String resourceName, String actionName) {
-        throw new NotSupportedException();
     }
 
     private static Map<String, Object> parseJson(String json) {
