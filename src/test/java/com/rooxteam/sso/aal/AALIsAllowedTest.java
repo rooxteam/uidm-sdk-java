@@ -45,7 +45,7 @@ public class AALIsAllowedTest {
         final String testToken = "Test JWT Token";
         when(mockPrincipal.getJwtToken())
                 .thenReturn(testToken);
-        when(mockSsoAuthorizationClient.authenticateByJwt(testToken))
+        when(mockSsoAuthorizationClient.authenticate(testToken))
                 .thenReturn(mockSsoToken);
         when(mockSsoAuthorizationClient.isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET"))
                 .thenReturn(new EvaluationResponse(Decision.Permit));
@@ -67,7 +67,7 @@ public class AALIsAllowedTest {
         final String testToken = "Test JWT Token";
         when(mockPrincipal.getJwtToken())
                 .thenReturn(testToken);
-        when(mockSsoAuthorizationClient.authenticateByJwt(testToken))
+        when(mockSsoAuthorizationClient.authenticate(testToken))
                 .thenReturn(mockSsoToken);
         when(mockSsoAuthorizationClient.isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET"))
                 .thenReturn(new EvaluationResponse(Decision.Deny));
@@ -89,7 +89,7 @@ public class AALIsAllowedTest {
         final String testToken = "Test JWT Token";
         when(mockPrincipal.getJwtToken())
                 .thenReturn(testToken);
-        when(mockSsoAuthorizationClient.authenticateByJwt(testToken))
+        when(mockSsoAuthorizationClient.authenticate(testToken))
                 .thenReturn(mockSsoToken);
         when(mockSsoAuthorizationClient.isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET"))
                 .thenReturn(new EvaluationResponse(Decision.Permit));
@@ -132,7 +132,7 @@ public class AALIsAllowedTest {
         boolean isAllowed = aal.isAllowed(mockPrincipal, "/TestResource", "GET", envParameters, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
         assertTrue(isAllowed);
 
-        verify(mockSsoAuthorizationClient, times(0)).authenticateByJwt(anyString());
+        verify(mockSsoAuthorizationClient, times(0)).authenticate(anyString());
         verify(mockPolicyDecisionsCache, times(1)).getIfPresent(key);
     }
 
@@ -154,7 +154,7 @@ public class AALIsAllowedTest {
         boolean isAllowed = aal.isAllowed(mockPrincipal, "/TestResource", "GET", envParameters, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
         assertFalse(isAllowed);
 
-        verify(mockSsoAuthorizationClient, times(0)).authenticateByJwt(anyString());
+        verify(mockSsoAuthorizationClient, times(0)).authenticate(anyString());
         verify(mockPolicyDecisionsCache, times(1)).getIfPresent(key);
     }
 

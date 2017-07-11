@@ -46,7 +46,7 @@ public class SsoAuthorizationClientBySSOToken implements SsoAuthorizationClient 
     }
 
     @Nullable
-    public SSOToken authenticateByJwt(String jwt) {
+    public SSOToken authenticate(String jwt) {
         try {
             AuthContext authContext = initAuthContext();
             authContext.login(AuthContext.IndexType.SERVICE, AUTHENTICATION_INDEX_NAME, new String[]{jwt});
@@ -135,7 +135,7 @@ public class SsoAuthorizationClientBySSOToken implements SsoAuthorizationClient 
                 jwt = subject.getJwtToken();
             }
             LOG.traceNoSSOTokenInPrincipal();
-            ssoToken = authenticateByJwt(jwt);
+            ssoToken = authenticate(jwt);
             if (ssoToken != null) {
                 subject.setProperty(PropertyScope.PRIVATE_IDENTITY_PARAMS, Principal.SESSION_PARAM, ssoToken);
             }
