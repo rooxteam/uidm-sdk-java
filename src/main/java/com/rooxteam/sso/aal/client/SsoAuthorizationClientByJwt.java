@@ -9,6 +9,7 @@ import com.rooxteam.sso.aal.client.model.Decision;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
 import com.rooxteam.sso.aal.exception.AuthorizationException;
+import com.rooxteam.sso.aal.exception.ValidateException;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpStatus;
@@ -23,7 +24,6 @@ import org.apache.http.util.EntityUtils;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
-import org.forgerock.json.jose.utils.Utils;
 
 import java.io.IOException;
 import java.util.*;
@@ -41,6 +41,7 @@ public class SsoAuthorizationClientByJwt implements SsoAuthorizationClient {
     private static final String TOKEN_INFO_PATH = "/oauth2/tokeninfo";
     private final Configuration config;
     private CloseableHttpClient httpClient;
+    private static ObjectMapper mapper = new ObjectMapper();
 
     public SsoAuthorizationClientByJwt(Configuration rooxConfig, CloseableHttpClient httpClient) {
         config = rooxConfig;
@@ -74,7 +75,7 @@ public class SsoAuthorizationClientByJwt implements SsoAuthorizationClient {
 
             if (statusCode == HttpStatus.SC_OK) {
                 String responseJson = EntityUtils.toString(response.getEntity());
-                Map<String, Object> tokenClaims = Utils.parseJson(responseJson);
+                Map<String, Object> tokenClaims = parseJson(responseJson);
                 Map<String, Object> sharedIdentityProperties = new HashMap<>();
                 Object cn = tokenClaims.get("sub");
                 sharedIdentityProperties.put("prn", cn);
@@ -219,5 +220,13 @@ public class SsoAuthorizationClientByJwt implements SsoAuthorizationClient {
     @Override
     public EvaluationResponse isActionOnResourceAllowedByPolicy(Principal subject, String resourceName, String actionName) {
         throw new NotSupportedException();
+    }
+
+    private static Map<String, Object> parseJson(String json) {
+        try {
+            return mapper.readValue(json, Map.class);
+        } catch (IOException e) {
+            throw new ValidateException("Failed to parse json", e);
+        }
     }
 }
