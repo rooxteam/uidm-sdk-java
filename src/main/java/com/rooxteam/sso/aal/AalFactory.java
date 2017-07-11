@@ -43,8 +43,8 @@ public class AalFactory {
      */
     public static AuthenticationAuthorizationLibrary create(Configuration config) {
 
-        String authTypeString = config.getString(AUTHORIZATION_TYPE, AUTHORIZATION_TYPE_DEFAULT);
-        AuthorizationType authorizationType = AuthorizationType.valueOf(authTypeString);
+        String authzTypeString = config.getString(AUTHORIZATION_TYPE, AUTHORIZATION_TYPE_DEFAULT);
+        AuthorizationType authorizationType = AuthorizationType.valueOf(authzTypeString);
         if (authorizationType == AuthorizationType.SSO_TOKEN) {
             // for AuthorizationType.SSO_TOKEN we have to initialize OpenAM AuthContext 
             setOpenamSystemProperties(config);
