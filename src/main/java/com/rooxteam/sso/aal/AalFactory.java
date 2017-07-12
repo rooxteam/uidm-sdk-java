@@ -209,7 +209,7 @@ public class AalFactory {
                 CacheBuilder.newBuilder()
                         .maximumSize(principalCacheSize)
                         .expireAfterWrite(principalExpireAfterWrite, TimeUnit.SECONDS)
-//                        .removalListener(new SSOSessionInvalidator(authorizationClient))
+                        .removalListener(new SSOSessionInvalidator(authorizationClient, config))
                         .build();
         AalLogger.LOG.traceInitPrincipalCacheWithSize(principalCacheSize);
         return principalCache;

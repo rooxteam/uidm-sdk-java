@@ -13,7 +13,7 @@ import static com.rooxteam.sso.aal.ConfigKeys.AUTHORIZATION_TYPE_DEFAULT;
 /**
  * Invalidates cached SSO session on YotaPrincipal removal from cache
  */
-public class SSOSessionInvalidator implements com.google.common.cache.RemovalListener<YotaPrincipalKey, YotaPrincipal> {
+public class SSOSessionInvalidator implements com.google.common.cache.RemovalListener<PrincipalKey, Principal> {
 
 
     SsoAuthorizationClient authorizationClient;
@@ -25,8 +25,8 @@ public class SSOSessionInvalidator implements com.google.common.cache.RemovalLis
     }
 
     @Override
-    public void onRemoval(RemovalNotification<YotaPrincipalKey, YotaPrincipal> notification) {
-        YotaPrincipal principalToBeRemoved = notification.getValue();
+    public void onRemoval(RemovalNotification<PrincipalKey, Principal> notification) {
+        Principal principalToBeRemoved = notification.getValue();
         if (principalToBeRemoved == null) return;
 
         if (config != null) {
