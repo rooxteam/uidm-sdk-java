@@ -3,7 +3,7 @@ package com.rooxteam.sso.aal;
 import com.google.common.cache.Cache;
 import com.iplanet.sso.SSOToken;
 import com.rooxteam.sso.aal.client.SsoAuthenticationClient;
-import com.rooxteam.sso.aal.client.SsoAuthorizationClient;
+import com.rooxteam.sso.aal.client.SsoAuthorizationClientBySSOToken;
 import com.rooxteam.sso.aal.client.model.Decision;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import org.junit.Before;
@@ -26,7 +26,7 @@ public class AALIsAllowedTest {
     private RooxAuthenticationAuthorizationLibrary aal;
     private final Cache<PolicyDecisionKey, EvaluationResponse> mockPolicyDecisionsCache = mock(Cache.class);
     private final Cache<PrincipalKey, Principal> mockPrincipalCache = (Cache<PrincipalKey, Principal>) mock(Cache.class);
-    private final SsoAuthorizationClient mockSsoAuthorizationClient = mock(SsoAuthorizationClient.class);
+    private final SsoAuthorizationClientBySSOToken mockSsoAuthorizationClient = mock(SsoAuthorizationClientBySSOToken.class);
     private final SsoAuthenticationClient mockSsoAuthenticationClient = mock(SsoAuthenticationClient.class);
 
     @Before
@@ -41,20 +41,20 @@ public class AALIsAllowedTest {
     public void aal_should_allow_test_request() {
         Principal mockPrincipal = mock(Principal.class);
         SSOToken mockSsoToken = mock(SSOToken.class);
+        mockPrincipal.setProperty(PropertyScope.PRIVATE_IDENTITY_PARAMS, Principal.SESSION_PARAM, mockSsoToken);
         final String testToken = "Test JWT Token";
         when(mockPrincipal.getJwtToken())
                 .thenReturn(testToken);
-        when(mockSsoAuthorizationClient.authenticateByJwt(testToken))
+        when(mockSsoAuthorizationClient.authenticate(testToken))
                 .thenReturn(mockSsoToken);
-        when(mockSsoAuthorizationClient.isActionOnResourceAllowedByPolicy(mockSsoToken, "/TestResource", "GET"))
+        when(mockSsoAuthorizationClient.isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET"))
                 .thenReturn(new EvaluationResponse(Decision.Permit));
 
         Map<String, Object> envParameters = Collections.emptyMap();
         boolean isAllowed = aal.isAllowed(mockPrincipal, "/TestResource", "GET", envParameters, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
         assertTrue(isAllowed);
 
-        verify(mockSsoAuthorizationClient, times(1)).authenticateByJwt(testToken);
-        verify(mockSsoAuthorizationClient, times(1)).isActionOnResourceAllowedByPolicy(mockSsoToken, "/TestResource", "GET");
+        verify(mockSsoAuthorizationClient, times(1)).isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET");
         verify(mockPolicyDecisionsCache, times(1)).getIfPresent(any());
         verify(mockPolicyDecisionsCache, times(1)).put(any(PolicyDecisionKey.class), eq(new EvaluationResponse(Decision.Permit)));
     }
@@ -63,20 +63,20 @@ public class AALIsAllowedTest {
     public void aal_should_NOT_allow_test_request() {
         Principal mockPrincipal = mock(Principal.class);
         SSOToken mockSsoToken = mock(SSOToken.class);
+        mockPrincipal.setProperty(PropertyScope.PRIVATE_IDENTITY_PARAMS, Principal.SESSION_PARAM, mockSsoToken);
         final String testToken = "Test JWT Token";
         when(mockPrincipal.getJwtToken())
                 .thenReturn(testToken);
-        when(mockSsoAuthorizationClient.authenticateByJwt(testToken))
+        when(mockSsoAuthorizationClient.authenticate(testToken))
                 .thenReturn(mockSsoToken);
-        when(mockSsoAuthorizationClient.isActionOnResourceAllowedByPolicy(mockSsoToken, "/TestResource", "GET"))
+        when(mockSsoAuthorizationClient.isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET"))
                 .thenReturn(new EvaluationResponse(Decision.Deny));
 
         Map<String, Object> envParameters = Collections.emptyMap();
         boolean isAllowed = aal.isAllowed(mockPrincipal, "/TestResource", "GET", envParameters, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
         assertFalse(isAllowed);
 
-        verify(mockSsoAuthorizationClient, times(1)).authenticateByJwt(testToken);
-        verify(mockSsoAuthorizationClient, times(1)).isActionOnResourceAllowedByPolicy(mockSsoToken, "/TestResource", "GET");
+        verify(mockSsoAuthorizationClient, times(1)).isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET");
         verify(mockPolicyDecisionsCache, times(1)).getIfPresent(any());
         verify(mockPolicyDecisionsCache, times(1)).put(any(PolicyDecisionKey.class), eq(new EvaluationResponse(Decision.Deny)));
     }
@@ -85,12 +85,13 @@ public class AALIsAllowedTest {
     public void aal_should_allow_test_request_after_invalidation() {
         Principal mockPrincipal = mock(Principal.class);
         SSOToken mockSsoToken = mock(SSOToken.class);
+        mockPrincipal.setProperty(PropertyScope.PRIVATE_IDENTITY_PARAMS, Principal.SESSION_PARAM, mockSsoToken);
         final String testToken = "Test JWT Token";
         when(mockPrincipal.getJwtToken())
                 .thenReturn(testToken);
-        when(mockSsoAuthorizationClient.authenticateByJwt(testToken))
+        when(mockSsoAuthorizationClient.authenticate(testToken))
                 .thenReturn(mockSsoToken);
-        when(mockSsoAuthorizationClient.isActionOnResourceAllowedByPolicy(mockSsoToken, "/TestResource", "GET"))
+        when(mockSsoAuthorizationClient.isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET"))
                 .thenReturn(new EvaluationResponse(Decision.Permit));
         ConcurrentHashMap<PrincipalKey, Principal> PrincipalCacheMap = new ConcurrentHashMap<>();
         PrincipalKey PrincipalKey = new PrincipalKey(AuthParamType.IP, IP_229_213_38_0);
@@ -107,8 +108,7 @@ public class AALIsAllowedTest {
         isAllowed = aal.isAllowed(mockPrincipal, "/TestResource", "GET", envParameters, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
         assertTrue(isAllowed);
 
-        verify(mockSsoAuthorizationClient, times(2)).authenticateByJwt(testToken);
-        verify(mockSsoAuthorizationClient, times(2)).isActionOnResourceAllowedByPolicy(mockSsoToken, "/TestResource", "GET");
+        verify(mockSsoAuthorizationClient, times(2)).isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET");
         verify(mockPolicyDecisionsCache, times(2)).getIfPresent(any());
         verify(mockPolicyDecisionsCache, times(2)).put(any(PolicyDecisionKey.class), eq(new EvaluationResponse(Decision.Permit)));
     }
@@ -117,6 +117,8 @@ public class AALIsAllowedTest {
     @Test
     public void aal_should_use_policy_decision_cache_to_allow_test_request() {
         Principal mockPrincipal = mock(Principal.class);
+        SSOToken mockSsoToken = mock(SSOToken.class);
+        mockPrincipal.setProperty(PropertyScope.PRIVATE_IDENTITY_PARAMS, Principal.SESSION_PARAM, mockSsoToken);
         PolicyDecisionKey key = new PolicyDecisionKey(mockPrincipal, "/TestResource", "GET");
         when(mockPolicyDecisionsCache.getIfPresent(key))
                 .thenReturn(new EvaluationResponse(Decision.Permit));
@@ -130,14 +132,15 @@ public class AALIsAllowedTest {
         boolean isAllowed = aal.isAllowed(mockPrincipal, "/TestResource", "GET", envParameters, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
         assertTrue(isAllowed);
 
-        verify(mockSsoAuthorizationClient, times(0)).authenticateByJwt(anyString());
-        verify(mockSsoAuthorizationClient, times(0)).isActionOnResourceAllowedByPolicy(any(SSOToken.class), anyString(), anyString());
+        verify(mockSsoAuthorizationClient, times(0)).authenticate(anyString());
         verify(mockPolicyDecisionsCache, times(1)).getIfPresent(key);
     }
 
     @Test
     public void aal_should_use_policy_decision_cache_to_disallow_test_request() {
         Principal mockPrincipal = mock(Principal.class);
+        SSOToken mockSsoToken = mock(SSOToken.class);
+        mockPrincipal.setProperty(PropertyScope.PRIVATE_IDENTITY_PARAMS, Principal.SESSION_PARAM, mockSsoToken);
         PolicyDecisionKey key = new PolicyDecisionKey(mockPrincipal, "/TestResource", "GET");
         when(mockPolicyDecisionsCache.getIfPresent(key))
                 .thenReturn(new EvaluationResponse(Decision.Deny));
@@ -151,8 +154,7 @@ public class AALIsAllowedTest {
         boolean isAllowed = aal.isAllowed(mockPrincipal, "/TestResource", "GET", envParameters, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
         assertFalse(isAllowed);
 
-        verify(mockSsoAuthorizationClient, times(0)).authenticateByJwt(anyString());
-        verify(mockSsoAuthorizationClient, times(0)).isActionOnResourceAllowedByPolicy(any(SSOToken.class), anyString(), anyString());
+        verify(mockSsoAuthorizationClient, times(0)).authenticate(anyString());
         verify(mockPolicyDecisionsCache, times(1)).getIfPresent(key);
     }
 

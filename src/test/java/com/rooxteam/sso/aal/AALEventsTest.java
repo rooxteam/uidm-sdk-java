@@ -2,7 +2,7 @@ package com.rooxteam.sso.aal;
 
 import com.google.common.cache.Cache;
 import com.rooxteam.sso.aal.client.SsoAuthenticationClient;
-import com.rooxteam.sso.aal.client.SsoAuthorizationClient;
+import com.rooxteam.sso.aal.client.SsoAuthorizationClientBySSOToken;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import org.junit.After;
 import org.junit.Before;
@@ -26,7 +26,7 @@ public class AALEventsTest {
 
     private final PrincipalEventListener mockListener = mock(PrincipalEventListener.class);
     private final SsoAuthenticationClient mockSsoAuthenticationClient = mock(SsoAuthenticationClient.class);
-    private final SsoAuthorizationClient mockSsoAuthorizationClient = mock(SsoAuthorizationClient.class);
+    private final SsoAuthorizationClientBySSOToken mockSsoAuthorizationClient = mock(SsoAuthorizationClientBySSOToken.class);
     private final Cache<PrincipalKey, Principal> mockPrincipalCache = (Cache<PrincipalKey, Principal>) mock(Cache.class);
     private final Cache<PolicyDecisionKey, EvaluationResponse> mockPolicyDecisionsCache = mock(Cache.class);
 

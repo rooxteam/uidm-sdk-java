@@ -2,10 +2,8 @@ package com.rooxteam.sso.aal;
 
 import com.codahale.metrics.Gauge;
 import com.google.common.cache.Cache;
-import com.iplanet.sso.SSOToken;
 import com.rooxteam.sso.aal.client.*;
 import com.rooxteam.sso.aal.client.model.AuthenticationResponse;
-import com.rooxteam.sso.aal.client.model.Decision;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
 import com.rooxteam.sso.aal.metrics.AalMetricsHelper;
@@ -338,54 +336,8 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         LOG.traceHardCallPolicyDecision(key);
 
         Principal subject = key.getSubject();
-        String jwt = null;
-        if (subject instanceof PrincipalImpl) {
-            jwt = ((PrincipalImpl) subject).getPrivateJwtToken();
-        } else {
-            jwt = subject.getJwtToken();
-        }
 
-        EvaluationResponse result;
-        switch (authorizationType) {
-            default:
-            case SSO_TOKEN: {
-                SSOToken ssoToken = (SSOToken) subject.getProperty(PropertyScope.PRIVATE_IDENTITY_PARAMS, Principal.SESSION_PARAM);
-
-                if (ssoToken != null) {
-                    LOG.traceHasSSOTokenInPrincipal();
-                    try {
-                        if (ssoToken.getTimeLeft() < 0) {
-                            LOG.traceSSOTokenExpired();
-                            ssoToken = null;
-                        } else {
-                            LOG.traceSSOTokenInPrincipalNotExpired();
-                        }
-                    } catch (Exception e) {
-                        LOG.traceFailedToGetSSOTimeLeft(e);
-                    }
-                }
-                if (ssoToken == null) {
-                    LOG.traceNoSSOTokenInPrincipal();
-                    ssoToken = ssoAuthorizationClient.authenticateByJwt(jwt);
-                    if (ssoToken == null) {
-                        return new EvaluationResponse(Decision.Deny);
-                    } else {
-                        subject.setProperty(PropertyScope.PRIVATE_IDENTITY_PARAMS, Principal.SESSION_PARAM, ssoToken);
-                    }
-                }
-                result = ssoAuthorizationClient.isActionOnResourceAllowedByPolicy(ssoToken, key.getResourceName(), key.getActionName());
-                break;
-            }
-            case JWT: {
-                result = ssoAuthorizationClient.isActionOnResourceAllowedByPolicy(jwt, key.getResourceName(), key.getActionName(), key.getEnvParameters());
-                break;
-            }
-            case CONFIG: {
-                result = ssoAuthorizationClient.isActionOnResourceAllowedByConfigPolicy(subject, key.getResourceName(), key.getActionName());
-                break;
-            }
-        }
-
+        EvaluationResponse result = ssoAuthorizationClient.isActionOnResourceAllowedByPolicy(subject, key.getResourceName(), key.getActionName(), key.getEnvParameters());
         isAllowedPolicyDecisionsCache.put(key, result);
         getPolicyCacheAddMeter().mark();
         return result;
@@ -478,7 +430,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     }
 
     @Override
-    public OtpResponse sendOtpForOperation(SendOtpParameter sendOtpParameter){
+    public OtpResponse sendOtpForOperation(SendOtpParameter sendOtpParameter) {
         return otpClient.sendOtpForOperation(sendOtpParameter);
     }
 
@@ -517,7 +469,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     }
 
     @Override
-    public OtpResponse validateOtp(ValidateOtpParameter validateOtpParameter){
+    public OtpResponse validateOtp(ValidateOtpParameter validateOtpParameter) {
         return otpClient.validateOtp(validateOtpParameter);
     }
 

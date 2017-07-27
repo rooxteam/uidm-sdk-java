@@ -46,4 +46,9 @@ public interface OtpResponse {
      * @return Время в секундах через которой можно будет заказать OTP под операцию.`
      */
     Long getNextOtpCodeOperationPeriod();
+
+    /**
+     * @return Номер OTP кода
+     */
+    Long getOtpCodeNumber();
 }

@@ -20,9 +20,8 @@ public class AuthorizationClientTest {
         final AuthContext mockAuthContext = mock(AuthContext.class);
         Configuration config = new BaseConfiguration();
         CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
-        SsoAuthorizationClient client = new SsoAuthorizationClient(config, httpClient) {
-            @Override
-            protected AuthContext initAuthContext() {
+        SsoAuthorizationClientBySSOToken client = new SsoAuthorizationClientBySSOToken(config, httpClient) {
+            public AuthContext initAuthContext() {
                 return mockAuthContext;
             }
         };
@@ -30,7 +29,7 @@ public class AuthorizationClientTest {
         when(mockAuthContext.getStatus()).thenReturn(AuthContext.Status.SUCCESS);
         when(mockAuthContext.getSSOToken()).thenReturn(token);
 
-        SSOToken ssoToken = client.authenticateByJwt("invalid token");
+        SSOToken ssoToken = client.authenticate("invalid token");
 
         assertNotNull(ssoToken);
         assertEquals(token, ssoToken);
