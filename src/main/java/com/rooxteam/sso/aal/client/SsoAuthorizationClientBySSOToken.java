@@ -17,7 +17,6 @@ import com.sun.identity.policy.PolicyException;
 import com.sun.identity.policy.client.PolicyEvaluator;
 import com.sun.identity.policy.client.PolicyEvaluatorFactory;
 import com.sun.identity.shared.locale.L10NMessageImpl;
-import com.sun.istack.internal.Nullable;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -45,7 +44,6 @@ public class SsoAuthorizationClientBySSOToken implements SsoAuthorizationClient 
         this.httpClient = httpClient;
     }
 
-    @Nullable
     public SSOToken authenticate(String jwt) {
         try {
             AuthContext authContext = initAuthContext();
@@ -110,7 +108,6 @@ public class SsoAuthorizationClientBySSOToken implements SsoAuthorizationClient 
         }
     }
 
-    @Nullable
     private SSOToken getSsoToken(Principal subject) {
         SSOToken ssoToken = (SSOToken) subject.getProperty(PropertyScope.PRIVATE_IDENTITY_PARAMS, Principal.SESSION_PARAM);
 
