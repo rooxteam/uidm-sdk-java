@@ -1,8 +1,6 @@
 package com.rooxteam.sso.aal;
 
-import com.iplanet.sso.SSOException;
 import com.rooxteam.sso.aal.otp.OtpFlowState;
-import com.sun.identity.shared.locale.L10NMessageImpl;
 import org.apache.http.HttpResponse;
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
@@ -42,7 +40,7 @@ public interface AalLogger extends BasicLogger {
     @LogMessage(level = ERROR)
     @Message(id = 3002, format = MESSAGE_FORMAT,
             value = "Localization exception. For details see cause.")
-    void errorI10n(@Cause L10NMessageImpl l10NMessage);
+    void errorI10n(@Cause Exception e);
 
     @LogMessage(level = ERROR)
     @Message(id = 3003, format = MESSAGE_FORMAT,
@@ -57,7 +55,7 @@ public interface AalLogger extends BasicLogger {
     @LogMessage(level = ERROR)
     @Message(id = 3005, format = MESSAGE_FORMAT,
             value = "Sso token is invalid during getting policy evaluator for service {0}. For details see cause.")
-    void errorSsoTokenInvalid(String webAgentServiceName, @Cause SSOException e);
+    void errorSsoTokenInvalid(String webAgentServiceName, @Cause Exception e);
 
     @LogMessage(level = ERROR)
     @Message(id = 3009, format = MESSAGE_FORMAT,
