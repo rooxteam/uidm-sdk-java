@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.PrincipalImpl;
+import com.rooxteam.sso.aal.PropertyScope;
 import com.rooxteam.sso.aal.client.model.Decision;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
@@ -86,6 +87,11 @@ public class SsoAuthorizationClientByJwt implements SsoAuthorizationClient {
                     }
                 }
 
+                Object realm = tokenClaims.get("realm");
+                if (realm != null) {
+                    sharedIdentityProperties.put("realm", realm.toString());
+                }
+
                 Object authLevel = tokenClaims.get("auth_level");
                 if (authLevel != null) {
                     sharedIdentityProperties.put("authLevel", Collections.singletonList(authLevel.toString()));
@@ -133,7 +139,11 @@ public class SsoAuthorizationClientByJwt implements SsoAuthorizationClient {
             throw new IllegalArgumentException("Method name is not supplied");
         }
 
-        String realm = config.getString(ConfigKeys.REALM, ConfigKeys.REALM_DEFAULT);
+        String realm = (String) subject.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "realm");
+        if (realm == null) {
+            realm = config.getString(ConfigKeys.REALM, ConfigKeys.REALM_DEFAULT);
+        }
+
         EvaluationContext evaluationContext = new EvaluationContext(realm, resource, method, env);
 
         try {
