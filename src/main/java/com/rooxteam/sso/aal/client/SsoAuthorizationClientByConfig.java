@@ -1,10 +1,8 @@
 package com.rooxteam.sso.aal.client;
 
-import com.rooxteam.sso.aal.ConfigKeys;
-import com.rooxteam.sso.aal.Principal;
-import com.rooxteam.sso.aal.PrincipalImpl;
-import com.rooxteam.sso.aal.PropertyScope;
+import com.rooxteam.sso.aal.*;
 import com.rooxteam.sso.aal.client.model.Decision;
+import com.rooxteam.sso.aal.client.model.EvaluationRequest;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.exception.AuthorizationException;
 import com.rooxteam.sso.aal.exception.ValidateException;
@@ -153,6 +151,18 @@ public class SsoAuthorizationClientByConfig implements SsoAuthorizationClient {
             result = userAuthLevel >= requiredLevel;
         }
         return new EvaluationResponse(Decision.fromAllow(result));
+    }
+
+    @Override
+    public Map<EvaluationRequest, EvaluationResponse> whichActionAreAllowed(Principal subject, List<EvaluationRequest> policies) {
+        Map<EvaluationRequest, EvaluationResponse> result = new LinkedHashMap<>();
+
+        for (EvaluationRequest decisionKey : policies) {
+            result.put(decisionKey, isActionOnResourceAllowedByPolicy(subject, decisionKey.getResourceName(),
+                    decisionKey.getActionName(), decisionKey.getEnvParameters()));
+        }
+
+        return result;
     }
 
     private Integer getRequiredLevel(String resourceName, String actionName) {

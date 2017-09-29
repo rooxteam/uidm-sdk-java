@@ -4,19 +4,18 @@ import com.codahale.metrics.Gauge;
 import com.google.common.cache.Cache;
 import com.rooxteam.sso.aal.client.*;
 import com.rooxteam.sso.aal.client.model.AuthenticationResponse;
+import com.rooxteam.sso.aal.client.model.EvaluationRequest;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
 import com.rooxteam.sso.aal.metrics.AalMetricsHelper;
 import com.rooxteam.sso.aal.otp.*;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.forgerock.json.jose.common.JwtReconstruction;
 import org.forgerock.json.jose.jws.SignedJwt;
 import org.forgerock.json.jose.jwt.JwtClaimsSet;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Timer;
+import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -322,6 +321,19 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         }
 
         return result;
+    }
+
+    @Override
+    public Map<EvaluationRequest, EvaluationResponse> evaluatePolicies(Principal subject, List<EvaluationRequest> policiesToCheck) {
+        if (subject == null) {
+            LOG.errorIllegalSubjectParameter();
+            throw new IllegalArgumentException(SUBJECT_SHOULD_BE_SPECIFIED);
+        }
+        if (CollectionUtils.isEmpty(policiesToCheck)) {
+            return Collections.emptyMap();
+        }
+
+        return ssoAuthorizationClient.whichActionAreAllowed(subject, policiesToCheck);
     }
 
     /**

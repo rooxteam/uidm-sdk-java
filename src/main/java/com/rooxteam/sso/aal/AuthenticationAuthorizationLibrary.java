@@ -1,10 +1,13 @@
 package com.rooxteam.sso.aal;
 
 import com.rooxteam.sso.aal.client.EvaluationContext;
+import com.rooxteam.sso.aal.client.model.EvaluationRequest;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.otp.*;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -131,6 +134,16 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
      * @throws IllegalArgumentException Если параметры {@code subject}, {@code resourceName} или {@code actionName} равны null
      */
     EvaluationResponse evaluatePolicy(Principal subject, String resourceName, String actionName, Map<String, ?> envParameters);
+
+    /**
+     * Вычислить политики относительно действий (actionName) над ресурсом (actionName) в контексте (envParameters).
+     *
+     * @param subject       Principal для которого запрашивается доступ
+     * @param policiesToCheck политики для вычисления
+     * @return ответ о возможности выполнения указанных действий, а также список advices, который может содержать причины отказа.
+     * @throws IllegalArgumentException Если параметр {@code policiesToCheck} равен null
+     */
+    Map<EvaluationRequest, EvaluationResponse> evaluatePolicies(Principal subject, List<EvaluationRequest> policiesToCheck);
 
     /**
      * Сбросить все авторизационные решения в кеше.

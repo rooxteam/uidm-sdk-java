@@ -2,12 +2,10 @@ package com.rooxteam.sso.aal.client;
 
 import com.iplanet.sso.SSOException;
 import com.iplanet.sso.SSOToken;
-import com.rooxteam.sso.aal.ConfigKeys;
-import com.rooxteam.sso.aal.Principal;
-import com.rooxteam.sso.aal.PrincipalImpl;
-import com.rooxteam.sso.aal.PropertyScope;
+import com.rooxteam.sso.aal.*;
 import com.rooxteam.sso.aal.client.exception.NotSupportedException;
 import com.rooxteam.sso.aal.client.model.Decision;
+import com.rooxteam.sso.aal.client.model.EvaluationRequest;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.utils.SsoPolicyDecisionUtils;
 import com.sun.identity.authentication.AuthContext;
@@ -21,8 +19,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 
 import static com.rooxteam.sso.aal.AalLogger.LOG;
 
@@ -35,7 +32,6 @@ public class SsoAuthorizationClientBySSOToken implements SsoAuthorizationClient 
     private static final String AUTHENTICATION_INDEX_NAME = "uidm";
     private static final String WEB_AGENT_SERVICE_NAME = "iPlanetAMWebAgentService";
 
-    private static final String TOKEN_INFO_PATH = "/oauth2/tokeninfo";
     private final Configuration config;
     private CloseableHttpClient httpClient;
 
@@ -108,6 +104,18 @@ public class SsoAuthorizationClientBySSOToken implements SsoAuthorizationClient 
         }
     }
 
+    @Override
+    public Map<EvaluationRequest, EvaluationResponse> whichActionAreAllowed(Principal subject, List<EvaluationRequest> policies) {
+        Map<EvaluationRequest, EvaluationResponse> result = new LinkedHashMap<>();
+
+        for (EvaluationRequest decisionKey : policies) {
+            result.put(decisionKey, isActionOnResourceAllowedByPolicy(subject, decisionKey.getResourceName(),
+                    decisionKey.getActionName(), decisionKey.getEnvParameters()));
+        }
+
+        return result;
+    }
+
     private SSOToken getSsoToken(Principal subject) {
         SSOToken ssoToken = (SSOToken) subject.getProperty(PropertyScope.PRIVATE_IDENTITY_PARAMS, Principal.SESSION_PARAM);
 
@@ -125,7 +133,7 @@ public class SsoAuthorizationClientBySSOToken implements SsoAuthorizationClient 
             }
         }
         if (ssoToken == null) {
-            String jwt = null;
+            String jwt;
             if (subject instanceof PrincipalImpl) {
                 jwt = ((PrincipalImpl) subject).getPrivateJwtToken();
             } else {

@@ -1,15 +1,9 @@
 package com.rooxteam.sso.aal.client;
 
-import com.google.common.collect.ImmutableMap;
-import com.rooxteam.sso.aal.ConfigKeys;
-import com.rooxteam.sso.aal.Principal;
-import com.rooxteam.sso.aal.PrincipalImpl;
-import com.rooxteam.sso.aal.PropertyScope;
-import com.rooxteam.sso.aal.client.model.Decision;
+import com.rooxteam.sso.aal.*;
+import com.rooxteam.sso.aal.client.model.EvaluationRequest;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
-import com.rooxteam.sso.aal.exception.AuthenticationException;
 import com.rooxteam.sso.aal.exception.AuthorizationException;
-import com.rooxteam.sso.aal.exception.ValidateException;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpStatus;
@@ -38,10 +32,10 @@ public class SsoAuthorizationClientByJwt implements SsoAuthorizationClient {
     private final ObjectMapper jsonMapper = new ObjectMapper();
 
     private static final String IS_ALLOWED_PATH = "/api/policyEvaluation/isAllowed";
+    private static final String WHICH_ALLOWED_PATH = "/api/policyEvaluation/whichAllowed";
     private static final String TOKEN_INFO_PATH = "/oauth2/tokeninfo";
     private final Configuration config;
     private CloseableHttpClient httpClient;
-    private static ObjectMapper mapper = new ObjectMapper();
 
     public SsoAuthorizationClientByJwt(Configuration rooxConfig, CloseableHttpClient httpClient) {
         config = rooxConfig;
@@ -75,7 +69,7 @@ public class SsoAuthorizationClientByJwt implements SsoAuthorizationClient {
 
             if (statusCode == HttpStatus.SC_OK) {
                 String responseJson = EntityUtils.toString(response.getEntity());
-                Map<String, Object> tokenClaims = parseJson(responseJson);
+                Map<String, Object> tokenClaims = jsonMapper.readValue(responseJson, Map.class);
                 Map<String, Object> sharedIdentityProperties = new HashMap<>();
                 Object cn = tokenClaims.get("sub");
                 sharedIdentityProperties.put("prn", cn);
@@ -160,6 +154,50 @@ public class SsoAuthorizationClientByJwt implements SsoAuthorizationClient {
         }
     }
 
+    @Override
+    public Map<EvaluationRequest, EvaluationResponse> whichActionAreAllowed(Principal subject, List<EvaluationRequest> policies) {
+        String token = getJwtToken(subject);
+
+        if (token == null) {
+            LOG.warnNullSsoToken();
+            throw new IllegalArgumentException("Authorization token is not supplied");
+        }
+
+        try {
+            String realm = (String) subject.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "realm");
+            List<EvaluationContext> contexts = new ArrayList<>();
+            for (EvaluationRequest policy : policies) {
+                String method = policy.getActionName();
+                String resource = policy.getResourceName();
+                Map<String, ?> env = policy.getEnvParameters();
+                contexts.add(new EvaluationContext(realm, resource, method, env));
+            }
+
+            String url = config.getString(ConfigKeys.SSO_URL) + WHICH_ALLOWED_PATH;
+            HttpPost post = HttpHelper.getHttpPostWithJsonBody(url, jsonMapper.writeValueAsString(contexts));
+            post.addHeader("Authorization", "Bearer " + token);
+            EvaluationResponse[] responses = doWhichAllowedPost(post);
+
+            if (policies.size() != responses.length) {
+                throw new IllegalStateException("Wrong number of results");
+            }
+
+            Map<EvaluationRequest, EvaluationResponse> result = new HashMap<>();
+
+            for (int i = 0; i < responses.length; i++) {
+                result.put(policies.get(i), responses[i]);
+            }
+
+            return result;
+        } catch (IOException e) {
+            LOG.errorAuthentication(e);
+            throw new AuthorizationException("Failed to authorize because of communication or protocol error", e);
+        } catch (Exception e) {
+            LOG.errorAuthentication(e);
+            throw e;
+        }
+    }
+
     private String getJwtToken(Principal subject) {
         String jwt;
         if (subject instanceof PrincipalImpl) {
@@ -171,31 +209,37 @@ public class SsoAuthorizationClientByJwt implements SsoAuthorizationClient {
     }
 
     private EvaluationResponse doIsAllowedPost(HttpPost post) throws IOException {
-        ObjectNode jsonResult = executeRequest(post);
-        if (jsonResult.has("error")) {
-            processPolicyError(jsonResult);
-        }
-        return parsePolicyDecision(jsonResult);
+        String result = executeRequest(post);
+
+        return jsonMapper.readValue(result, EvaluationResponse.class);
     }
 
-    private ObjectNode executeRequest(HttpPost post) throws IOException {
+    private EvaluationResponse[] doWhichAllowedPost(HttpPost post) throws IOException {
+        String result = executeRequest(post);
+        return jsonMapper.readValue(result, EvaluationResponse[].class);
+    }
+
+    private String executeRequest(HttpPost post) throws IOException {
         HttpClientContext context = new HttpClientContext();
         context.setCookieStore(new BasicCookieStore());
         String result;
         try (CloseableHttpResponse response = httpClient.execute(post, context)) {
             result = EntityUtils.toString(response.getEntity());
+
+            if (response.getStatusLine().getStatusCode() != 200) {
+                try {
+                    ObjectNode jsonError = (ObjectNode) jsonMapper.readTree(result);
+                    processPolicyError(jsonError);
+                } catch (IOException e) {
+                    throw new AuthorizationException("Failed to read a response from the server:" + response.getStatusLine(), e);
+                }
+            }
         }
         if (result == null) {
-            throw new AuthenticationException("Empty response from the server");
+            throw new AuthorizationException("Empty response from the server");
         }
 
-        ObjectNode jsonResult = null;
-        try {
-            jsonResult = (ObjectNode) jsonMapper.readTree(result);
-        } catch (IOException e) {
-            throw new AuthorizationException("Failed to read a response from the server", e);
-        }
-        return jsonResult;
+        return result;
     }
 
     private void processPolicyError(ObjectNode jsonResult) {
@@ -210,39 +254,5 @@ public class SsoAuthorizationClientByJwt implements SsoAuthorizationClient {
             message = error.get("message").asText();
         }
         throw new AuthorizationException(message, message, errorCode);
-    }
-
-    private EvaluationResponse parsePolicyDecision(ObjectNode jsonResult) {
-        if (!jsonResult.has("decision")) {
-            throw new AuthorizationException("Response from server contains no decision and no error");
-        }
-        String decisionString = jsonResult.get("decision").asText();
-        Decision decision = Decision.valueOf(decisionString);
-        ImmutableMap.Builder<String, String> advicesResult = ImmutableMap.builder();
-        if (jsonResult.has("advices")) {
-            JsonNode advicesNode = jsonResult.get("advices");
-            if (!advicesNode.isObject()) {
-                throw new AuthorizationException("Unexpected advices format sent from the server");
-            }
-            ObjectNode advices = (ObjectNode) advicesNode;
-            Iterator<Map.Entry<String, JsonNode>> fields = advices.getFields();
-            while (fields.hasNext()) {
-                Map.Entry<String, JsonNode> field = fields.next();
-                if (!field.getValue().isTextual()) {
-                    LOG.errorInvalidAdviceContentType(field.getKey(), field.getValue().toString());
-                    throw new AuthorizationException("Invalid advice content type");
-                }
-                advicesResult.put(field.getKey(), field.getValue().getTextValue());
-            }
-        }
-        return new EvaluationResponse(decision, advicesResult.build());
-    }
-
-    private static Map<String, Object> parseJson(String json) {
-        try {
-            return mapper.readValue(json, Map.class);
-        } catch (IOException e) {
-            throw new ValidateException("Failed to parse json", e);
-        }
     }
 }
