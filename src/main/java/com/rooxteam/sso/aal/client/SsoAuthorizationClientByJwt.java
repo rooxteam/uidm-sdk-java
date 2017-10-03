@@ -228,8 +228,13 @@ public class SsoAuthorizationClientByJwt implements SsoAuthorizationClient {
 
             if (response.getStatusLine().getStatusCode() != 200) {
                 try {
-                    ObjectNode jsonError = (ObjectNode) jsonMapper.readTree(result);
-                    processPolicyError(jsonError);
+                    ObjectNode jsonResult = (ObjectNode) jsonMapper.readTree(result);
+                    if (jsonResult.has("error")) {
+                        processPolicyError(jsonResult);
+                    } else {
+                        // Proper json, without errors. Moving on.
+                        return result;
+                    }
                 } catch (IOException e) {
                     throw new AuthorizationException("Failed to read a response from the server:" + response.getStatusLine(), e);
                 }
