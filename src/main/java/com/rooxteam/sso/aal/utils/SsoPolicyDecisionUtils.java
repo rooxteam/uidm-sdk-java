@@ -16,7 +16,7 @@ public class SsoPolicyDecisionUtils {
     public static EvaluationResponse toEvaluationResponse(PolicyDecision result, String actionNaame) {
         ActionDecision decision = (ActionDecision) result.getActionDecisions().get(actionNaame);
         if (decision == null) {
-            throw new IllegalArgumentException("Unexpected action name in policy evaluation: " + actionNaame);
+            return new EvaluationResponse(Decision.Deny);
         }
         if (decision.getValues().contains("allow")) {
             return new EvaluationResponse(Decision.Permit);
