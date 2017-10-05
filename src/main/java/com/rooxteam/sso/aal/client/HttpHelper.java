@@ -32,7 +32,7 @@ class HttpHelper {
         HttpPost post = new HttpPost(url);
         restPrepare(post);
         post.addHeader(new BasicHeader(HttpHeaders.CONTENT_TYPE, JSON_CONTENT_TYPE));
-        post.setEntity(new StringEntity(body));
+        post.setEntity(new StringEntity(body, REQUEST_BODY_CHARSET));
         return post;
     }
 
