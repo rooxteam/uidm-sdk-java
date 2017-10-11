@@ -74,6 +74,11 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
                     }
                 }
 
+                Object realm = tokenClaims.get("realm");
+                if (realm != null) {
+                    sharedIdentityProperties.put("realm", realm.toString());
+                }
+
                 Object authLevel = tokenClaims.get("auth_level");
                 if (authLevel != null) {
                     sharedIdentityProperties.put("authLevel", Collections.singletonList(authLevel.toString()));
