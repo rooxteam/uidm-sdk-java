@@ -28,7 +28,7 @@ class HttpHelper {
         return post;
     }
 
-    static HttpPost getHttpPostWithJsonBody(String url, String body) throws UnsupportedEncodingException {
+    static HttpPost getHttpPostWithJsonBody(String url, String body) {
         HttpPost post = new HttpPost(url);
         restPrepare(post);
         post.addHeader(new BasicHeader(HttpHeaders.CONTENT_TYPE, JSON_CONTENT_TYPE));
@@ -36,13 +36,13 @@ class HttpHelper {
         return post;
     }
 
-    static HttpPost getHttpPost(String url, List<NameValuePair> params) throws UnsupportedEncodingException {
+    static HttpPost getHttpPost(String url, List<NameValuePair> params) {
         HttpPost post = new HttpPost(url + uniformURLParams(params));
         restPrepare(post);
         return post;
     }
 
-    static HttpGet getHttpGet(String url, List<NameValuePair> params) throws UnsupportedEncodingException {
+    static HttpGet getHttpGet(String url, List<NameValuePair> params) {
         HttpGet get = new HttpGet(url + uniformURLParams(params));
         restPrepare(get);
         return get;
