@@ -69,6 +69,7 @@ public final class YotaPrincipalImpl implements YotaPrincipal {
         }
     }
 
+
     @Override
     public Calendar getExpirationTime() {
         return expirationTime;

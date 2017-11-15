@@ -19,16 +19,15 @@ import static com.rooxteam.sso.aal.AalLogger.LOG;
  *
  * @author Dmitry Tikhonov
  */
-public final class PrincipalImpl implements Principal {
-
-    private final String policyContextJwtToken;
-    private final String publicJwtToken;
+public final class PrincipalImpl extends AbstractPrincipal {
 
     private final Map<String, Object> sharedIdentityProperties = new ConcurrentHashMap<>();
     private final Map<String, Object> privateIdentityProperties = new ConcurrentHashMap<>();
     private final Map<String, Object> sessionProperties = new ConcurrentHashMap<>();
-
+    private final String policyContextJwtToken;
+    private final String publicJwtToken;
     private Calendar expirationTime;
+
 
     public PrincipalImpl(String policyContextJwtToken, String publicJwtToken) {
         if (policyContextJwtToken == null || policyContextJwtToken.trim().isEmpty()) {
@@ -57,42 +56,8 @@ public final class PrincipalImpl implements Principal {
     }
 
     @Override
-    public Object getProperty(PropertyScope propertyScope, String name) {
-        return getProperties(propertyScope).get(name);
-    }
-
-    @Override
-    public Map<String, Object> getProperties(PropertyScope propertyScope) {
-        switch (propertyScope) {
-            case SHARED_IDENTITY_PARAMS:
-                return sharedIdentityProperties;
-            case PRIVATE_IDENTITY_PARAMS:
-                return privateIdentityProperties;
-            case SESSION_PARAMS:
-                return sessionProperties;
-            default:
-                return null;
-        }
-    }
-
-    @Override
-    public void setProperty(PropertyScope propertyScope, String name, Object value) {
-        getProperties(propertyScope).put(name, value);
-    }
-
-    @Override
-    public Calendar getExpirationTime() {
-        return expirationTime;
-    }
-
-    @Override
     public String getJwtToken() {
         return publicJwtToken;
-    }
-
-    @Override
-    public boolean isAnonymous() {
-        return false;
     }
 
     /**
@@ -106,6 +71,11 @@ public final class PrincipalImpl implements Principal {
         return policyContextJwtToken;
     }
 
+
+    @Override
+    public Calendar getExpirationTime() {
+        return expirationTime;
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -144,4 +114,18 @@ public final class PrincipalImpl implements Principal {
         }
     }
 
+    @Override
+    protected Map<String, Object> getSharedIdentityProperties() {
+        return sharedIdentityProperties;
+    }
+
+    @Override
+    protected Map<String, Object> getPrivateIdentityProperties() {
+        return privateIdentityProperties;
+    }
+
+    @Override
+    protected Map<String, Object> getSessionProperties() {
+        return sessionProperties;
+    }
 }

@@ -1,7 +1,10 @@
 package com.rooxteam.sso.aal.client;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.client.model.AuthenticationResponse;
+import com.rooxteam.sso.aal.client.model.JWTAuthenticationResponse;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
 import com.rooxteam.sso.aal.exception.ErrorSubtypes;
 import org.apache.commons.configuration.Configuration;
@@ -13,9 +16,6 @@ import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
-import org.codehaus.jackson.map.DeserializationConfig;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.node.ObjectNode;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static com.rooxteam.sso.aal.AalLogger.LOG;
 
 /**
@@ -59,7 +60,7 @@ public class SsoAuthenticationClient {
         COMMON_PARAMS.add(REALM_PARAM_NAME);
         COMMON_PARAMS.add(SERVICE_PARAM_NAME);
 
-        this.jsonMapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        this.jsonMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     /**
@@ -136,7 +137,7 @@ public class SsoAuthenticationClient {
             throw new AuthenticationException("Failed to read response from server", e);
         }
         if (!jsonResult.has("error")) {
-            return jsonMapper.readValue(jsonResult,AuthenticationResponse.class);
+            return jsonMapper.convertValue(jsonResult, JWTAuthenticationResponse.class);
         }
         if (jsonResult.has("error")) {
             //{"error_description":"Resource owner authentication failed","error":"invalid_grant"}

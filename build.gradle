@@ -31,6 +31,7 @@ dependencies {
     compile("com.google.guava:guava:$guavaVersion")
     compile("io.dropwizard.metrics:metrics-core:${metricsVersion}")
     compile("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
+    compile("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
     compile("com.nimbusds:nimbus-jose-jwt:${nimbusJoseJwtVersion}")
 
     provided("org.projectlombok:lombok:${lombokVersion}")

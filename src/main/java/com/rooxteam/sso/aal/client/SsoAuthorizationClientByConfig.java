@@ -1,19 +1,22 @@
 package com.rooxteam.sso.aal.client;
 
-import com.rooxteam.sso.aal.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.rooxteam.sso.aal.ConfigKeys;
+import com.rooxteam.sso.aal.Principal;
+import com.rooxteam.sso.aal.PropertyScope;
 import com.rooxteam.sso.aal.client.model.Decision;
 import com.rooxteam.sso.aal.client.model.EvaluationRequest;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.exception.AuthorizationException;
-import com.rooxteam.sso.aal.exception.ValidateException;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.node.NullNode;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Dmitry Tikhonov
@@ -86,8 +89,8 @@ public class SsoAuthorizationClientByConfig extends CommonSsoAuthorizationClient
 
     private Integer getRequiredLevel(String resourceName, String actionName) {
         JsonNode policyAuthLevelNode = getAuthLevelFromLocalPolicies(resourceName, actionName);
-        if (policyAuthLevelNode != null) {
-            return policyAuthLevelNode.getIntValue();
+        if (policyAuthLevelNode != null && policyAuthLevelNode.isInt()) {
+            return policyAuthLevelNode.asInt();
         } else {
             return null;
         }

@@ -6,6 +6,7 @@ import com.rooxteam.sso.aal.client.*;
 import com.rooxteam.sso.aal.client.model.AuthenticationResponse;
 import com.rooxteam.sso.aal.client.model.EvaluationRequest;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
+import com.rooxteam.sso.aal.context.TokenContextFactory;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
 import com.rooxteam.sso.aal.metrics.AalMetricsHelper;
 import com.rooxteam.sso.aal.otp.*;
@@ -165,7 +166,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         AuthenticationResponse authResult = ssoAuthenticationClient.authenticate(params);
 
         if (authResult != null) {
-            PrincipalImpl principal = new PrincipalImpl(authResult.getPolicyContext(), authResult.getPublicToken());
+            Principal principal = TokenContextFactory.get(TokenContextFactory.TYPE.JWTToken).createPrincipal(authResult);
             String authType = (String) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "authType");
             if (authType != null && authType.equals(AuthParamType.IP.getValue())) {
                 PrincipalCache.put(new PrincipalKey(AuthParamType.IP, ip, clientIps), principal);
@@ -210,7 +211,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         AuthenticationResponse authenticationResponse = ssoAuthenticationClient.authenticate(params);
         Principal result = null;
         if (authenticationResponse != null) {
-            result = new PrincipalImpl(authenticationResponse.getPolicyContext(), authenticationResponse.getPublicToken());
+            result = TokenContextFactory.get(TokenContextFactory.TYPE.JWTToken).createPrincipal(authenticationResponse);
             fireOnRequestPrincipal(result);
         }
         return result;

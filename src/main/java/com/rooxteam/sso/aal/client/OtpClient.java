@@ -1,12 +1,11 @@
 package com.rooxteam.sso.aal.client;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rooxteam.sso.aal.ConfigKeys;
-import com.rooxteam.sso.aal.PrincipalImpl;
 import com.rooxteam.sso.aal.client.exception.UnknownResponseException;
-import com.rooxteam.sso.aal.client.model.AuthenticationResponse;
-import com.rooxteam.sso.aal.client.model.Form;
-import com.rooxteam.sso.aal.client.model.OtpFlowStateJson;
-import com.rooxteam.sso.aal.client.model.ResponseError;
+import com.rooxteam.sso.aal.client.model.*;
+import com.rooxteam.sso.aal.context.TokenContextFactory;
 import com.rooxteam.sso.aal.otp.*;
 import org.apache.commons.codec.Charsets;
 import org.apache.commons.configuration.Configuration;
@@ -27,8 +26,6 @@ import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -52,6 +49,7 @@ public class OtpClient {
     private static final String SESSION_ID_COOKIE_NAME = "RX_SID";
     private static final String NEXT_OTP_OPERATION_PERIOD_PARAM_NAME = "com.rooxteam.uidm.otp.operation.next_otp_period";
     private static final int NEXT_OTP_OPERATION_PERIOD_DEFAULT_VALUE = 10;
+    private final Map<String, Class<? extends AuthenticationResponse>> responseTypes;
 
     private Configuration config;
 
@@ -70,6 +68,9 @@ public class OtpClient {
         this.config = config;
         this.jsonMapper = new ObjectMapper();
         this.httpClient = httpClient;
+        responseTypes = new HashMap<>();
+        responseTypes.put("Bearer", BearerAuthenticationResponse.class);
+        responseTypes.put("JWTToken", JWTAuthenticationResponse.class);
     }
 
     public OtpResponse sendOtp(String jwt) {
@@ -207,11 +208,11 @@ public class OtpClient {
         OtpFlowStateJson otpFlowStateJson;
         try {
             JsonNode jsonNode = jsonMapper.readTree(json);
-            if (jsonNode.has("JWTToken")) {
-                AuthenticationResponse authenticationResponse = jsonMapper.readValue(jsonNode, AuthenticationResponse.class);
+            if (jsonNode.has("token_type")) {
+                TokenContextFactory factory = TokenContextFactory.get(jsonNode.get("token_type").asText());
                 OtpResponseImpl response = new OtpResponseImpl();
                 response.setStatus(OtpStatus.SUCCESS);
-                response.setPrincipal(new PrincipalImpl(authenticationResponse.getPolicyContext(), authenticationResponse.getPublicToken()));
+                response.setPrincipal(factory.createPrincipal(jsonMapper, jsonNode));
                 return response;
             }
             if (!jsonNode.has("form") || !jsonNode.has("view")) {
@@ -243,6 +244,11 @@ public class OtpClient {
         otpResponse.setOtpCodeNumber(otpFlowStateJson.getView().getOtpCodeNumber());
 
         return otpResponse;
+    }
+
+    private Class<? extends AuthenticationResponse> resolveClass(String tokenType) {
+        Class<? extends AuthenticationResponse> value = responseTypes.get(tokenType);
+        return value == null ? JWTAuthenticationResponse.class : value;
     }
 
     private String getDefaultService() {

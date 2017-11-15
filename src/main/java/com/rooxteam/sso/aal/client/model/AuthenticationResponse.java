@@ -1,23 +1,17 @@
 package com.rooxteam.sso.aal.client.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonProperty;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Setter
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AuthenticationResponse {
+abstract public class AuthenticationResponse<T> {
 
     @JsonProperty("PolicyContext")
-    private String policyContext;
+    private T policyContext;
 
-    @JsonProperty("JWTToken")
     private String publicToken;
 }

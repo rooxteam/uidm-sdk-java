@@ -1,10 +1,9 @@
 package com.rooxteam.sso.aal.client;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
