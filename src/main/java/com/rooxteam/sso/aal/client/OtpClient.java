@@ -2,6 +2,7 @@ package com.rooxteam.sso.aal.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rooxteam.errors.exception.ApiException;
 import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.client.exception.UnknownResponseException;
 import com.rooxteam.sso.aal.client.model.*;
@@ -26,6 +27,7 @@ import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.springframework.http.HttpStatus;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -165,12 +167,13 @@ public class OtpClient {
                 cookieStore.addCookie(cookie);
             }
             response = httpClient.execute(post, context);
+            int status = response.getStatusLine().getStatusCode();
             String sessionIdCookie = getSessionIdCookie(cookieStore);
 
             HttpEntity entity = response.getEntity();
             String json = EntityUtils.toString(entity, Charsets.UTF_8);
 
-            return prepareOtpResponse(json, sessionIdCookie);
+            return prepareOtpResponse(status, json, sessionIdCookie);
         } catch (IOException e) {
             LOG.errorValidateOtpByMsisdnError(otpState, e);
             return OtpResponseImpl.exception(e);
@@ -204,7 +207,7 @@ public class OtpClient {
         return commonOtpParams(null);
     }
 
-    private OtpResponse prepareOtpResponse(String json, String sessionIdCookie) {
+    private OtpResponse prepareOtpResponse(int status, String json, String sessionIdCookie) {
         OtpFlowStateJson otpFlowStateJson;
         try {
             JsonNode jsonNode = jsonMapper.readTree(json);
@@ -216,6 +219,9 @@ public class OtpClient {
                 return response;
             }
             if (!jsonNode.has("form") || !jsonNode.has("view")) {
+                if (status >= 400) {
+                    throw handleServerException(status, jsonNode);
+                }
                 LOG.errorUnknownWebSSOResponse(json);
                 OtpResponseImpl response = new OtpResponseImpl();
                 response.setStatus(OtpStatus.EXCEPTION);
@@ -244,6 +250,19 @@ public class OtpClient {
         otpResponse.setOtpCodeNumber(otpFlowStateJson.getView().getOtpCodeNumber());
 
         return otpResponse;
+    }
+
+    private ApiException handleServerException(int status, JsonNode jsonNode) {
+        HttpStatus httpStatus = HttpStatus.valueOf(status);
+        String message;
+        if (jsonNode.has("error_description")) {
+            message = jsonNode.get("error_description").asText();
+        } else if (jsonNode.has("error")) {
+            message = jsonNode.get("error").asText();
+        } else {
+            message = httpStatus.getReasonPhrase();
+        }
+        return new ApiException(httpStatus, message);
     }
 
     private Class<? extends AuthenticationResponse> resolveClass(String tokenType) {

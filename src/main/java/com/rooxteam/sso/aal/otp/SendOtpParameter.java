@@ -19,6 +19,10 @@ public class SendOtpParameter {
      */
     private String msisdn;
     /**
+     * Категория OTP. Позволяет кастомизировать шаблон, транспорт и т. д.
+     */
+    private String category;
+    /**
      * Имя сценария в Customer SSO для AAL
      */
     private String service;
