@@ -19,7 +19,7 @@ import static com.rooxteam.sso.aal.AalLogger.LOG;
  *
  * @author Dmitry Tikhonov
  */
-public final class PrincipalImpl extends AbstractPrincipal {
+public class PrincipalImpl extends AbstractPrincipal {
 
     private final Map<String, Object> sharedIdentityProperties = new ConcurrentHashMap<>();
     private final Map<String, Object> privateIdentityProperties = new ConcurrentHashMap<>();
