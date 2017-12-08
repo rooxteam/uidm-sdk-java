@@ -45,6 +45,7 @@ public class OtpClient {
 
     private static final String EXECUTION_PARAM_NAME = "execution";
     public static final String MSISDN_PARAM_NAME = "msisdn";
+    private static final String CATEGORY_PARAM_NAME = "category";
     private static final String EVENT_ID_PARAM_NAME = "_eventId";
     private static final String EVENT_ID_VALIDATE = "validate";
     private static final String EVENT_ID_SEND = "send";
@@ -105,6 +106,9 @@ public class OtpClient {
         }
         if (!StringUtils.isEmpty(sendOtpParameter.getMsisdn())) {
             params.add(new BasicNameValuePair(MSISDN_PARAM_NAME, sendOtpParameter.getMsisdn()));
+        }
+        if (!StringUtils.isEmpty(sendOtpParameter.getCategory())) {
+            params.add(new BasicNameValuePair(CATEGORY_PARAM_NAME, sendOtpParameter.getCategory()));
         }
         params.add(new BasicNameValuePair("operation", contextJson));
         return makeOtpRequest(params, null);
