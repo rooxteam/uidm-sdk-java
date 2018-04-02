@@ -6,11 +6,14 @@ import com.rooxteam.jwt.IatClaimChecker;
 import com.rooxteam.jwt.NbfClaimChecker;
 import com.rooxteam.jwt.StringClaimChecker;
 import com.rooxteam.sso.aal.client.*;
+import com.rooxteam.sso.aal.client.cookies.RequestCookieStore;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import org.apache.commons.configuration.Configuration;
+import org.apache.http.client.CookieStore;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
 import org.apache.http.impl.NoConnectionReuseStrategy;
+import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -125,9 +128,16 @@ public class AalFactory {
                                                         RequestConfig requestConfig,
                                                         PoolingHttpClientConnectionManager connectionManager
     ) {
+        CookieStore cookieStore;
+        if (config.getBoolean("com.rooxteam.sso.aal.client.cookie.store.enablePerRequest", true)) {
+            cookieStore = new RequestCookieStore();
+        } else {
+            cookieStore = new BasicCookieStore();
+        }
         return HttpClientBuilder.create()
                 .setConnectionManager(connectionManager)
                 .setDefaultRequestConfig(requestConfig)
+                .setDefaultCookieStore(cookieStore)
                 .addInterceptorLast(new MonitoringHttpClientRequestInterceptor(config))
                 .setConnectionReuseStrategy(reuseStrategy)
                 .build();

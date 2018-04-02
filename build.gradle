@@ -23,6 +23,7 @@ apply plugin: 'roox-sonar'
 dependencies {
     provided("com.rooxteam.sso:roox-openam-clientsdk:$rooxOpenamClientVersion")
     provided("com.rooxteam.webapi:error-handlers-plugin:$errorHandlersPluginVersion")
+    compile("com.rooxteam.sso:request-cookie-store:$requestCookieStoreVersion")
     compile("org.forgerock.commons:json-web-token:$jsonWebTokenVesrion")
     compile("commons-configuration:commons-configuration:$apacheConfigurationVersion")
     compile("org.apache.httpcomponents:httpclient:$apacheHttpClientVersion")

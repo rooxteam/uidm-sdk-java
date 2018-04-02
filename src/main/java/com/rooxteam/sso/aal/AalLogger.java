@@ -164,7 +164,7 @@ public interface AalLogger extends BasicLogger {
     @LogMessage(level = WARN)
     @Message(id = 4003, format = MESSAGE_FORMAT,
             value = "Unexpected Jwt validator creation exception.\n" +
-            "For details see cause.")
+                    "For details see cause.")
     void warnJwtValidatorGotSuppressedException(@Cause Exception e);
 
     @LogMessage(level = WARN)
