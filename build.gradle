@@ -19,6 +19,8 @@ apply plugin: 'roox-doc'
 apply plugin: 'roox-jar'
 apply plugin: 'roox-sonar'
 
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
 
 dependencies {
     provided("com.rooxteam.sso:roox-openam-clientsdk:$rooxOpenamClientVersion")
@@ -36,6 +38,7 @@ dependencies {
     compile("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
     compile("com.nimbusds:nimbus-jose-jwt:${nimbusJoseJwtVersion}")
 
+    provided("javax.servlet:servlet-api:${servletVersion}")
     provided("org.projectlombok:lombok:${lombokVersion}")
 
     testCompile("junit:junit:$junitVersion")

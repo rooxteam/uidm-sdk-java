@@ -5,9 +5,9 @@ import com.rooxteam.sso.aal.client.model.EvaluationRequest;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.otp.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -28,7 +28,7 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
      * @param timeOut  таймаут выполнения.
      * @param timeUnit единица измерения таймаута.
      * @return Principal с заполненными атрибутами при успешной аутентификации
-     * @throws IllegalArgumentException Если параметр {@code params} не содержит параметер "ip"
+     * @throws IllegalArgumentException                               Если параметр {@code params} не содержит параметер "ip"
      * @throws com.rooxteam.sso.aal.exception.AuthenticationException В случае неуспеха аутентификации
      */
     @Deprecated
@@ -45,7 +45,7 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
      *               для аутентификации по ранее выданному JWT необходимо передать параметр "jwt".
      *               Опционально передать список клиентских IP-адресов в параметре clientIps (формат, IP-адреса в dot-представлении разделенные между собой запятой).
      * @return Principal с заполненными атрибутами при успешной аутентификации
-     * @throws IllegalArgumentException Если параметр {@code params} не содержит параметр "ip"
+     * @throws IllegalArgumentException                               Если параметр {@code params} не содержит параметр "ip"
      * @throws com.rooxteam.sso.aal.exception.AuthenticationException В случае неуспеха аутентификации
      */
     Principal authenticate(Map<String, ?> params);
@@ -138,7 +138,7 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
     /**
      * Вычислить политики относительно действий (actionName) над ресурсом (actionName) в контексте (envParameters).
      *
-     * @param subject       Principal для которого запрашивается доступ
+     * @param subject         Principal для которого запрашивается доступ
      * @param policiesToCheck политики для вычисления
      * @return ответ о возможности выполнения указанных действий, а также список advices, который может содержать причины отказа.
      * @throws IllegalArgumentException Если параметр {@code policiesToCheck} равен null
@@ -159,16 +159,24 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
 
     /**
      * Преобразовать JWT токен в принципал. Созданный принципал будет иметь только свойства из скоупа Shared Identity Params.
-     * @deprecated Используйте метод authenticate вместо локальной проверки.
+     *
      * @param jwt JWT токен для создания принципала
      * @return Principal с атрибутами из JWT
+     * @deprecated Используйте {@link #authenticate(Map)} вместо локальной проверки.
      */
     @Deprecated
     Principal parseToken(String jwt);
 
     /**
+     * @deprecated Используйте {@link #authenticate(Map)} вместо локальной проверки.
+     */
+    default Principal validate(String jwt) {
+        return validate(null, jwt);
+    }
+
+    /**
      * Проверить корректность токена без обращения к SSO.
-     * @deprecated Используйте метод authenticate вместо локальной проверки.
+     *
      * @param jwt JWT токен для проверки
      * @return статус проверки
      * @throws com.rooxteam.sso.aal.exception.AalException Может сождержать в себе причины (cause):
@@ -176,10 +184,12 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
      *                                                     {@link java.security.spec.InvalidKeySpecException},
      *                                                     {@link com.nimbusds.jose.JOSEException},
      *                                                     {@link java.lang.RuntimeException}
-     * @throws java.lang.IllegalArgumentException Если {@code jwt} равен null
-     * @throws java.lang.IllegalStateException Если параметры iat, nbf и другие с неправильными значениями
+     * @throws java.lang.IllegalArgumentException          Если {@code jwt} равен null
+     * @throws java.lang.IllegalStateException             Если параметры iat, nbf и другие с неправильными значениями
+     * @deprecated Используйте {@link #authenticate(Map)} вместо локальной проверки.
      */
-    Principal validate(String jwt);
+    @Deprecated
+    Principal validate(HttpServletRequest request, String jwt);
 
     /**
      * Зарегистрировать PrincipalEventListener для обработки событий Principal.
@@ -241,7 +251,7 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
      * Запрос одноразового пароля (One-time password, OTP).
      *
      * @param principal Принципал, которому отправляется уведомление
-     * @param context Контекст операции, для которой требуется выдать токен по результатам OTP
+     * @param context   Контекст операции, для которой требуется выдать токен по результатам OTP
      * @return Возвращает POJO, содержащую текущий шаг, состояние, форму отправки OTP, дополнительные параметры и результат аутентификации (Principal) в случае успеха
      */
     OtpResponse sendOtpForOperation(Principal principal, EvaluationContext context);
@@ -261,7 +271,7 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
      * @param timeOut      таймаут выполнения.
      * @param timeUnit     единица измерения таймаута.
      * @return OtpResponse POJO, содержащую текущий шаг, состояние, форму отправки OTP,
-     * дополнительные параметры и результат аутентификации (Principal) в случае успеха
+     *         дополнительные параметры и результат аутентификации (Principal) в случае успеха
      */
     @Deprecated
     OtpResponse resendOtp(OtpFlowState otpFlowState, long timeOut, TimeUnit timeUnit);
@@ -271,7 +281,7 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
      *
      * @param otpFlowState Объект представляющий текущее состояние сценария OTP.
      * @return OtpResponse POJO, содержащую текущий шаг, состояние, форму отправки OTP,
-     * дополнительные параметры и результат аутентификации (Principal) в случае успеха
+     *         дополнительные параметры и результат аутентификации (Principal) в случае успеха
      */
     OtpResponse resendOtp(OtpFlowState otpFlowState);
 
@@ -280,7 +290,7 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
      *
      * @param resendOtpParameter Параметры для повторного запроса OTP.
      * @return OtpResponse POJO, содержащую текущий шаг, состояние, форму отправки OTP,
-     * дополнительные параметры и результат аутентификации (Principal) в случае успеха
+     *         дополнительные параметры и результат аутентификации (Principal) в случае успеха
      */
     OtpResponse resendOtp(ResendOtpParameter resendOtpParameter);
 
@@ -311,7 +321,7 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
      * Валидация OTP
      *
      * @param otpState Состояние запроса
-     * @param otpCode   Введенный пользователем код
+     * @param otpCode  Введенный пользователем код
      * @return Возвращает результат валидации: или форму для заполнения (не успешная валидация) или принципала (успешная валидация)
      */
     OtpResponse validateOtp(OtpFlowState otpState, String otpCode);

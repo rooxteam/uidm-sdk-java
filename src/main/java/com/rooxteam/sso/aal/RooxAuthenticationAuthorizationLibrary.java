@@ -16,6 +16,7 @@ import org.forgerock.json.jose.common.JwtReconstruction;
 import org.forgerock.json.jose.jws.SignedJwt;
 import org.forgerock.json.jose.jwt.JwtClaimsSet;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -382,8 +383,8 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     }
 
     @Override
-    public Principal validate(String jwt) {
-        return ssoAuthorizationClient.validate(jwt);
+    public Principal validate(HttpServletRequest request, String jwt) {
+        return ssoAuthorizationClient.validate(request, jwt);
     }
 
     @Override

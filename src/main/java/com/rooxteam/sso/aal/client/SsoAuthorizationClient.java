@@ -4,6 +4,7 @@ import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.client.model.EvaluationRequest;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
 
@@ -13,6 +14,25 @@ public interface SsoAuthorizationClient {
 
     Map<EvaluationRequest, EvaluationResponse> whichActionAreAllowed(Principal subject, List<EvaluationRequest> policies);
 
-    Principal validate(final String token);
+    /**
+     * Token validation
+     *
+     * @param token Token value
+     * @return True if token is valid
+     * @deprecated use {@link #validate(HttpServletRequest, String)}
+     */
+    @Deprecated
+    default Principal validate(final String token) {
+        return validate(null, token);
+    }
+
+    /**
+     * Token validation
+     *
+     * @param request Request
+     * @param token   Token value
+     * @return True if token is valid
+     */
+    Principal validate(HttpServletRequest request, final String token);
 
 }

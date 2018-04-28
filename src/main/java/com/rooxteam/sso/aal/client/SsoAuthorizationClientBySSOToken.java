@@ -2,7 +2,10 @@ package com.rooxteam.sso.aal.client;
 
 import com.iplanet.sso.SSOException;
 import com.iplanet.sso.SSOToken;
-import com.rooxteam.sso.aal.*;
+import com.rooxteam.sso.aal.ConfigKeys;
+import com.rooxteam.sso.aal.Principal;
+import com.rooxteam.sso.aal.PrincipalImpl;
+import com.rooxteam.sso.aal.PropertyScope;
 import com.rooxteam.sso.aal.client.exception.NotSupportedException;
 import com.rooxteam.sso.aal.client.model.Decision;
 import com.rooxteam.sso.aal.client.model.EvaluationRequest;
@@ -19,7 +22,11 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
 
-import java.util.*;
+import javax.servlet.http.HttpServletRequest;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.rooxteam.sso.aal.AalLogger.LOG;
 
@@ -156,7 +163,7 @@ public class SsoAuthorizationClientBySSOToken implements SsoAuthorizationClient 
      * @return True if token is valid
      */
     @Override
-    public Principal validate(final String token) {
+    public Principal validate(final HttpServletRequest request, final String token) {
         throw new NotSupportedException();
     }
 }
