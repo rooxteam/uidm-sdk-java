@@ -6,9 +6,11 @@ import com.rooxteam.sso.aal.otp.OtpStatus;
 import com.sun.identity.policy.PolicyException;
 import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.http.HttpEntity;
+import org.apache.http.ProtocolVersion;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.message.BasicStatusLine;
 import org.apache.http.protocol.HttpContext;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,7 +20,12 @@ import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class OtpClientTest {
 
@@ -96,6 +103,7 @@ public class OtpClientTest {
         CloseableHttpResponse mockHttpResponse = mock(CloseableHttpResponse.class);
         HttpEntity mockHttpEntity = mock(HttpEntity.class);
         when(mockHttpResponse.getEntity()).thenReturn(mockHttpEntity);
+        when(mockHttpResponse.getStatusLine()).thenReturn(new BasicStatusLine(new ProtocolVersion("1.1", 1, 1), 200, ""));
         ByteArrayInputStream inputStream = new ByteArrayInputStream(ENTER_OTP_FORM_JSON.getBytes());
         when(mockHttpEntity.getContent()).thenReturn(inputStream);
         when(mockHttpClient.execute(any(HttpPost.class), any(HttpContext.class))).thenReturn(mockHttpResponse);
@@ -113,6 +121,7 @@ public class OtpClientTest {
         CloseableHttpResponse mockHttpResponse = mock(CloseableHttpResponse.class);
         HttpEntity mockHttpEntity = mock(HttpEntity.class);
         when(mockHttpResponse.getEntity()).thenReturn(mockHttpEntity);
+        when(mockHttpResponse.getStatusLine()).thenReturn(new BasicStatusLine(new ProtocolVersion("1.1", 1, 1), 200, ""));
         ByteArrayInputStream inputStream = new ByteArrayInputStream(ENTER_OTP_FORM_WITHOUT_ERRORS_JSON.getBytes());
         when(mockHttpEntity.getContent()).thenReturn(inputStream);
         when(mockHttpClient.execute(any(HttpPost.class), any(HttpContext.class))).thenReturn(mockHttpResponse);
@@ -130,6 +139,8 @@ public class OtpClientTest {
         CloseableHttpResponse mockHttpResponse = mock(CloseableHttpResponse.class);
         HttpEntity mockHttpEntity = mock(HttpEntity.class);
         when(mockHttpResponse.getEntity()).thenReturn(mockHttpEntity);
+        when(mockHttpResponse.getStatusLine()).thenReturn(new BasicStatusLine(new ProtocolVersion("1.1", 1, 1), 200, ""));
+
         ByteArrayInputStream inputStream = new ByteArrayInputStream(UNKNOWN_JSON.getBytes());
         when(mockHttpEntity.getContent()).thenReturn(inputStream);
         when(mockHttpClient.execute(any(HttpPost.class), any(HttpContext.class))).thenReturn(mockHttpResponse);

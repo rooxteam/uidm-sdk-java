@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.rooxteam.sso.aal.AALInvalidationTest.IP_229_213_38_0;
 import static org.junit.Assert.*;
@@ -47,14 +48,14 @@ public class AALIsAllowedTest {
                 .thenReturn(testToken);
         when(mockSsoAuthorizationClient.authenticate(testToken))
                 .thenReturn(mockSsoToken);
-        when(mockSsoAuthorizationClient.isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET", null))
+        when(mockSsoAuthorizationClient.isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET", Collections.EMPTY_MAP))
                 .thenReturn(new EvaluationResponse(Decision.Permit));
 
         Map<String, Object> envParameters = Collections.emptyMap();
         boolean isAllowed = aal.isAllowed(mockPrincipal, "/TestResource", "GET", envParameters, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
         assertTrue(isAllowed);
 
-        verify(mockSsoAuthorizationClient, times(1)).isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET", null);
+        verify(mockSsoAuthorizationClient, times(1)).isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET", Collections.EMPTY_MAP);
         verify(mockPolicyDecisionsCache, times(1)).getIfPresent(any());
         verify(mockPolicyDecisionsCache, times(1)).put(any(PolicyDecisionKey.class), eq(new EvaluationResponse(Decision.Permit)));
     }
@@ -69,14 +70,14 @@ public class AALIsAllowedTest {
                 .thenReturn(testToken);
         when(mockSsoAuthorizationClient.authenticate(testToken))
                 .thenReturn(mockSsoToken);
-        when(mockSsoAuthorizationClient.isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET", null))
+        when(mockSsoAuthorizationClient.isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET", Collections.EMPTY_MAP))
                 .thenReturn(new EvaluationResponse(Decision.Deny));
 
         Map<String, Object> envParameters = Collections.emptyMap();
         boolean isAllowed = aal.isAllowed(mockPrincipal, "/TestResource", "GET", envParameters, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
         assertFalse(isAllowed);
 
-        verify(mockSsoAuthorizationClient, times(1)).isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET", null);
+        verify(mockSsoAuthorizationClient, times(1)).isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET", Collections.EMPTY_MAP);
         verify(mockPolicyDecisionsCache, times(1)).getIfPresent(any());
         verify(mockPolicyDecisionsCache, times(1)).put(any(PolicyDecisionKey.class), eq(new EvaluationResponse(Decision.Deny)));
     }
@@ -91,7 +92,7 @@ public class AALIsAllowedTest {
                 .thenReturn(testToken);
         when(mockSsoAuthorizationClient.authenticate(testToken))
                 .thenReturn(mockSsoToken);
-        when(mockSsoAuthorizationClient.isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET", null))
+        when(mockSsoAuthorizationClient.isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET", Collections.EMPTY_MAP))
                 .thenReturn(new EvaluationResponse(Decision.Permit));
         ConcurrentHashMap<PrincipalKey, Principal> PrincipalCacheMap = new ConcurrentHashMap<>();
         PrincipalKey PrincipalKey = new PrincipalKey(AuthParamType.IP, IP_229_213_38_0);
@@ -108,7 +109,7 @@ public class AALIsAllowedTest {
         isAllowed = aal.isAllowed(mockPrincipal, "/TestResource", "GET", envParameters, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
         assertTrue(isAllowed);
 
-        verify(mockSsoAuthorizationClient, times(2)).isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET", null);
+        verify(mockSsoAuthorizationClient, times(2)).isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET", Collections.EMPTY_MAP);
         verify(mockPolicyDecisionsCache, times(2)).getIfPresent(any());
         verify(mockPolicyDecisionsCache, times(2)).put(any(PolicyDecisionKey.class), eq(new EvaluationResponse(Decision.Permit)));
     }
