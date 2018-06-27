@@ -137,7 +137,7 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
         while (names.hasMoreElements()) {
             ArrayList<String> list = new ArrayList<>();
             String name = names.nextElement();
-            Enumeration<String> values =  Optional.ofNullable(request.getHeaders(name)).orElse(Collections.enumeration(Collections.emptyList()));
+            Enumeration<String> values = Optional.ofNullable(request.getHeaders(name)).orElse(Collections.enumeration(Collections.emptyList()));
             while (values.hasMoreElements()) {
                 String value = values.nextElement();
                 list.add(value);

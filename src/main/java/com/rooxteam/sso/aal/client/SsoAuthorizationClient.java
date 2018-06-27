@@ -3,10 +3,9 @@ package com.rooxteam.sso.aal.client;
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.client.model.EvaluationRequest;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
-import com.rooxteam.sso.aal.utils.SsoAuthorizationHelper;
+import com.rooxteam.sso.aal.utils.DummyRequest;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletRequestWrapper;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +24,7 @@ public interface SsoAuthorizationClient {
      */
     @Deprecated
     default Principal validate(final String token) {
-        return validate(SsoAuthorizationHelper.getDefaultRequest(), token);
+        return validate(DummyRequest.getInstance(), token);
     }
 
     /**

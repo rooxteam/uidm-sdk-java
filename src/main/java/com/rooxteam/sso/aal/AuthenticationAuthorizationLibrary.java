@@ -8,7 +8,7 @@ import com.rooxteam.sso.aal.otp.OtpResponse;
 import com.rooxteam.sso.aal.otp.ResendOtpParameter;
 import com.rooxteam.sso.aal.otp.SendOtpParameter;
 import com.rooxteam.sso.aal.otp.ValidateOtpParameter;
-import com.rooxteam.sso.aal.utils.SsoAuthorizationHelper;
+import com.rooxteam.sso.aal.utils.DummyRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -176,7 +176,7 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
      * @deprecated Используйте {@link #authenticate(Map)} вместо локальной проверки.
      */
     default Principal validate(String jwt) {
-        return validate(SsoAuthorizationHelper.getDefaultRequest(), jwt);
+        return validate(DummyRequest.getInstance(), jwt);
     }
 
     /**
