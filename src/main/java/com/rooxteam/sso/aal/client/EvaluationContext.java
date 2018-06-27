@@ -22,6 +22,7 @@ public class EvaluationContext implements Serializable {
     private String actionName;
     private String resourceName;
     private Map envParams;
+    private Map extraParams;
     private String realm;
 
     public EvaluationContext(String realm, String resourceName, String actionName, Map envParams) {
@@ -29,5 +30,14 @@ public class EvaluationContext implements Serializable {
         this.resourceName = resourceName;
         this.actionName = actionName;
         this.envParams = envParams;
+        this.extraParams = envParams;
+    }
+
+    public EvaluationContext(String realm, String resourceName, String actionName, Map envParams, Map extraParams) {
+        this.realm = realm;
+        this.resourceName = resourceName;
+        this.actionName = actionName;
+        this.envParams = envParams;
+        this.extraParams = extraParams;
     }
 }

@@ -23,7 +23,15 @@ import org.apache.http.util.EntityUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static com.rooxteam.sso.aal.AalLogger.LOG;
 
@@ -125,11 +133,11 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
     @SneakyThrows
     private Map<String, List<String>> getRequestHeaders(HttpServletRequest request) {
         Map<String, List<String>> headers = new HashMap<>();
-        Enumeration<String> names = request.getHeaderNames();
+        Enumeration<String> names = Optional.ofNullable(request.getHeaderNames()).orElse(Collections.enumeration(Collections.emptyList()));
         while (names.hasMoreElements()) {
             ArrayList<String> list = new ArrayList<>();
             String name = names.nextElement();
-            Enumeration<String> values = request.getHeaders(name);
+            Enumeration<String> values = Optional.ofNullable(request.getHeaders(name)).orElse(Collections.enumeration(Collections.emptyList()));
             while (values.hasMoreElements()) {
                 String value = values.nextElement();
                 list.add(value);
