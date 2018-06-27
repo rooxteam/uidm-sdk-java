@@ -3,7 +3,12 @@ package com.rooxteam.sso.aal;
 import com.rooxteam.sso.aal.client.EvaluationContext;
 import com.rooxteam.sso.aal.client.model.EvaluationRequest;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
-import com.rooxteam.sso.aal.otp.*;
+import com.rooxteam.sso.aal.otp.OtpFlowState;
+import com.rooxteam.sso.aal.otp.OtpResponse;
+import com.rooxteam.sso.aal.otp.ResendOtpParameter;
+import com.rooxteam.sso.aal.otp.SendOtpParameter;
+import com.rooxteam.sso.aal.otp.ValidateOtpParameter;
+import com.rooxteam.sso.aal.utils.SsoAuthorizationHelper;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -171,7 +176,7 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
      * @deprecated Используйте {@link #authenticate(Map)} вместо локальной проверки.
      */
     default Principal validate(String jwt) {
-        return validate(null, jwt);
+        return validate(SsoAuthorizationHelper.getDefaultRequest(), jwt);
     }
 
     /**
