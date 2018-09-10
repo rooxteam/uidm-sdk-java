@@ -2,7 +2,6 @@ package com.rooxteam.sso.aal.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.ImmutableMap;
 import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.PrincipalImpl;
@@ -23,15 +22,7 @@ import org.apache.http.util.EntityUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static com.rooxteam.sso.aal.AalLogger.LOG;
 
@@ -44,10 +35,16 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
     private static ObjectMapper mapper = new ObjectMapper();
     protected final Configuration config;
     protected final CloseableHttpClient httpClient;
+    protected final RequestContextCollector requestContextCollector;
 
     protected CommonSsoAuthorizationClient(Configuration config, CloseableHttpClient httpClient) {
+        this(config, httpClient, new RequestContextCollector());
+    }
+
+    protected CommonSsoAuthorizationClient(Configuration config, CloseableHttpClient httpClient, RequestContextCollector requestContextCollector) {
         this.config = config;
         this.httpClient = httpClient;
+        this.requestContextCollector = requestContextCollector;
     }
 
     /**
@@ -68,7 +65,7 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
         List<NameValuePair> params = new ArrayList<>();
         params.add(new BasicNameValuePair("access_token", token));
         HttpPost post = HttpHelper.getHttpPost(url, params);
-        post.setEntity(new StringEntity(mapper.writeValueAsString(getRequestContext(request)), ContentType.APPLICATION_JSON));
+        post.setEntity(new StringEntity(mapper.writeValueAsString(requestContextCollector.collect(request)), ContentType.APPLICATION_JSON));
         HttpClientContext context = new HttpClientContext();
         try (CloseableHttpResponse response = httpClient.execute(post, context)) {
             int statusCode = response.getStatusLine().getStatusCode();
@@ -119,32 +116,6 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
             LOG.errorAuthentication(e);
             throw e;
         }
-    }
-
-    private Map<String, Object> getRequestContext(HttpServletRequest request) {
-        return ImmutableMap.of(
-                "headers", getRequestHeaders(request),
-                "url", request.getRequestURI(),
-                "httpMethod", request.getMethod(),
-                "ip", request.getRemoteAddr()
-        );
-    }
-
-    @SneakyThrows
-    private Map<String, List<String>> getRequestHeaders(HttpServletRequest request) {
-        Map<String, List<String>> headers = new HashMap<>();
-        Enumeration<String> names = Optional.ofNullable(request.getHeaderNames()).orElse(Collections.enumeration(Collections.emptyList()));
-        while (names.hasMoreElements()) {
-            ArrayList<String> list = new ArrayList<>();
-            String name = names.nextElement();
-            Enumeration<String> values = Optional.ofNullable(request.getHeaders(name)).orElse(Collections.enumeration(Collections.emptyList()));
-            while (values.hasMoreElements()) {
-                String value = values.nextElement();
-                list.add(value);
-            }
-            headers.put(name, list);
-        }
-        return headers;
     }
 
     private static Map<String, Object> parseJson(String json) {
