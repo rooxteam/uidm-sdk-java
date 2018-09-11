@@ -17,7 +17,7 @@ abstract public class TokenContextFactory<A extends AuthenticationResponse, P ex
 
     private static final Map<TYPE, TokenContextFactory> factories = new HashMap<TYPE, TokenContextFactory>() {{
         put(TYPE.Bearer, new BearerTokenContextFactory());
-        put(TYPE.JWTToken, new JwtTokenContextFactory());
+        put(TYPE.JWTToken, new BearerTokenContextFactory());
     }};
 
     abstract protected Class<A> getAuthenticationResponseClass();

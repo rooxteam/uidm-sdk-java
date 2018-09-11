@@ -73,7 +73,7 @@ public class OtpClient {
         this.httpClient = httpClient;
         responseTypes = new HashMap<>();
         responseTypes.put("Bearer", BearerAuthenticationResponse.class);
-        responseTypes.put("JWTToken", JWTAuthenticationResponse.class);
+        responseTypes.put("JWTToken", BearerAuthenticationResponse.class);
     }
 
     public OtpResponse sendOtp(String jwt) {

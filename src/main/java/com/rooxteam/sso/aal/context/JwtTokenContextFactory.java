@@ -6,7 +6,10 @@ import com.rooxteam.sso.aal.client.model.JWTAuthenticationResponse;
 /**
  * @author Ivan Volynkin
  *         ivolynkin@roox.ru
+ *         <p>
+ *         We must not use JWTToken field as token
  */
+@Deprecated
 public class JwtTokenContextFactory extends TokenContextFactory<JWTAuthenticationResponse, PrincipalImpl> {
 
     @Override
