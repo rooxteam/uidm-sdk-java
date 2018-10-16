@@ -12,4 +12,5 @@ public class View {
     private String msisdn;
     private Long blockedFor;
     private Long otpCodeNumber;
+    private String method;
 }

@@ -51,4 +51,9 @@ public interface OtpResponse {
      * @return Номер OTP кода
      */
     Long getOtpCodeNumber();
+
+    /**
+     * @return OTP method (SMS, IQDS, ...)
+     */
+    String getMethod();
 }

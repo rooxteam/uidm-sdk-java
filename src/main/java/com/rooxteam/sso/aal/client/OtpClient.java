@@ -252,6 +252,7 @@ public class OtpClient {
         otpResponse.setBlockedFor(otpFlowStateJson.getView().getBlockedFor());
         otpResponse.setNextOtpCodeOperationPeriod((long) config.getInt(NEXT_OTP_OPERATION_PERIOD_PARAM_NAME, NEXT_OTP_OPERATION_PERIOD_DEFAULT_VALUE));
         otpResponse.setOtpCodeNumber(otpFlowStateJson.getView().getOtpCodeNumber());
+        otpResponse.setMethod(otpFlowStateJson.getView().getMethod());
 
         return otpResponse;
     }

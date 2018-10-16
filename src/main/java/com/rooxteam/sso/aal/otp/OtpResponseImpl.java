@@ -18,6 +18,7 @@ public class OtpResponseImpl implements OtpResponse {
     private Exception exception;
     private Long nextOtpCodeOperationPeriod;
     private Long otpCodeNumber;
+    private String method;
 
     public OtpResponseImpl() {
     }
