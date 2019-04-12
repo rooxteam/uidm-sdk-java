@@ -29,7 +29,7 @@ targetCompatibility = JavaVersion.VERSION_1_8
 dependencies {
     // for import com.rooxteam.errors.exception.ApiException;
     // TODO: remove dep, because aal should throw AalExceptions and not ApiExceptions
-    testCompile("com.rooxteam.webapi:error-handlers-plugin:$errorHandlersPluginVersion")
+    compileOnly("com.rooxteam.webapi:error-handlers-plugin:$errorHandlersPluginVersion")
 
     // for com.rooxteam.sso.aal.client.cookie.store.enablePerRequest
     compile("com.rooxteam.sso:request-cookie-store:$requestCookieStoreVersion")
@@ -39,7 +39,12 @@ dependencies {
     compile("org.forgerock.commons:json-web-token:$jsonWebTokenVesrion")
 
     // for backward compat, ok to have it provided
-    testCompile("commons-configuration:commons-configuration:$apacheConfigurationVersion")
+    compileOnly("commons-configuration:commons-configuration:$apacheConfigurationVersion")
+
+    // for RooxconfigConfiguration, ok to have it provided
+    compileOnly("com.rooxteam.commons:rooxconfig:$rooxconfigVersion")
+
+
 
     // for HttpClient, ok for now
     compile("org.apache.httpcomponents:httpclient:$apacheHttpClientVersion")
@@ -63,10 +68,10 @@ dependencies {
     compile("com.nimbusds:nimbus-jose-jwt:${nimbusJoseJwtVersion}")
 
     // for compiling upon servlet api
-    testCompile("javax.servlet:servlet-api:${servletVersion}")
+    compileOnly("javax.servlet:servlet-api:${servletVersion}")
 
     // for lombok magic
-    testCompile("org.projectlombok:lombok:${lombokVersion}")
+    compileOnly("org.projectlombok:lombok:${lombokVersion}")
 
     // for testing
     testCompile("junit:junit:$junitVersion")

@@ -10,6 +10,30 @@ public final class ConfigurationBuilder {
         return new MapConfigurationImpl(map);
     }
 
+    public static Configuration fromSpringEnvironment(Object environment) {
+        Class environmentClass;
+        try {
+            environmentClass = Class.forName("org.springframework.core.env.Environment");
+        } catch (ClassNotFoundException e) {
+            throw new AalException("Can't instantiate AAL from Spring because library is not on classpath", e);
+        }
+        if (!environmentClass.isInstance(environment)) {
+            throw new AalException("Can't instantiate AAL from Spring because object passed is not " +
+                    "an instance of org.springframework.core.env.Environment");
+        }
+        Class configClass;
+        try {
+            configClass = Class.forName("com.rooxteam.sso.aal.configuration.SpringEnvironmentConfiguration");
+        } catch (ClassNotFoundException e) {
+            throw new AalException("Can't instantiate AAL from Spring because library is not on classpath", e);
+        }
+        try {
+            return (Configuration) configClass.getConstructor(environmentClass).newInstance(environment);
+        } catch (Exception e) {
+            throw new AalException("Can't instantiate AAL from Spring", e);
+        }
+    }
+
     public static Configuration fromApacheCommonsConfiguration(Object config) {
         Class apacheConfiguration;
         try {
