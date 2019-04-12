@@ -50,7 +50,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     private final SsoTokenClient ssoTokenClient;
     private final OtpClient otpClient;
     private final Cache<PolicyDecisionKey, EvaluationResponse> isAllowedPolicyDecisionsCache;
-    private final Cache<PrincipalKey, Principal> PrincipalCache;
+    private final Cache<PrincipalKey, Principal> principalCache;
 
     private final Timer timer;
     private final CopyOnWriteArrayList<PrincipalEventListener> principalEventListeners = new CopyOnWriteArrayList<>();
@@ -73,7 +73,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         this.ssoTokenClient = ssoTokenClient;
         this.otpClient = otpClient;
         this.isAllowedPolicyDecisionsCache = policyDecisionsCache;
-        this.PrincipalCache = principalCache;
+        this.principalCache = principalCache;
         this.timer = timer;
         this.jwtValidator = jwtValidator;
         this.authorizationType = authorizationType;
@@ -94,7 +94,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
                     new Gauge<Long>() {
                         @Override
                         public Long getValue() {
-                            return PrincipalCache.size();
+                            return RooxAuthenticationAuthorizationLibrary.this.principalCache.size();
                         }
                     });
         }
@@ -147,7 +147,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
      */
     private Principal getPrincipalFromCache(PrincipalKey key) {
         Principal result;
-        result = PrincipalCache.getIfPresent(key);
+        result = principalCache.getIfPresent(key);
         if (result != null) {
             AalMetricsHelper.getPrincipalCacheHitMeter().mark();
         } else {
@@ -170,7 +170,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
             Principal principal = TokenContextFactory.get(TokenContextFactory.TYPE.JWTToken).createPrincipal(authResult);
             String authType = (String) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "authType");
             if (authType != null && authType.equals(AuthParamType.IP.getValue())) {
-                PrincipalCache.put(new PrincipalKey(AuthParamType.IP, ip, clientIps), principal);
+                principalCache.put(new PrincipalKey(AuthParamType.IP, ip, clientIps), principal);
                 AalMetricsHelper.getPrincipalCacheAddMeter().mark();
             }
             return principal;
@@ -223,10 +223,10 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         if (principal == null) {
             throw new IllegalArgumentException(PRINCIPAL_IS_MISSING_MESSAGE);
         }
-        ConcurrentMap<PrincipalKey, Principal> principalMap = PrincipalCache.asMap();
+        ConcurrentMap<PrincipalKey, Principal> principalMap = principalCache.asMap();
         for (Map.Entry<PrincipalKey, Principal> entry : principalMap.entrySet()) {
             if (entry.getValue().equals(principal)) {
-                PrincipalCache.invalidate(entry.getKey());
+                principalCache.invalidate(entry.getKey());
             }
         }
 
@@ -242,11 +242,11 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
 
     @Override
     public void invalidate() {
-        Collection<Principal> principals = PrincipalCache.asMap().values();
+        Collection<Principal> principals = principalCache.asMap().values();
         for (Principal principal : principals) {
             fireOnInvalidate(principal);
         }
-        PrincipalCache.invalidateAll();
+        principalCache.invalidateAll();
         isAllowedPolicyDecisionsCache.invalidateAll();
     }
 
@@ -255,7 +255,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         if (imsi == null) {
             throw new IllegalArgumentException("imsi");
         }
-        ConcurrentMap<PrincipalKey, Principal> principalMap = PrincipalCache.asMap();
+        ConcurrentMap<PrincipalKey, Principal> principalMap = principalCache.asMap();
         for (Map.Entry<PrincipalKey, Principal> entry : principalMap.entrySet()) {
             Principal principal = entry.getValue();
             String token;
@@ -269,7 +269,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
             if (claims.getClaim(IMSI_CLAIM_NAME) != null) {
                 String claimImsi = claims.getClaim(IMSI_CLAIM_NAME, String.class);
                 if (imsi.equalsIgnoreCase(claimImsi)) {
-                    PrincipalCache.invalidate(entry.getKey());
+                    principalCache.invalidate(entry.getKey());
                     fireOnInvalidate(principal);
                 }
             }
@@ -410,7 +410,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
             if (isPollingEnabled()) {
                 disablePolling();
             }
-            pollingBean = new PollingBean(ssoTokenClient, isAllowedPolicyDecisionsCache, PrincipalCache, principalEventListeners);
+            pollingBean = new PollingBean(ssoTokenClient, isAllowedPolicyDecisionsCache, principalCache, principalEventListeners);
             timer.schedule(pollingBean, 0, TimeUnit.MILLISECONDS.convert(period, unit));
         }
     }

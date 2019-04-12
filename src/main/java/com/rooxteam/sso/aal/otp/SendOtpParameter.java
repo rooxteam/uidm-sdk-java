@@ -2,7 +2,7 @@ package com.rooxteam.sso.aal.otp;
 
 import com.rooxteam.sso.aal.client.EvaluationContext;
 import lombok.Getter;
-import lombok.experimental.Builder;
+import lombok.Builder;
 
 /**
  * Параметры для отправки OTP

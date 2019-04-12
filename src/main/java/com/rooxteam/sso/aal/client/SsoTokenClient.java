@@ -1,7 +1,7 @@
 package com.rooxteam.sso.aal.client;
 
 import com.rooxteam.sso.aal.ConfigKeys;
-import org.apache.commons.configuration.Configuration;
+import com.rooxteam.sso.aal.configuration.Configuration;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;

@@ -11,7 +11,7 @@ public enum OtpStatus {
     OTP_REQUIRED,
 
     /**
-     * OTP Успешно подтвержден. Выдан новый YotaPrincipal.
+     * OTP Успешно подтвержден. Выдан новый Principal.
      */
     SUCCESS,
 

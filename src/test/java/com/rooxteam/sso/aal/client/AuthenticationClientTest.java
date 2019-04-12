@@ -1,5 +1,6 @@
 package com.rooxteam.sso.aal.client;
 
+import com.rooxteam.sso.aal.configuration.ConfigurationBuilder;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
 import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.commons.configuration.Configuration;
@@ -36,7 +37,7 @@ public class AuthenticationClientTest {
         when(response.getEntity()).thenReturn(entity);
         when(client.execute(any(HttpUriRequest.class), any(HttpClientContext.class))).thenReturn(response);
 
-        SsoAuthenticationClient instance = new SsoAuthenticationClient(config, client);
+        SsoAuthenticationClient instance = new SsoAuthenticationClient(ConfigurationBuilder.fromApacheCommonsConfiguration(config), client);
 
         HashMap<String, Object> params = new HashMap<>();
         params.put("ip", "10.0.0.0");
@@ -61,7 +62,7 @@ public class AuthenticationClientTest {
         when(response.getEntity()).thenReturn(entity);
         when(client.execute(any(HttpUriRequest.class), any(HttpClientContext.class))).thenReturn(response);
 
-        SsoAuthenticationClient instance = new SsoAuthenticationClient(config, client);
+        SsoAuthenticationClient instance = new SsoAuthenticationClient(ConfigurationBuilder.fromApacheCommonsConfiguration(config), client);
 
         HashMap<String, Object> params = new HashMap<>();
         params.put("ip", "229.213.38.10");

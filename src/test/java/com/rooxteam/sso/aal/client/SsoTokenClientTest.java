@@ -1,6 +1,7 @@
 package com.rooxteam.sso.aal.client;
 
 import com.rooxteam.sso.aal.ConfigKeys;
+import com.rooxteam.sso.aal.configuration.ConfigurationBuilder;
 import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpStatus;
 import org.apache.http.ProtocolVersion;
@@ -98,7 +99,7 @@ public class SsoTokenClientTest {
     protected void testQueryExistenceBase(CloseableHttpClient httpClient, boolean expectedExistence) throws Exception {
 
         Configuration config = mock(Configuration.class);
-        SsoTokenClient tokenClient = new SsoTokenClient(config, httpClient);
+        SsoTokenClient tokenClient = new SsoTokenClient(ConfigurationBuilder.fromApacheCommonsConfiguration(config), httpClient);
 
         when(config.getString(ConfigKeys.SSO_URL))
                 .thenReturn(TOKEN_API_URL);

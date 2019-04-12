@@ -1,14 +1,12 @@
 package com.rooxteam.sso.aal;
 
-import com.iplanet.sso.SSOException;
 import com.rooxteam.sso.aal.client.OtpClient;
 import com.rooxteam.sso.aal.client.SsoAuthenticationClient;
-import com.rooxteam.sso.aal.client.SsoAuthorizationClientBySSOToken;
+import com.rooxteam.sso.aal.client.SsoAuthorizationClient;
 import com.rooxteam.sso.aal.otp.OtpFlowState;
 import com.rooxteam.sso.aal.otp.OtpFlowStateImpl;
 import com.rooxteam.sso.aal.otp.OtpResponse;
 import com.rooxteam.sso.aal.otp.OtpResponseImpl;
-import com.sun.identity.policy.PolicyException;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -16,9 +14,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyMap;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @Ignore
 public class AALTest {
@@ -27,12 +31,12 @@ public class AALTest {
     public static final int DEFAULT_TIMEOUT = 10;
 
     @Test
-    public void authenticate_EmptyParamMap_IllegalArgumentException() throws SSOException, PolicyException {
+    public void authenticate_EmptyParamMap_IllegalArgumentException() {
 
-        final SsoAuthorizationClientBySSOToken mockSsoAuthorizationClient = mock(SsoAuthorizationClientBySSOToken.class);
+        final SsoAuthorizationClient mockSsoAuthorizationClient = mock(SsoAuthorizationClient.class);
         final SsoAuthenticationClient mockSsoAuthenticationClient = mock(SsoAuthenticationClient.class);
         AuthenticationAuthorizationLibrary aal = new RooxAuthenticationAuthorizationLibrary(null, mockSsoAuthorizationClient, mockSsoAuthenticationClient,
-                null, null, null, null, null, AuthorizationType.SSO_TOKEN);
+                null, null, null, null, null, AuthorizationType.JWT);
 
         try {
             aal.authenticate(Collections.<String, Object>emptyMap(), DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
@@ -45,7 +49,7 @@ public class AALTest {
     }
 
     @Test
-    public void authenticate_byIpReturnNull_YotaPrincipalWithNullJwt() throws SSOException, PolicyException {
+    public void authenticate_byIpReturnNull_YotaPrincipalWithNullJwt() {
 
         final SsoAuthenticationClient mockSsoAuthenticationClient = mock(SsoAuthenticationClient.class);
 
@@ -56,7 +60,7 @@ public class AALTest {
         params = new HashMap<>();
         params.put("ip", "incorrect IP");
         AuthenticationAuthorizationLibrary aal = new RooxAuthenticationAuthorizationLibrary(null, null, mockSsoAuthenticationClient,
-                null, null, null, null, null, AuthorizationType.SSO_TOKEN);
+                null, null, null, null, null, AuthorizationType.JWT);
 
         Principal yotaPrincipal = aal.authenticate(params, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
 
@@ -68,7 +72,7 @@ public class AALTest {
 
         final OtpClient mockOtpClient = mock(OtpClient.class);
         AuthenticationAuthorizationLibrary aal = new RooxAuthenticationAuthorizationLibrary(null, null, null, null,
-                mockOtpClient, null, null, null, AuthorizationType.SSO_TOKEN);
+                mockOtpClient, null, null, null, AuthorizationType.JWT);
 
         try {
             aal.sendOtp(null, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
@@ -89,7 +93,7 @@ public class AALTest {
 
         final OtpClient mockOtpClient = mock(OtpClient.class);
         AuthenticationAuthorizationLibrary aal = new RooxAuthenticationAuthorizationLibrary(null, null, null, null,
-                mockOtpClient, null, null, null, AuthorizationType.SSO_TOKEN);
+                mockOtpClient, null, null, null, AuthorizationType.JWT);
 
         try {
             aal.sendOtp(mockYotaPrincipal, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
@@ -100,7 +104,7 @@ public class AALTest {
     }
 
     @Test
-    public void sendOtp_validPrincipal_otpResponseWithFlowState() throws SSOException, PolicyException {
+    public void sendOtp_validPrincipal_otpResponseWithFlowState() {
 
         String token = "eyAiYWxnIjogIkhTMjU2IiwgImN0eSI6ICJKV1QiLCAidHlwIjogImp3dCIgfQ.eyAidG9rZW5OYW1lIjogImlkX3Rva2VuIiwgImF6cCI6ICJ3ZWJhcGkiLCAic3ViIjogIjI1MDExMDEwMDAxNDQ4IiwgIm1zaXNkbiI6ICIyNTAxMTAxMDAwMTQ0OCIsICJpc3MiOiAiUGNyZkF1dGhlbnRpY2F0aW9uU2VydmljZSIsICJ2ZXIiOiAiMS4wIiwgImlhdCI6IDE0Mzg3MDMyNzMsICJleHAiOiAxNDM4NzAzMzMzLCAidG9rZW5UeXBlIjogIkpXVFRva2VuIiwgInJlYWxtIjogIi9jdXN0b21lciIsICJhdXRoTGV2ZWwiOiBbICIyIiBdLCAiYXVkIjogWyAid2ViYXBpIiBdLCAicmVuIjogMTQzODcwMzMzMywgImp0aSI6ICIzZTI2MjEzOC1lNjc4LTQ0MDYtODBjNy04M2I0NzJmYmJlNzkiLCAiaW1zaSI6ICIyNTAxMTAxMDAwMTQ0OCIsICJhdGgiOiAxNDM4NzAzMjczIH0.pMqdpoGQisd2EPmF3duzftWG0v6U_LtM5qXV186-5xM";
 
@@ -118,7 +122,7 @@ public class AALTest {
         when(mockOtpClient.sendOtp(anyString()))
                 .thenReturn(mockResponse);
         AuthenticationAuthorizationLibrary aal = new RooxAuthenticationAuthorizationLibrary(null, null, null, null,
-                mockOtpClient, null, null, null, AuthorizationType.SSO_TOKEN);
+                mockOtpClient, null, null, null, AuthorizationType.JWT);
 
         OtpResponse response = aal.sendOtp(mockYotaPrincipal, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
 

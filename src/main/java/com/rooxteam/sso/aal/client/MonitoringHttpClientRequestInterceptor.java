@@ -1,7 +1,7 @@
 package com.rooxteam.sso.aal.client;
 
+import com.rooxteam.sso.aal.configuration.Configuration;
 import lombok.Setter;
-import org.apache.commons.configuration.Configuration;
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpRequestInterceptor;

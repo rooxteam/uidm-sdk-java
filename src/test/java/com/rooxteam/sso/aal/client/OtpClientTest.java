@@ -1,9 +1,8 @@
 package com.rooxteam.sso.aal.client;
 
-import com.iplanet.sso.SSOException;
+import com.rooxteam.sso.aal.configuration.ConfigurationBuilder;
 import com.rooxteam.sso.aal.otp.OtpResponse;
 import com.rooxteam.sso.aal.otp.OtpStatus;
-import com.sun.identity.policy.PolicyException;
 import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.http.HttpEntity;
 import org.apache.http.ProtocolVersion;
@@ -95,11 +94,11 @@ public class OtpClientTest {
 
         BaseConfiguration configuration = new BaseConfiguration();
         configuration.addProperty("com.rooxteam.sso.endpoint", "http://example.com");
-        otpClient = new OtpClient(configuration, mockHttpClient);
+        otpClient = new OtpClient(ConfigurationBuilder.fromApacheCommonsConfiguration(configuration), mockHttpClient);
     }
 
     @Test
-    public void send_otp_correctly() throws SSOException, PolicyException, IOException {
+    public void send_otp_correctly() throws IOException {
         CloseableHttpResponse mockHttpResponse = mock(CloseableHttpResponse.class);
         HttpEntity mockHttpEntity = mock(HttpEntity.class);
         when(mockHttpResponse.getEntity()).thenReturn(mockHttpEntity);
@@ -117,7 +116,7 @@ public class OtpClientTest {
     }
 
     @Test
-    public void send_otp_without_errors() throws SSOException, PolicyException, IOException {
+    public void send_otp_without_errors() throws IOException {
         CloseableHttpResponse mockHttpResponse = mock(CloseableHttpResponse.class);
         HttpEntity mockHttpEntity = mock(HttpEntity.class);
         when(mockHttpResponse.getEntity()).thenReturn(mockHttpEntity);
@@ -135,7 +134,7 @@ public class OtpClientTest {
     }
 
     @Test
-    public void handle_unknown_response_from_sso_while_sending_otp() throws SSOException, PolicyException, IOException {
+    public void handle_unknown_response_from_sso_while_sending_otp() throws IOException {
         CloseableHttpResponse mockHttpResponse = mock(CloseableHttpResponse.class);
         HttpEntity mockHttpEntity = mock(HttpEntity.class);
         when(mockHttpResponse.getEntity()).thenReturn(mockHttpEntity);
