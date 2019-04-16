@@ -13,7 +13,7 @@ bintray {
         userOrg = 'roox'
         name = project.name
         desc = project.description
-        websiteUrl = 'https://textback.io'
+        websiteUrl = 'https://roox.ru'
         issueTrackerUrl = 'https://bitbucket.org/rooxteam/uidm-sdk-java/issues'
         vcsUrl = 'https://bitbucket.org/rooxteam/uidm-sdk-java/src'
         licenses = ['CDDL-1.1']
