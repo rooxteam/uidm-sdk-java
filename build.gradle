@@ -1,10 +1,10 @@
 buildscript {
     repositories {
-        if(project.hasProperty('rooxExternalAccess')){
+        if (project.hasProperty('rooxExternalAccess')) {
             mavenLocal()
             mavenCentral()
             maven { url 'http://repo.springsource.org/plugins-release/' }
-        }else {
+        } else {
             maven { url 'http://nexus.rooxintra.net/content/repositories/releases' }
             maven { url 'http://nexus.rooxintra.net/content/repositories/public' }
         }
@@ -14,9 +14,15 @@ buildscript {
     }
 }
 
+plugins {
+    // for configuration see gradle/jcenter.gradle
+    id "com.jfrog.bintray" version "1.8.4"
+}
+
 
 apply plugin: 'roox-doc'
 apply plugin: 'roox-jar'
+apply from: 'gradle/jcenter.gradle'
 
 // give test dependencies access to compileOnly dependencies to emulate providedCompile
 configurations {
@@ -43,7 +49,6 @@ dependencies {
 
     // for RooxconfigConfiguration, ok to have it provided
     compileOnly("com.rooxteam.commons:rooxconfig:$rooxconfigVersion")
-
 
 
     // for HttpClient, ok for now

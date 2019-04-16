@@ -1,0 +1,28 @@
+
+
+
+bintray {
+    user = System.getenv('bintray_user')
+    key = System.getenv('bintray_api_key')
+
+    publications = ['maven']
+    dryRun = false
+    publish = true
+    pkg {
+        repo = 'uidm-sdk'
+        userOrg = 'roox'
+        name = project.name
+        desc = project.description
+        websiteUrl = 'https://textback.io'
+        issueTrackerUrl = 'https://bitbucket.org/rooxteam/uidm-sdk-java/issues'
+        vcsUrl = 'https://bitbucket.org/rooxteam/uidm-sdk-java/src'
+        licenses = ['CDDL-1.1']
+        labels = ['uidm','authentication','authorization']
+        publicDownloadNumbers = true
+        //Optional version descriptor
+        version {
+            // no other way found to make bintray plugin work with roox Version
+            name = "$project.version" as String
+        }
+    }
+}
