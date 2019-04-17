@@ -33,11 +33,11 @@ sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
 dependencies {
-    // for import com.rooxteam.errors.exception.ApiException;
-    // TODO: remove dep, because aal should throw AalExceptions and not ApiExceptions
-    compileOnly("com.rooxteam.webapi:error-handlers-plugin:$errorHandlersPluginVersion")
 
-    // for com.rooxteam.sso.aal.client.cookie.store.enablePerRequest
+    // TODO: for HttpStatus, needs fixing
+    compileOnly(group: 'org.springframework', name: 'spring-web', version: springVersion)
+
+    // for com.rooxteam.sso.aal.client.cookie.store.enablePerRequest, ok until UIDM needs sticky session
     compile("com.rooxteam.sso:request-cookie-store:$requestCookieStoreVersion")
 
     // for org.forgerock.json.fluent and org.forgerock.json.jose.*
@@ -56,8 +56,8 @@ dependencies {
 
     // for typed logging, ok for now
     compile("org.jboss.logging:jboss-logging:$jbossLoggingVersion")
-    compile("org.jboss.logging:jboss-logging-processor:$jbossLoggingExtensionsVersion")
-    compile("org.jboss.logging:jboss-logging-annotations:$jbossLoggingExtensionsVersion")
+    compileOnly("org.jboss.logging:jboss-logging-processor:$jbossLoggingExtensionsVersion")
+    compileOnly("org.jboss.logging:jboss-logging-annotations:$jbossLoggingExtensionsVersion")
 
     // for cache, ok for now
     compile("com.google.guava:guava:$guavaVersion")

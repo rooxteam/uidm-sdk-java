@@ -26,17 +26,10 @@ import java.util.concurrent.TimeUnit;
 import static com.rooxteam.sso.aal.ConfigKeys.*;
 import static java.text.MessageFormat.format;
 
+@SuppressWarnings({"WeakerAccess", "UnstableApiUsage"})
 public class AalFactory {
 
-    private static final String AGENT_APP_USERNAME = "com.sun.identity.agents.app.username";
-    private static final String OPENAM_SERVICE_PASSWORD = "com.iplanet.am.service.password";
-    private static final String IPLANET_NAMING_URL = "com.iplanet.am.naming.url";
-    private static final String OPENAM_AGENTS_POLLING_INTERVAL = "com.sun.identity.agents.polling.interval";
-    private static final String OPENAM_AGENTS_POLLING_INTERVAL_VALUE = "3";
-    private static final String NAMING_SERVICE_PATH = "/namingservice";
     public static final String MISSING_PROPERTY_IN_CONFIGURATION = "Missing property ''{0}'' in configuration.";
-    private static final String OPENAM_CACHE_MODE = "com.sun.identity.policy.client.cacheMode";
-    private static final String OPENAM_CACHE_MODE_SELF = "self";
 
     private AalFactory() {
     }
@@ -70,7 +63,7 @@ public class AalFactory {
         SsoTokenClient tokenClient = new SsoTokenClient(config, httpClient);
         OtpClient otpClient = new OtpClient(config, httpClient);
 
-        Cache<PrincipalKey, Principal> principalCache = initPrincipalsCache(config, authorizationClient);
+        Cache<PrincipalKey, Principal> principalCache = initPrincipalsCache(config);
         Cache<PolicyDecisionKey, EvaluationResponse> isAllowedPolicyDecisionsCache = initPoliciesCache(config);
         JwtValidator jwtValidator = createJwtValidator(config);
 
@@ -159,7 +152,7 @@ public class AalFactory {
                                                                        CloseableHttpClient httpClient) {
         String classNameStringValue = getSsoAuthorizationClientName(authorizationType);
 
-        SsoAuthorizationClient ssoAuthorizationClient = null;
+        SsoAuthorizationClient ssoAuthorizationClient;
         Class aClass;
         try {
             aClass = Class.forName(classNameStringValue);
@@ -168,6 +161,7 @@ public class AalFactory {
         }
 
         try {
+            //noinspection unchecked
             ssoAuthorizationClient =
                     (SsoAuthorizationClient) aClass
                             .getConstructor(Configuration.class, CloseableHttpClient.class)
@@ -191,24 +185,7 @@ public class AalFactory {
         }
     }
 
-    private static void setOpenamSystemProperties(Configuration config) {
-        String ssoUrl = config.getString(SSO_URL);
-        if (ssoUrl != null) {
-            System.setProperty(IPLANET_NAMING_URL, ssoUrl + NAMING_SERVICE_PATH);
-        }
-        String openamAgentName = config.getString(OPENAM_AGENT_NAME);
-        if (openamAgentName != null) {
-            System.setProperty(AGENT_APP_USERNAME, openamAgentName);
-        }
-        String openamAgentPassword = config.getString(OPENAM_AGENT_PASSWORD);
-        if (openamAgentPassword != null) {
-            System.setProperty(OPENAM_SERVICE_PASSWORD, openamAgentPassword);
-        }
-        System.setProperty(OPENAM_AGENTS_POLLING_INTERVAL, OPENAM_AGENTS_POLLING_INTERVAL_VALUE);
-        System.setProperty(OPENAM_CACHE_MODE, OPENAM_CACHE_MODE_SELF);
-    }
-
-    private static Cache<PrincipalKey, Principal> initPrincipalsCache(Configuration config, SsoAuthorizationClient authorizationClient) {
+    private static Cache<PrincipalKey, Principal> initPrincipalsCache(Configuration config) {
         int principalCacheSize = config.getInt(PRINCIPAL_CACHE_LIMIT, PRINCIPAL_CACHE_LIMIT_DEFAULT);
         int principalExpireAfterWrite = config.getInt(PRINCIPAL_CACHE_EXPIRE_AFTER_WRITE, PRINCIPAL_CACHE_EXPIRE_AFTER_WRITE_DEFAULT);
         Cache<PrincipalKey, Principal> principalCache =
