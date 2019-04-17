@@ -64,4 +64,9 @@ final class MapConfigurationImpl implements Configuration {
     public List getList(String property) {
         return (List) configuration.get(property);
     }
+
+    @Override
+    public String[] getStringArray(String property) {
+        return (String[]) configuration.get(property);
+    }
 }

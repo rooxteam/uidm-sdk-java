@@ -9,8 +9,8 @@ import com.rooxteam.sso.aal.PropertyScope;
 import com.rooxteam.sso.aal.client.model.Decision;
 import com.rooxteam.sso.aal.client.model.EvaluationRequest;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
+import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.exception.AuthorizationException;
-import org.apache.commons.configuration.Configuration;
 import org.apache.http.impl.client.CloseableHttpClient;
 
 import java.io.IOException;
