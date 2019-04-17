@@ -13,4 +13,6 @@ public interface Configuration {
     int getInt(String property, int defaultValue);
 
     List getList(String property);
+
+    String[] getStringArray(String tokenInfoAttributesForward);
 }

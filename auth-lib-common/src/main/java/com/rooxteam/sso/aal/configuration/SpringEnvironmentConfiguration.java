@@ -45,4 +45,9 @@ final class SpringEnvironmentConfiguration implements Configuration {
     public List getList(String property) {
         return environment.getProperty(property, List.class, Collections.EMPTY_LIST);
     }
+
+    @Override
+    public String[] getStringArray(String property) {
+        return environment.getProperty(property, String[].class, new String[0]);
+    }
 }
