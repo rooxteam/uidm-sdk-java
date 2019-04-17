@@ -1,7 +1,7 @@
 package com.rooxteam.sso.aal.otp;
 
 import lombok.Getter;
-import lombok.experimental.Builder;
+import lombok.Builder;
 
 /**
  * Параметры для повторного запроса OTP.

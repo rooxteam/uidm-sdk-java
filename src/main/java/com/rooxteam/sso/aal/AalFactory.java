@@ -8,7 +8,7 @@ import com.rooxteam.jwt.StringClaimChecker;
 import com.rooxteam.sso.aal.client.*;
 import com.rooxteam.sso.aal.client.cookies.RequestCookieStore;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
-import org.apache.commons.configuration.Configuration;
+import com.rooxteam.sso.aal.configuration.Configuration;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
@@ -19,6 +19,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Objects;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 
@@ -41,17 +42,15 @@ public class AalFactory {
     }
 
     /**
-     * @param config конфигурация. Описание ключей конфигурации в {@link ConfigKeys}.
+     * @param config конфигурация.
+     *                     Описание ключей конфигурации в {@link ConfigKeys}.
      * @return AuthenticationAuthorizationLibrary
      */
     public static AuthenticationAuthorizationLibrary create(Configuration config) {
+        Objects.requireNonNull(config);
 
         String authzTypeString = config.getString(AUTHORIZATION_TYPE, AUTHORIZATION_TYPE_DEFAULT);
         AuthorizationType authorizationType = AuthorizationType.valueOf(authzTypeString);
-        if (authorizationType == AuthorizationType.SSO_TOKEN) {
-            // for AuthorizationType.SSO_TOKEN we have to initialize OpenAM AuthContext 
-            setOpenamSystemProperties(config);
-        }
 
         Timer pollingTimer = new Timer("RX Polling Timer", true);
 
@@ -183,9 +182,6 @@ public class AalFactory {
     private static String getSsoAuthorizationClientName(AuthorizationType authorizationType) {
         switch (authorizationType) {
             default:
-            case SSO_TOKEN: {
-                return "com.rooxteam.sso.aal.client.SsoAuthorizationClientBySSOToken";
-            }
             case JWT: {
                 return "com.rooxteam.sso.aal.client.SsoAuthorizationClientByJwt";
             }
@@ -219,7 +215,6 @@ public class AalFactory {
                 CacheBuilder.newBuilder()
                         .maximumSize(principalCacheSize)
                         .expireAfterWrite(principalExpireAfterWrite, TimeUnit.SECONDS)
-                        .removalListener(new SSOSessionInvalidator(authorizationClient, config))
                         .build();
         AalLogger.LOG.traceInitPrincipalCacheWithSize(principalCacheSize);
         return principalCache;

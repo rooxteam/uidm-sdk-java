@@ -1,6 +1,7 @@
 package com.rooxteam.sso.aal;
 
 import com.rooxteam.sso.aal.client.SsoAuthenticationClient;
+import com.rooxteam.sso.aal.configuration.ConfigurationBuilder;
 import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.junit.Before;
@@ -29,7 +30,7 @@ public class AALInvalidationTest {
     public void invalidate_should_throw_illegalArgumentException_when_principal_is_null() {
         Configuration config = new BaseConfiguration();
         config.setProperty("com.rooxteam.aal.jwt.issuer", "TEST_ISSUER");
-        AuthenticationAuthorizationLibrary aal = AalFactory.create(config);
+        AuthenticationAuthorizationLibrary aal = AalFactory.create(ConfigurationBuilder.fromApacheCommonsConfiguration(config));
         Whitebox.setInternalState(aal, "ssoAuthenticationClient", mockSsoAuthenticationClient);
         aal.invalidate(null);
     }
@@ -39,7 +40,7 @@ public class AALInvalidationTest {
     public void invalidate_by_imsi_should_throw_illegalArgumentException_when_principal_is_null() {
         Configuration config = new BaseConfiguration();
         config.setProperty("com.rooxteam.aal.jwt.issuer", "TEST_ISSUER");
-        AuthenticationAuthorizationLibrary aal = AalFactory.create(config);
+        AuthenticationAuthorizationLibrary aal = AalFactory.create(ConfigurationBuilder.fromApacheCommonsConfiguration(config));
         Whitebox.setInternalState(aal, "ssoAuthenticationClient", mockSsoAuthenticationClient);
         aal.invalidateByImsi(null);
     }

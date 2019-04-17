@@ -1,46 +1,84 @@
 buildscript {
     repositories {
-        if(project.hasProperty('rooxExternalAccess')){
+        if (project.hasProperty('rooxExternalAccess')) {
             mavenLocal()
             mavenCentral()
             maven { url 'http://repo.springsource.org/plugins-release/' }
-        }else {
+        } else {
             maven { url 'http://nexus.rooxintra.net/content/repositories/releases' }
             maven { url 'http://nexus.rooxintra.net/content/repositories/public' }
         }
     }
     dependencies {
-        classpath('com.rooxteam.corporate:gradle-plugins:27.1.+')
+        classpath("com.rooxteam.corporate:gradle-plugins:$rooxGradlePlugins")
     }
+}
+
+plugins {
+    // for configuration see gradle/jcenter.gradle
+    id "com.jfrog.bintray" version "1.8.4"
 }
 
 
 apply plugin: 'roox-doc'
 apply plugin: 'roox-jar'
-apply plugin: 'roox-sonar'
+apply from: 'gradle/jcenter.gradle'
+
+// give test dependencies access to compileOnly dependencies to emulate providedCompile
+configurations {
+    testImplementation.extendsFrom compileOnly
+}
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
 dependencies {
-    provided("com.rooxteam.sso:roox-openam-clientsdk:$rooxOpenamClientVersion")
-    provided("com.rooxteam.webapi:error-handlers-plugin:$errorHandlersPluginVersion")
+    // for import com.rooxteam.errors.exception.ApiException;
+    // TODO: remove dep, because aal should throw AalExceptions and not ApiExceptions
+    compileOnly("com.rooxteam.webapi:error-handlers-plugin:$errorHandlersPluginVersion")
+
+    // for com.rooxteam.sso.aal.client.cookie.store.enablePerRequest
     compile("com.rooxteam.sso:request-cookie-store:$requestCookieStoreVersion")
+
+    // for org.forgerock.json.fluent and org.forgerock.json.jose.*
+    // TODO: remove in favour of jose; we don't need two JWT libs at the same time
     compile("org.forgerock.commons:json-web-token:$jsonWebTokenVesrion")
-    compile("commons-configuration:commons-configuration:$apacheConfigurationVersion")
+
+    // for backward compat, ok to have it provided
+    compileOnly("commons-configuration:commons-configuration:$apacheConfigurationVersion")
+
+    // for RooxconfigConfiguration, ok to have it provided
+    compileOnly("com.rooxteam.commons:rooxconfig:$rooxconfigVersion")
+
+
+    // for HttpClient, ok for now
     compile("org.apache.httpcomponents:httpclient:$apacheHttpClientVersion")
+
+    // for typed logging, ok for now
     compile("org.jboss.logging:jboss-logging:$jbossLoggingVersion")
     compile("org.jboss.logging:jboss-logging-processor:$jbossLoggingExtensionsVersion")
     compile("org.jboss.logging:jboss-logging-annotations:$jbossLoggingExtensionsVersion")
+
+    // for cache, ok for now
     compile("com.google.guava:guava:$guavaVersion")
+
+    // for metrics, todo make pluggable
     compile("io.dropwizard.metrics:metrics-core:${metricsVersion}")
+
+    // for json processing, ok for now
     compile("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
     compile("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
+
+    // for JWT, ok
     compile("com.nimbusds:nimbus-jose-jwt:${nimbusJoseJwtVersion}")
 
-    provided("javax.servlet:servlet-api:${servletVersion}")
-    provided("org.projectlombok:lombok:${lombokVersion}")
+    // for compiling upon servlet api
+    compileOnly("javax.servlet:servlet-api:${servletVersion}")
 
+    // for lombok magic
+    compileOnly("org.projectlombok:lombok:${lombokVersion}")
+
+    // for testing
     testCompile("junit:junit:$junitVersion")
     testCompile("org.mockito:mockito-all:$mockitoVersion")
     testCompile('javax.servlet:servlet-api:2.5')
@@ -51,5 +89,5 @@ javadoc {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.6'
+    gradleVersion = '4.10.2'
 }

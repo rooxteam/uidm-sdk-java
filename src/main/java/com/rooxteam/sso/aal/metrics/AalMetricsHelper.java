@@ -26,7 +26,7 @@ public abstract class AalMetricsHelper {
     static {
         metricRegistry = new MetricRegistry();
         JmxReporter.forRegistry(metricRegistry)
-                .inDomain("ru.yota")
+                .inDomain("com.rooxteam")
                 .createsObjectNamesWith(new ObjectNameFactory())
                 .build().start();
     }

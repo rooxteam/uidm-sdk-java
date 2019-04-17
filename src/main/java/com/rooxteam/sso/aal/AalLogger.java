@@ -11,7 +11,7 @@ import java.io.IOException;
 import static org.jboss.logging.Logger.Level.*;
 import static org.jboss.logging.annotations.Message.Format.MESSAGE_FORMAT;
 
-@MessageLogger(projectCode = "RX_YOTA_AAL___", length = 4)
+@MessageLogger(projectCode = "RX_UIDM_AAL___", length = 4)
 @ValidIdRanges({
         // FATAL
         @ValidIdRange(min = 1, max = 999),
@@ -192,11 +192,6 @@ public interface AalLogger extends BasicLogger {
     @Message(id = 9002, format = MESSAGE_FORMAT,
             value = "SSO authentication request: ip = {0}, jwt = {1}, clientIps = {2}")
     void traceSsoAuthenticationRequest(String ip, String jwt, String clientIps);
-
-    @LogMessage(level = TRACE)
-    @Message(id = 9003, format = MESSAGE_FORMAT,
-            value = "Attempt to get principal by key: {0}.")
-    void traceGetPrincipalByIp(YotaPrincipalKey key);
 
     @LogMessage(level = TRACE)
     @Message(id = 9004, format = MESSAGE_FORMAT,
