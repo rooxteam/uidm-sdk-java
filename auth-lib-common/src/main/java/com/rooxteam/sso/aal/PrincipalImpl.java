@@ -1,13 +1,14 @@
 package com.rooxteam.sso.aal;
 
+import com.nimbusds.jose.Algorithm;
+import com.nimbusds.jwt.JWT;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.JWTParser;
 import com.rooxteam.sso.aal.client.TokenHelper;
+import com.rooxteam.sso.aal.exception.AalException;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
-import org.forgerock.json.fluent.JsonValue;
-import org.forgerock.json.jose.common.JwtReconstruction;
-import org.forgerock.json.jose.jws.JwsAlgorithm;
-import org.forgerock.json.jose.jws.SignedJwt;
-import org.forgerock.json.jose.jwt.JwtClaimsSet;
 
+import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -95,22 +96,21 @@ public class PrincipalImpl extends AbstractPrincipal {
 
     private void initContextFromJwt() {
         try {
-            SignedJwt signedJwt = new JwtReconstruction().reconstructJwt(policyContextJwtToken, SignedJwt.class);
-            if (signedJwt.getHeader().getAlgorithm() == JwsAlgorithm.NONE) {
+            JWT signedJwt = JWTParser.parse(policyContextJwtToken);
+            if (signedJwt.getHeader().getAlgorithm() == Algorithm.NONE) {
                 throw new AuthenticationException("alg not supported");
             }
             expirationTime = TokenHelper.expires(signedJwt);
-            JwtClaimsSet claimsSet = signedJwt.getClaimsSet();
-            for (String claimKey : claimsSet.keys()) {
-                JsonValue claimValue = claimsSet.get(claimKey);
+            JWTClaimsSet claimsSet = signedJwt.getJWTClaimsSet();
+            claimsSet.getClaims().forEach((key, value) -> {
+                Object claimValue = claimsSet.getClaim(key);
                 if (claimValue != null) {
-                    Object claimValueObject = claimValue.getObject();
-                    sharedIdentityProperties.put(claimKey, claimValueObject);
+                    sharedIdentityProperties.put(key, claimValue);
                 }
-            }
-        } catch (RuntimeException e) {
+            });
+        } catch (RuntimeException | ParseException e) {
             LOG.errorCannotParseJwt(policyContextJwtToken, e);
-            throw e;
+            throw new AalException(e);
         }
     }
 

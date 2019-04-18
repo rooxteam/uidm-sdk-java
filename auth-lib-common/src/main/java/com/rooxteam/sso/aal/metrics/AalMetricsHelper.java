@@ -1,9 +1,11 @@
 package com.rooxteam.sso.aal.metrics;
 
-import com.codahale.metrics.JmxReporter;
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.MetricRegistry;
-import lombok.Getter;
+
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Meter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Metrics;
 
 /**
  * Регистрирует метрики работы с кешем аутентификаций и авторизаций.
@@ -20,49 +22,65 @@ public abstract class AalMetricsHelper {
     public static final String METRIC_PRINCIPAL_CACHE_MISS_METER = "principalCacheMissMeter";
     public static final String METRIC_POLICY_CACHE_MISS_METER = "policyCacheMissMeter";
 
-    @Getter
-    private final static MetricRegistry metricRegistry;
+    private final static MeterRegistry metricRegistry;
 
     static {
-        metricRegistry = new MetricRegistry();
-        JmxReporter.forRegistry(metricRegistry)
-                .inDomain("com.rooxteam")
-                .createsObjectNamesWith(new ObjectNameFactory())
-                .build().start();
+        metricRegistry = Metrics.globalRegistry;
     }
 
     /**
      * Кол-во сохранений principal в кеш, в единицу времени
      */
-    @Getter
-    private static Meter principalCacheAddMeter = metricRegistry.meter(METRIC_PRINCIPAL_CACHE_ADD_METER);
+    private static Counter principalCacheAddMeter = metricRegistry.counter(METRIC_PRINCIPAL_CACHE_ADD_METER);
     /**
      * Кол-во сохранений policy в кеш, в единицу времени
      */
-    @Getter
-    private static Meter policyCacheAddMeter = metricRegistry.meter(METRIC_POLICY_CACHE_ADD_METER);
+    private static Counter policyCacheAddMeter = metricRegistry.counter(METRIC_POLICY_CACHE_ADD_METER);
 
 
     /**
      * Кол-во попаданий в кеш принципалов, в единицу времени
      */
-    @Getter
-    private static Meter principalCacheHitMeter = metricRegistry.meter(METRIC_PRINCIPAL_CACHE_HIT_METER);
+    private static Counter principalCacheHitMeter = metricRegistry.counter(METRIC_PRINCIPAL_CACHE_HIT_METER);
     /**
      * Кол-во попаданий в кеш политик, в единицу времени
      */
-    @Getter
-    private static Meter policyCacheHitMeter = metricRegistry.meter(METRIC_POLICY_CACHE_HIT_METER);
+    private static Counter policyCacheHitMeter = metricRegistry.counter(METRIC_POLICY_CACHE_HIT_METER);
 
     /**
      * Кол-во промахов в кеш принципалов, в единицу времени
      */
-    @Getter
-    private static Meter principalCacheMissMeter = metricRegistry.meter(METRIC_PRINCIPAL_CACHE_MISS_METER);
+    private static Counter principalCacheMissMeter = metricRegistry.counter(METRIC_PRINCIPAL_CACHE_MISS_METER);
     /**
      * Кол-во промахов в кеш политик, в единицу времени
      */
-    @Getter
-    private static Meter policyCacheMissMeter = metricRegistry.meter(METRIC_POLICY_CACHE_MISS_METER);
+    private static Counter policyCacheMissMeter = metricRegistry.counter(METRIC_POLICY_CACHE_MISS_METER);
 
+    public static MeterRegistry getMetricRegistry() {
+        return AalMetricsHelper.metricRegistry;
+    }
+
+    public static Counter getPrincipalCacheAddMeter() {
+        return AalMetricsHelper.principalCacheAddMeter;
+    }
+
+    public static Counter getPolicyCacheAddMeter() {
+        return AalMetricsHelper.policyCacheAddMeter;
+    }
+
+    public static Counter getPrincipalCacheHitMeter() {
+        return AalMetricsHelper.principalCacheHitMeter;
+    }
+
+    public static Counter getPolicyCacheHitMeter() {
+        return AalMetricsHelper.policyCacheHitMeter;
+    }
+
+    public static Counter getPrincipalCacheMissMeter() {
+        return AalMetricsHelper.principalCacheMissMeter;
+    }
+
+    public static Counter getPolicyCacheMissMeter() {
+        return AalMetricsHelper.policyCacheMissMeter;
+    }
 }

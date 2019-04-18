@@ -1,29 +1,46 @@
 package com.rooxteam.sso.aal;
 
-import com.codahale.metrics.Gauge;
 import com.google.common.cache.Cache;
-import com.rooxteam.sso.aal.client.*;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
+import com.rooxteam.sso.aal.client.EvaluationContext;
+import com.rooxteam.sso.aal.client.OtpClient;
+import com.rooxteam.sso.aal.client.SsoAuthenticationClient;
+import com.rooxteam.sso.aal.client.SsoAuthorizationClient;
+import com.rooxteam.sso.aal.client.SsoTokenClient;
 import com.rooxteam.sso.aal.client.model.AuthenticationResponse;
 import com.rooxteam.sso.aal.client.model.EvaluationRequest;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.context.TokenContextFactory;
+import com.rooxteam.sso.aal.exception.AalException;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
 import com.rooxteam.sso.aal.metrics.AalMetricsHelper;
-import com.rooxteam.sso.aal.otp.*;
+import com.rooxteam.sso.aal.otp.OtpFlowState;
+import com.rooxteam.sso.aal.otp.OtpResponse;
+import com.rooxteam.sso.aal.otp.ResendOtpParameter;
+import com.rooxteam.sso.aal.otp.SendOtpParameter;
+import com.rooxteam.sso.aal.otp.ValidateOtpParameter;
+import io.micrometer.core.instrument.Tags;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.forgerock.json.jose.common.JwtReconstruction;
-import org.forgerock.json.jose.jws.SignedJwt;
-import org.forgerock.json.jose.jwt.JwtClaimsSet;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.text.ParseException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Timer;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
 import static com.rooxteam.sso.aal.AalLogger.LOG;
-import static com.rooxteam.sso.aal.metrics.AalMetricsHelper.*;
+import static com.rooxteam.sso.aal.metrics.AalMetricsHelper.METRIC_POLICY_DECISIONS_COUNT_IN_CACHE;
+import static com.rooxteam.sso.aal.metrics.AalMetricsHelper.METRIC_PRINCIPALS_COUNT_IN_CACHE;
+import static com.rooxteam.sso.aal.metrics.AalMetricsHelper.getMetricRegistry;
+import static com.rooxteam.sso.aal.metrics.AalMetricsHelper.getPolicyCacheAddMeter;
 
 /**
  * Реализация AuthenticationAuthorizationLibrary, работающая с ForgeRock OpenAM
@@ -79,25 +96,14 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         this.authorizationType = authorizationType;
 
 
-        if (!getMetricRegistry().getNames().contains(METRIC_POLICY_DECISIONS_COUNT_IN_CACHE)) {
-            getMetricRegistry().register(METRIC_POLICY_DECISIONS_COUNT_IN_CACHE,
-                    new Gauge<Long>() {
-                        @Override
-                        public Long getValue() {
-                            return isAllowedPolicyDecisionsCache.size();
-                        }
-                    });
-        }
-
-        if (!getMetricRegistry().getNames().contains(METRIC_PRINCIPALS_COUNT_IN_CACHE)) {
-            getMetricRegistry().register(METRIC_PRINCIPALS_COUNT_IN_CACHE,
-                    new Gauge<Long>() {
-                        @Override
-                        public Long getValue() {
-                            return RooxAuthenticationAuthorizationLibrary.this.principalCache.size();
-                        }
-                    });
-        }
+            getMetricRegistry().gaugeMapSize(METRIC_POLICY_DECISIONS_COUNT_IN_CACHE,
+                    Tags.empty(),
+                            isAllowedPolicyDecisionsCache.asMap()
+                    );
+            getMetricRegistry().gaugeMapSize(METRIC_PRINCIPALS_COUNT_IN_CACHE,
+                    Tags.empty(),
+                        RooxAuthenticationAuthorizationLibrary.this.principalCache.asMap()
+                    );
     }
 
     @Override
@@ -149,9 +155,9 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         Principal result;
         result = principalCache.getIfPresent(key);
         if (result != null) {
-            AalMetricsHelper.getPrincipalCacheHitMeter().mark();
+            AalMetricsHelper.getPrincipalCacheHitMeter().increment();
         } else {
-            AalMetricsHelper.getPrincipalCacheMissMeter().mark();
+            AalMetricsHelper.getPrincipalCacheMissMeter().increment();
         }
         return result;
     }
@@ -171,7 +177,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
             String authType = (String) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "authType");
             if (authType != null && authType.equals(AuthParamType.IP.getValue())) {
                 principalCache.put(new PrincipalKey(AuthParamType.IP, ip, clientIps), principal);
-                AalMetricsHelper.getPrincipalCacheAddMeter().mark();
+                AalMetricsHelper.getPrincipalCacheAddMeter().increment();
             }
             return principal;
         } else {
@@ -264,10 +270,16 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
             } else {
                 token = principal.getJwtToken();
             }
-            SignedJwt jwt = new JwtReconstruction().reconstructJwt(token, SignedJwt.class);
-            JwtClaimsSet claims = jwt.getClaimsSet();
+            SignedJWT jwt = null;
+            JWTClaimsSet claims = null;
+            try {
+                jwt = SignedJWT.parse(token);
+                claims = jwt.getJWTClaimsSet();
+            } catch (ParseException e) {
+                throw new AalException("Failed to parse JWT", e);
+            }
             if (claims.getClaim(IMSI_CLAIM_NAME) != null) {
-                String claimImsi = claims.getClaim(IMSI_CLAIM_NAME, String.class);
+                String claimImsi = (String) claims.getClaim(IMSI_CLAIM_NAME);
                 if (imsi.equalsIgnoreCase(claimImsi)) {
                     principalCache.invalidate(entry.getKey());
                     fireOnInvalidate(principal);
@@ -316,9 +328,9 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         LOG.traceGetPolicyDecision(key);
         EvaluationResponse result = isAllowedPolicyDecisionsCache.getIfPresent(key);
         if (result != null) {
-            AalMetricsHelper.getPolicyCacheHitMeter().mark();
+            AalMetricsHelper.getPolicyCacheHitMeter().increment();
         } else {
-            AalMetricsHelper.getPolicyCacheMissMeter().mark();
+            AalMetricsHelper.getPolicyCacheMissMeter().increment();
             result = evaluatePolicyOnResource(key);
         }
 
@@ -353,7 +365,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
 
         EvaluationResponse result = ssoAuthorizationClient.isActionOnResourceAllowedByPolicy(subject, key.getResourceName(), key.getActionName(), key.getEnvParameters());
         isAllowedPolicyDecisionsCache.put(key, result);
-        getPolicyCacheAddMeter().mark();
+        getPolicyCacheAddMeter().increment();
         return result;
     }
 

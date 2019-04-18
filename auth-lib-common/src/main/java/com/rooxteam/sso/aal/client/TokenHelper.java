@@ -1,9 +1,10 @@
 
 package com.rooxteam.sso.aal.client;
 
-import org.forgerock.json.jose.common.JwtReconstruction;
-import org.forgerock.json.jose.jws.SignedJwt;
+import com.nimbusds.jwt.JWT;
+import com.nimbusds.jwt.JWTParser;
 
+import java.text.ParseException;
 import java.util.Calendar;
 
 /**
@@ -11,23 +12,23 @@ import java.util.Calendar;
  */
 public class TokenHelper {
 
-    public static Calendar expires(SignedJwt jwt) {
+    public static Calendar expires(JWT jwt) throws ParseException {
         Calendar expiration = Calendar.getInstance();
-        expiration.setTime(jwt.getClaimsSet().getExpirationTime());
+        expiration.setTime(jwt.getJWTClaimsSet().getExpirationTime());
         return expiration;
     }
     
-    public static Calendar expires(String jwtStr) {
-        SignedJwt jwt = parseJwt(jwtStr);
+    public static Calendar expires(String jwtStr) throws ParseException {
+        JWT jwt = parseJwt(jwtStr);
         return expires(jwt);
     }
 
-    public static String getId(String jwtStr) {
-        SignedJwt jwt = parseJwt(jwtStr);
-        return jwt.getClaimsSet().getJwtId();
+    public static String getId(String jwtStr) throws ParseException {
+        JWT jwt = parseJwt(jwtStr);
+        return jwt.getJWTClaimsSet().getJWTID();
     }
 
-    private static SignedJwt parseJwt(String jwt) {
-        return new JwtReconstruction().reconstructJwt(jwt, SignedJwt.class);
+    private static JWT parseJwt(String jwt) throws ParseException {
+        return JWTParser.parse(jwt);
     }
 }

@@ -34,45 +34,24 @@ targetCompatibility = JavaVersion.VERSION_1_8
 
 dependencies {
 
-    // TODO: for HttpStatus, needs fixing
-    compileOnly(group: 'org.springframework', name: 'spring-web', version: springVersion)
+    // for com.rooxteam.sso.aal.client.cookie.store.enablePerRequest
+    compile("com.rooxteam.uidm.sdk:auth-lib-common:$authLibCommonVersion")
 
-    // for com.rooxteam.sso.aal.client.cookie.store.enablePerRequest, ok until UIDM needs sticky session
-    compile("com.rooxteam.sso:request-cookie-store:$requestCookieStoreVersion")
+    // for lombok magic
+    compileOnly("org.projectlombok:lombok:${lombokVersion}")
 
-    // for backward compat, ok to have it provided
-    compileOnly("commons-configuration:commons-configuration:$apacheConfigurationVersion")
-
-    // for RooxconfigConfiguration, ok to have it provided
-    compileOnly("com.rooxteam.commons:rooxconfig:$rooxconfigVersion")
-
-    // for HttpClient, ok for now
-    compile("org.apache.httpcomponents:httpclient:$apacheHttpClientVersion")
-
-    compileOnly("ch.qos.logback:logback-classic:$logbackVersion")
-
-    // for typed logging, ok for now
-    compile("org.jboss.logging:jboss-logging:$jbossLoggingVersion")
-    compileOnly("org.jboss.logging:jboss-logging-processor:$jbossLoggingExtensionsVersion")
-    compileOnly("org.jboss.logging:jboss-logging-annotations:$jbossLoggingExtensionsVersion")
-
-    // for cache, ok for now
-    compile("com.google.guava:guava:$guavaVersion")
-
-    compileOnly("io.micrometer:micrometer-core:$micrometerVersion")
-
-    // for json processing, ok for now
-    compile("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
-    compile("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
-
-    // for JWT, ok
-    compile("com.nimbusds:nimbus-jose-jwt:${nimbusJoseJwtVersion}")
+    // for compiling upon spring security
+    compileOnly("org.springframework.security:spring-security-core:$springSecurityVersion")
+    compileOnly("org.springframework.security:spring-security-web:$springSecurityVersion")
+    compileOnly("org.springframework.security:spring-security-config:$springSecurityVersion")
 
     // for compiling upon servlet api
     compileOnly("javax.servlet:servlet-api:${servletVersion}")
 
-    // for lombok magic
-	compileOnly("org.projectlombok:lombok:${lombokVersion}")
+    // for typed logging
+    compile("org.jboss.logging:jboss-logging:$jbossLoggingVersion")
+    compileOnly("org.jboss.logging:jboss-logging-processor:$jbossLoggingExtensionsVersion")
+    compileOnly("org.jboss.logging:jboss-logging-annotations:$jbossLoggingExtensionsVersion")
 
     // for testing
     testCompile("junit:junit:$junitVersion")
@@ -82,10 +61,6 @@ dependencies {
 
 javadoc {
     options.charSet = 'UTF-8'
-}
-
-tasks.withType(Javadoc) {
-    options.addStringOption('Xdoclint:none', '-quiet')
 }
 
 task wrapper(type: Wrapper) {
