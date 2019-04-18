@@ -7,6 +7,7 @@ import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
+import java.text.ParseException;
 import java.util.*;
 
 /**
@@ -30,7 +31,12 @@ public class PollingBean extends TimerTask {
 
         for (Map.Entry<Principal, List<AalCacheKey>> entry : cachedPrincipals.entrySet()) {
             Principal cachedPrincipal = entry.getKey();
-            String tokenId = TokenHelper.getId(cachedPrincipal.getJwtToken());
+            String tokenId = null;
+            try {
+                tokenId = TokenHelper.getId(cachedPrincipal.getJwtToken());
+            } catch (ParseException e) {
+                continue;
+            }
             if (!ssoTokenClient.queryExistence(tokenId)) {
                 List<AalCacheKey> cacheKeys = entry.getValue();
                 for (AalCacheKey cacheKey : cacheKeys) {

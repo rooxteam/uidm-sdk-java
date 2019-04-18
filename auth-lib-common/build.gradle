@@ -40,24 +40,23 @@ dependencies {
     // for com.rooxteam.sso.aal.client.cookie.store.enablePerRequest, ok until UIDM needs sticky session
     compile("com.rooxteam.sso:request-cookie-store:$requestCookieStoreVersion")
 
-    // for org.forgerock.json.fluent and org.forgerock.json.jose.*
-    // TODO: remove in favour of jose; we don't need two JWT libs at the same time
-    compile("org.forgerock.commons:json-web-token:$jsonWebTokenVesrion")
-
     // for backward compat, ok to have it provided
     compileOnly("commons-configuration:commons-configuration:$apacheConfigurationVersion")
 
     // for RooxconfigConfiguration, ok to have it provided
     compileOnly("com.rooxteam.commons:rooxconfig:$rooxconfigVersion")
 
-
     // for HttpClient, ok for now
     compile("org.apache.httpcomponents:httpclient:$apacheHttpClientVersion")
+
+    compile("ch.qos.logback:logback-classic:$logbackVersion")
 
     // for typed logging, ok for now
     compile("org.jboss.logging:jboss-logging:$jbossLoggingVersion")
     compileOnly("org.jboss.logging:jboss-logging-processor:$jbossLoggingExtensionsVersion")
     compileOnly("org.jboss.logging:jboss-logging-annotations:$jbossLoggingExtensionsVersion")
+//    annotationProcessor("org.jboss.logging:jboss-logging-processor:$jbossLoggingExtensionsVersion")
+//    annotationProcessor("org.jboss.logging:jboss-logging-annotations:$jbossLoggingExtensionsVersion")
 
     // for cache, ok for now
     compile("com.google.guava:guava:$guavaVersion")
@@ -76,7 +75,8 @@ dependencies {
     compileOnly("javax.servlet:servlet-api:${servletVersion}")
 
     // for lombok magic
-    compileOnly("org.projectlombok:lombok:${lombokVersion}")
+    annotationProcessor("org.projectlombok:lombok:${lombokVersion}")
+	compileOnly("org.projectlombok:lombok:${lombokVersion}")
 
     // for testing
     testCompile("junit:junit:$junitVersion")
@@ -86,6 +86,10 @@ dependencies {
 
 javadoc {
     options.charSet = 'UTF-8'
+}
+
+tasks.withType(Javadoc) {
+    options.addStringOption('Xdoclint:none', '-quiet')
 }
 
 task wrapper(type: Wrapper) {

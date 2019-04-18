@@ -9,15 +9,6 @@ public interface ConfigKeys {
      * Обязательные ключи конфигурации
      */
 
-    /**
-     * {@value} - Имя агента для доступа к OpenAM
-     */
-    String OPENAM_AGENT_NAME = "com.rooxteam.aal.agent.name";
-
-    /**
-     * {@value} - Пароль агента для доступа к OpenAM
-     */
-    String OPENAM_AGENT_PASSWORD = "com.rooxteam.aal.agent.password";
 
     /**
      * {@value} - Внешний базовый URL SSO
