@@ -2,8 +2,8 @@ package com.rooxteam.jwt;
 
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
+import com.rooxteam.sso.aal.utils.StringUtils;
 import lombok.*;
-import org.apache.commons.lang.StringUtils;
 
 import java.security.SignatureException;
 import java.text.ParseException;

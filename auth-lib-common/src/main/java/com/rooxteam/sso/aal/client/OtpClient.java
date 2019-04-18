@@ -9,8 +9,7 @@ import com.rooxteam.sso.aal.client.model.*;
 import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.context.TokenContextFactory;
 import com.rooxteam.sso.aal.otp.*;
-import org.apache.commons.codec.Charsets;
-import org.apache.commons.lang.StringUtils;
+import com.rooxteam.sso.aal.utils.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.NameValuePair;
@@ -30,6 +29,7 @@ import org.apache.http.util.EntityUtils;
 import org.springframework.http.HttpStatus;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -157,7 +157,7 @@ public class OtpClient {
     private OtpResponse makeOtpRequest(List<NameValuePair> params, OtpFlowState otpState) {
         HttpPost post = new HttpPost(config.getString(ConfigKeys.SSO_URL) + OAUTH2_ACCESS_TOKEN_PATH);
         post.addHeader(new BasicHeader(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON.getMimeType()));
-        post.setEntity(new UrlEncodedFormEntity(params, Charsets.UTF_8));
+        post.setEntity(new UrlEncodedFormEntity(params, StandardCharsets.UTF_8));
 
         CookieStore basicCookieStore = new BasicCookieStore();
         HttpClientContext context = new HttpClientContext();
@@ -175,7 +175,7 @@ public class OtpClient {
             String sessionIdCookie = getSessionIdCookie(cookieStore);
 
             HttpEntity entity = response.getEntity();
-            String json = EntityUtils.toString(entity, Charsets.UTF_8);
+            String json = EntityUtils.toString(entity, StandardCharsets.UTF_8);
 
             return prepareOtpResponse(status, json, sessionIdCookie);
         } catch (IOException e) {

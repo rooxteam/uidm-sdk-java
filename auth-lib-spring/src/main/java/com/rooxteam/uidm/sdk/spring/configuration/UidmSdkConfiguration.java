@@ -29,6 +29,11 @@ public class UidmSdkConfiguration {
     }
 
     @Bean
+    public AalResourceValidation uidmAuthz(AalAuthorizationClient aalAuthorizationClient) {
+        return aalAuthorizationClient;
+    }
+
+    @Bean
     public SsoAuthorizationClient ssoAuthorizationClient(AalAuthorizationClient aalAuthorizationClient){
         return aalAuthorizationClient;
     }
