@@ -1,6 +1,5 @@
 package com.rooxteam.sso.aal;
 
-import com.codahale.metrics.Gauge;
 import com.google.common.cache.Cache;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
@@ -21,6 +20,7 @@ import com.rooxteam.sso.aal.otp.OtpResponse;
 import com.rooxteam.sso.aal.otp.ResendOtpParameter;
 import com.rooxteam.sso.aal.otp.SendOtpParameter;
 import com.rooxteam.sso.aal.otp.ValidateOtpParameter;
+import io.micrometer.core.instrument.Tags;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 
@@ -96,25 +96,14 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         this.authorizationType = authorizationType;
 
 
-        if (!getMetricRegistry().getNames().contains(METRIC_POLICY_DECISIONS_COUNT_IN_CACHE)) {
-            getMetricRegistry().register(METRIC_POLICY_DECISIONS_COUNT_IN_CACHE,
-                    new Gauge<Long>() {
-                        @Override
-                        public Long getValue() {
-                            return isAllowedPolicyDecisionsCache.size();
-                        }
-                    });
-        }
-
-        if (!getMetricRegistry().getNames().contains(METRIC_PRINCIPALS_COUNT_IN_CACHE)) {
-            getMetricRegistry().register(METRIC_PRINCIPALS_COUNT_IN_CACHE,
-                    new Gauge<Long>() {
-                        @Override
-                        public Long getValue() {
-                            return RooxAuthenticationAuthorizationLibrary.this.principalCache.size();
-                        }
-                    });
-        }
+            getMetricRegistry().gaugeMapSize(METRIC_POLICY_DECISIONS_COUNT_IN_CACHE,
+                    Tags.empty(),
+                            isAllowedPolicyDecisionsCache.asMap()
+                    );
+            getMetricRegistry().gaugeMapSize(METRIC_PRINCIPALS_COUNT_IN_CACHE,
+                    Tags.empty(),
+                        RooxAuthenticationAuthorizationLibrary.this.principalCache.asMap()
+                    );
     }
 
     @Override
@@ -166,9 +155,9 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         Principal result;
         result = principalCache.getIfPresent(key);
         if (result != null) {
-            AalMetricsHelper.getPrincipalCacheHitMeter().mark();
+            AalMetricsHelper.getPrincipalCacheHitMeter().increment();
         } else {
-            AalMetricsHelper.getPrincipalCacheMissMeter().mark();
+            AalMetricsHelper.getPrincipalCacheMissMeter().increment();
         }
         return result;
     }
@@ -188,7 +177,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
             String authType = (String) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "authType");
             if (authType != null && authType.equals(AuthParamType.IP.getValue())) {
                 principalCache.put(new PrincipalKey(AuthParamType.IP, ip, clientIps), principal);
-                AalMetricsHelper.getPrincipalCacheAddMeter().mark();
+                AalMetricsHelper.getPrincipalCacheAddMeter().increment();
             }
             return principal;
         } else {
@@ -339,9 +328,9 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         LOG.traceGetPolicyDecision(key);
         EvaluationResponse result = isAllowedPolicyDecisionsCache.getIfPresent(key);
         if (result != null) {
-            AalMetricsHelper.getPolicyCacheHitMeter().mark();
+            AalMetricsHelper.getPolicyCacheHitMeter().increment();
         } else {
-            AalMetricsHelper.getPolicyCacheMissMeter().mark();
+            AalMetricsHelper.getPolicyCacheMissMeter().increment();
             result = evaluatePolicyOnResource(key);
         }
 
@@ -376,7 +365,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
 
         EvaluationResponse result = ssoAuthorizationClient.isActionOnResourceAllowedByPolicy(subject, key.getResourceName(), key.getActionName(), key.getEnvParameters());
         isAllowedPolicyDecisionsCache.put(key, result);
-        getPolicyCacheAddMeter().mark();
+        getPolicyCacheAddMeter().increment();
         return result;
     }
 

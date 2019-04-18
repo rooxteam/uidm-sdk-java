@@ -59,8 +59,7 @@ dependencies {
     // for cache, ok for now
     compile("com.google.guava:guava:$guavaVersion")
 
-    // for metrics, todo make pluggable
-    compile("io.dropwizard.metrics:metrics-core:${metricsVersion}")
+    compileOnly("io.micrometer:micrometer-core:$micrometerVersion")
 
     // for json processing, ok for now
     compile("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
