@@ -25,7 +25,7 @@ public class UidmSpringSecurityFilterConfiguration {
 
     @Bean
     @Order(0)
-    public Filter requestContextFilter() {
+    public Filter requestCookieStoreFilter() {
         return new RequestCookieStoreFilter(new CookieStoreFactory());
     }
 
