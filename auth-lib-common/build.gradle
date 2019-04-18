@@ -49,14 +49,12 @@ dependencies {
     // for HttpClient, ok for now
     compile("org.apache.httpcomponents:httpclient:$apacheHttpClientVersion")
 
-    compile("ch.qos.logback:logback-classic:$logbackVersion")
+    compileOnly("ch.qos.logback:logback-classic:$logbackVersion")
 
     // for typed logging, ok for now
     compile("org.jboss.logging:jboss-logging:$jbossLoggingVersion")
     compileOnly("org.jboss.logging:jboss-logging-processor:$jbossLoggingExtensionsVersion")
     compileOnly("org.jboss.logging:jboss-logging-annotations:$jbossLoggingExtensionsVersion")
-//    annotationProcessor("org.jboss.logging:jboss-logging-processor:$jbossLoggingExtensionsVersion")
-//    annotationProcessor("org.jboss.logging:jboss-logging-annotations:$jbossLoggingExtensionsVersion")
 
     // for cache, ok for now
     compile("com.google.guava:guava:$guavaVersion")
@@ -75,7 +73,6 @@ dependencies {
     compileOnly("javax.servlet:servlet-api:${servletVersion}")
 
     // for lombok magic
-    annotationProcessor("org.projectlombok:lombok:${lombokVersion}")
 	compileOnly("org.projectlombok:lombok:${lombokVersion}")
 
     // for testing
