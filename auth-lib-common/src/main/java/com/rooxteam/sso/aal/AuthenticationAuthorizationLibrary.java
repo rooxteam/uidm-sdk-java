@@ -3,6 +3,7 @@ package com.rooxteam.sso.aal;
 import com.rooxteam.sso.aal.client.EvaluationContext;
 import com.rooxteam.sso.aal.client.model.EvaluationRequest;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
+import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.otp.OtpFlowState;
 import com.rooxteam.sso.aal.otp.OtpResponse;
 import com.rooxteam.sso.aal.otp.ResendOtpParameter;
@@ -338,4 +339,11 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
      * @return Возвращает результат валидации: или форму для заполнения (не успешная валидация) или принципала (успешная валидация)
      */
     OtpResponse validateOtp(ValidateOtpParameter validateOtpParameter);
+
+
+    /**
+     * Получить обьект конфигурации, с помощью которой SDK была сконфигурирована
+     * @return
+     */
+    Configuration getConfiguration();
 }

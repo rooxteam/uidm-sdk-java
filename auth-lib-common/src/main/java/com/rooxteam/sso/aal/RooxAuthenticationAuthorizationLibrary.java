@@ -11,6 +11,7 @@ import com.rooxteam.sso.aal.client.SsoTokenClient;
 import com.rooxteam.sso.aal.client.model.AuthenticationResponse;
 import com.rooxteam.sso.aal.client.model.EvaluationRequest;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
+import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.context.TokenContextFactory;
 import com.rooxteam.sso.aal.exception.AalException;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
@@ -74,8 +75,10 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     private final JwtValidator jwtValidator;
     private final AuthorizationType authorizationType;
     private volatile PollingBean pollingBean;
+    private Configuration configuration;
 
-    RooxAuthenticationAuthorizationLibrary(Timer timer,
+    RooxAuthenticationAuthorizationLibrary(Configuration configuration,
+                                           Timer timer,
                                            SsoAuthorizationClient ssoAuthorizationClient,
                                            SsoAuthenticationClient ssoAuthenticationClient,
                                            SsoTokenClient ssoTokenClient,
@@ -84,7 +87,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
                                            Cache<PrincipalKey, Principal> principalCache,
                                            JwtValidator jwtValidator,
                                            AuthorizationType authorizationType) {
-
+        this.configuration = configuration;
         this.ssoAuthorizationClient = ssoAuthorizationClient;
         this.ssoAuthenticationClient = ssoAuthenticationClient;
         this.ssoTokenClient = ssoTokenClient;
@@ -96,14 +99,14 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         this.authorizationType = authorizationType;
 
 
-            getMetricRegistry().gaugeMapSize(METRIC_POLICY_DECISIONS_COUNT_IN_CACHE,
-                    Tags.empty(),
-                            isAllowedPolicyDecisionsCache.asMap()
-                    );
-            getMetricRegistry().gaugeMapSize(METRIC_PRINCIPALS_COUNT_IN_CACHE,
-                    Tags.empty(),
-                        RooxAuthenticationAuthorizationLibrary.this.principalCache.asMap()
-                    );
+        getMetricRegistry().gaugeMapSize(METRIC_POLICY_DECISIONS_COUNT_IN_CACHE,
+                Tags.empty(),
+                isAllowedPolicyDecisionsCache.asMap()
+        );
+        getMetricRegistry().gaugeMapSize(METRIC_PRINCIPALS_COUNT_IN_CACHE,
+                Tags.empty(),
+                RooxAuthenticationAuthorizationLibrary.this.principalCache.asMap()
+        );
     }
 
     @Override
@@ -395,8 +398,8 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     }
 
     @Override
-    public Principal validate(HttpServletRequest request, String jwt) {
-        return ssoAuthorizationClient.validate(request, jwt);
+    public Principal validate(HttpServletRequest request, String token) {
+        return ssoAuthorizationClient.validate(request, token);
     }
 
     @Override
@@ -497,6 +500,11 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     @Override
     public OtpResponse validateOtp(ValidateOtpParameter validateOtpParameter) {
         return otpClient.validateOtp(validateOtpParameter);
+    }
+
+    @Override
+    public Configuration getConfiguration() {
+        return configuration;
     }
 
     @Override
