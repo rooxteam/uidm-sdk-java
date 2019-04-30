@@ -32,7 +32,7 @@ public class AALIsAllowedTest {
     @Before
     public void setUp() {
         reset(mockPolicyDecisionsCache, mockPrincipalCache, mockSsoAuthorizationClient, mockSsoAuthenticationClient);
-        aal = new RooxAuthenticationAuthorizationLibrary(null, mockSsoAuthorizationClient, mockSsoAuthenticationClient,
+        aal = new RooxAuthenticationAuthorizationLibrary(null,null, mockSsoAuthorizationClient, mockSsoAuthenticationClient,
                 null, null, mockPolicyDecisionsCache, mockPrincipalCache, null, AuthorizationType.JWT);
     }
 

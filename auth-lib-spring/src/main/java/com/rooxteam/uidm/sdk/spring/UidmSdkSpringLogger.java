@@ -10,9 +10,10 @@ import org.jboss.logging.annotations.ValidIdRange;
 import org.jboss.logging.annotations.ValidIdRanges;
 
 import static org.jboss.logging.Logger.Level.ERROR;
+import static org.jboss.logging.Logger.Level.WARN;
 import static org.jboss.logging.annotations.Message.Format.MESSAGE_FORMAT;
 
-@MessageLogger(projectCode = "RX_JWT_SEC____", length = 4)
+@MessageLogger(projectCode = "RX_UIDM_SPRING_", length = 4)
 @ValidIdRanges({
         // FATAL
         @ValidIdRange(min = 1, max = 999),
@@ -29,12 +30,12 @@ import static org.jboss.logging.annotations.Message.Format.MESSAGE_FORMAT;
         // TRACE
         @ValidIdRange(min = 9001, max = 9999)
 })
-public interface JwtSecurityPluginLogger extends BasicLogger {
+public interface UidmSdkSpringLogger extends BasicLogger {
 
     /**
      * The default logger named 'com.rooxteam.webapi'.
      */
-    JwtSecurityPluginLogger LOG = Logger.getMessageLogger(JwtSecurityPluginLogger.class, JwtSecurityPluginLogger.class.getPackage().getName());
+    UidmSdkSpringLogger LOG = Logger.getMessageLogger(UidmSdkSpringLogger.class, UidmSdkSpringLogger.class.getPackage().getName());
 
     @LogMessage(level = ERROR)
     @Message(id = 3001, format = MESSAGE_FORMAT,
@@ -67,6 +68,11 @@ public interface JwtSecurityPluginLogger extends BasicLogger {
     @LogMessage(level = Logger.Level.WARN)
     @Message(id = 4003, format = Message.Format.MESSAGE_FORMAT, value = "Empty token so attributes cannot be received'")
     void logWarnTokenIsEmpty();
+
+    @LogMessage(level = WARN)
+    @Message(id = 4004, format = MESSAGE_FORMAT,
+            value = "An exception occured on OTP request processing")
+    void warnExceptionOnAalOtpRequest(@Cause Exception e);
 
     @LogMessage(level = Logger.Level.WARN)
     @Message(id = 4005, format = Message.Format.MESSAGE_FORMAT, value = "Attributes ''{0}'' cannot be received'")

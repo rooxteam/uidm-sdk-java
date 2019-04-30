@@ -123,21 +123,6 @@ public class OtpClient {
         return sendOtpEvent(resendOtpParameter.getOtpFlowState(), null, EVENT_ID_SEND, resendOtpParameter.getService());
     }
 
-    public OtpResponse validateOtp(OtpFlowState otpState, String otpCode) {
-        ValidateOtpParameter validateOtpParameter = ValidateOtpParameter.builder()
-                .otpFlowState(otpState).otpCode(otpCode).build();
-        return validateOtp(validateOtpParameter);
-    }
-
-    public OtpResponse validateOtp(ValidateOtpParameter validateOtpParameter) {
-        return sendOtpEvent(validateOtpParameter.getOtpFlowState(), validateOtpParameter.getOtpCode(), EVENT_ID_VALIDATE,
-                validateOtpParameter.getService());
-    }
-
-    protected String currentTokenParamName() {
-        return config.getString(ConfigKeys.OTP_CURRENT_TOKEN_PARAM_NAME, ConfigKeys.OTP_CURRENT_TOKEN_PARAM_NAME_DEFAULT);
-    }
-
     private OtpResponse sendOtpEvent(OtpFlowState otpState, String otpCode, String eventId, String service) {
         if (StringUtils.isEmpty(otpState.getSessionId()) ||
                 StringUtils.isEmpty(otpState.getExecution()) ||
@@ -152,6 +137,21 @@ public class OtpClient {
             params.add(new BasicNameValuePair(OTP_CODE_PARAM_NAME, otpCode));
         }
         return makeOtpRequest(params, otpState);
+    }
+
+    public OtpResponse validateOtp(OtpFlowState otpState, String otpCode) {
+        ValidateOtpParameter validateOtpParameter = ValidateOtpParameter.builder()
+                .otpFlowState(otpState).otpCode(otpCode).build();
+        return validateOtp(validateOtpParameter);
+    }
+
+    public OtpResponse validateOtp(ValidateOtpParameter validateOtpParameter) {
+        return sendOtpEvent(validateOtpParameter.getOtpFlowState(), validateOtpParameter.getOtpCode(), EVENT_ID_VALIDATE,
+                validateOtpParameter.getService());
+    }
+
+    protected String currentTokenParamName() {
+        return config.getString(ConfigKeys.OTP_CURRENT_TOKEN_PARAM_NAME, ConfigKeys.OTP_CURRENT_TOKEN_PARAM_NAME_DEFAULT);
     }
 
     private OtpResponse makeOtpRequest(List<NameValuePair> params, OtpFlowState otpState) {

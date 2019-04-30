@@ -67,7 +67,8 @@ public class AalFactory {
         Cache<PolicyDecisionKey, EvaluationResponse> isAllowedPolicyDecisionsCache = initPoliciesCache(config);
         JwtValidator jwtValidator = createJwtValidator(config);
 
-        RooxAuthenticationAuthorizationLibrary aal = new RooxAuthenticationAuthorizationLibrary(pollingTimer,
+        RooxAuthenticationAuthorizationLibrary aal = new RooxAuthenticationAuthorizationLibrary(config,
+                pollingTimer,
                 authorizationClient,
                 authenticationClient,
                 tokenClient,

@@ -34,7 +34,7 @@ public class AALEventsTest {
     public void setUp() {
         reset(mockSsoAuthenticationClient, mockSsoAuthorizationClient, mockPrincipalCache, mockPolicyDecisionsCache, mockListener);
         aal = new RooxAuthenticationAuthorizationLibrary(
-                null, mockSsoAuthorizationClient, mockSsoAuthenticationClient, null, null,
+                null,null, mockSsoAuthorizationClient, mockSsoAuthenticationClient, null, null,
                 mockPolicyDecisionsCache, mockPrincipalCache, null, AuthorizationType.JWT);
         aal.addPrincipalListener(mockListener);
     }
