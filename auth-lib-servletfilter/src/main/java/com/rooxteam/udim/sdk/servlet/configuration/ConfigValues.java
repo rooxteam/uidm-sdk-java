@@ -6,5 +6,5 @@ public interface ConfigValues {
     String ROLES_KEY = "com.rooxteam.uidm.sdk.auth.filter.headers.token_roles";
     String EXPIRES_IN_KEY = "com.rooxteam.uidm.sdk.auth.filter.headers.expires_in";
     String AUTH_LEVEL_KEY = "com.rooxteam.uidm.sdk.auth.filter.headers.auth_level";
-    String TOKEN_INFO_URL_KEY = "com.rooxteam.uidm.sdk.auth.filter.tokeninfo_url";
+    String SCOPES_KEY = "com.rooxteam.uidm.sdk.auth.filter.headers.token_scopes";
 }

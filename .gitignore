@@ -13,3 +13,7 @@ out
 auth-lib-servletfilter/.idea
 auth-lib-servletfilter/.idea/uiDesigner.xml 
 auth-lib-servletfilter/.gradle
+auth-lib-common/.gradle/
+auth-lib-common/.idea/
+auth-lib-spring/.gradle/
+auth-lib-spring/.idea/

@@ -1,6 +1,7 @@
 package com.rooxteam.udim.sdk.servlet.filter;
 
-import com.rooxteam.udim.sdk.servlet.configuration.Configuration;
+import com.rooxteam.udim.sdk.servlet.configuration.ConfigValues;
+import com.rooxteam.udim.sdk.servlet.configuration.ServletFilterConfiguration;
 import com.rooxteam.udim.sdk.servlet.dto.TokenInfo;
 
 import javax.servlet.http.HttpServletRequest;
@@ -43,7 +44,7 @@ class ServletFilterHttpRequestWrapper extends HttpServletRequestWrapper {
 
     ServletFilterHttpRequestWrapper(HttpServletRequest request,
                                     TokenInfo tokenInfo,
-                                    Configuration config) {
+                                    ServletFilterConfiguration config) {
         super(request);
         Objects.requireNonNull(tokenInfo);
         Objects.requireNonNull(config);
@@ -53,10 +54,11 @@ class ServletFilterHttpRequestWrapper extends HttpServletRequestWrapper {
                 : Collections.unmodifiableSet(new TreeSet<>());
 
         this.virtualHeaders = new TreeMap<>();
-        putIntoHeader(config.getPrincipalHeader(), createCollection(principal));
-        putIntoHeader(config.getRolesHeader(), roles);
-        putIntoHeader(config.getAuthLevelHeader(), createCollection(tokenInfo.getAuthLevel()));
-        putIntoHeader(config.getExpiresInHeader(), createCollection(tokenInfo.getExpiresIn()));
+        putIntoHeader(config.getString(ConfigValues.PRINCIPAL_KEY), createCollection(principal));
+        putIntoHeader(config.getString(ConfigValues.ROLES_KEY), roles);
+        putIntoHeader(config.getString(ConfigValues.AUTH_LEVEL_KEY), createCollection(tokenInfo.getAuthLevel()));
+        putIntoHeader(config.getString(ConfigValues.EXPIRES_IN_KEY), createCollection(tokenInfo.getExpiresIn()));
+        putIntoHeader(config.getString(ConfigValues.SCOPES_KEY), createCollection(tokenInfo.getScopes()));
 
         Enumeration<String> iter = request.getHeaderNames();
         while (iter.hasMoreElements()) {

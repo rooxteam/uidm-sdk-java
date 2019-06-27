@@ -1,10 +1,17 @@
 package com.rooxteam.udim.sdk.servlet.filter;
 
-import com.rooxteam.udim.sdk.servlet.configuration.Configuration;
+import com.rooxteam.sso.aal.client.CommonSsoAuthorizationClient;
+import com.rooxteam.sso.aal.client.SsoAuthorizationClientByConfig;
+import com.rooxteam.udim.sdk.servlet.configuration.ConfigValues;
+import com.rooxteam.udim.sdk.servlet.configuration.ServletFilterConfiguration;
 import com.rooxteam.udim.sdk.servlet.dto.TokenInfo;
-import com.rooxteam.udim.sdk.servlet.service.ValidateTokenService;
-import com.rooxteam.udim.sdk.servlet.service.ValidateTokenServiceImpl;
+import com.rooxteam.udim.sdk.servlet.exceptions.AlreadyIniliazedException;
+import com.rooxteam.udim.sdk.servlet.exceptions.NotInitializedException;
+import com.rooxteam.udim.sdk.servlet.service.ServletFilterService;
+import com.rooxteam.udim.sdk.servlet.service.ServletFilterServiceImpl;
 import org.apache.http.HttpHeaders;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -18,31 +25,54 @@ import java.io.IOException;
 import java.util.Optional;
 
 public class ServletFilter implements Filter {
-    private final ValidateTokenService validateTokenService;
-    private final Configuration config;
+    private ServletFilterService servletFilterService;
+    private ServletFilterConfiguration config;
+    private boolean fullyInitialized = false;
 
-    public ServletFilter(Configuration configuration) {
-        this.validateTokenService = new ValidateTokenServiceImpl(
-                configuration.getSocketTimeout(),
-                configuration.getConnectionTimeout(),
-                configuration.getConnectionRequestTimeout()
-        );
-        this.config = configuration;
+    private void assureNotInitialised() {
+        if (fullyInitialized) {
+            throw new AlreadyIniliazedException();
+        }
+    }
+
+    private void assureInitialised() {
+        if (!fullyInitialized) {
+            throw new NotInitializedException();
+        }
     }
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
+        //do nothing
+    }
+
+    /**
+     * Use finishInit() methods to finish initialization.
+     */
+    public void finishInit(ServletFilterConfiguration servletFilterConfiguration) {
+        CloseableHttpClient closeableHttpClient = HttpClientBuilder
+                .create()
+                .build();
+        SsoAuthorizationClientByConfig client = new SsoAuthorizationClientByConfig(servletFilterConfiguration, closeableHttpClient);
+        finishInit(client, servletFilterConfiguration);
+    }
+
+    public void finishInit(CommonSsoAuthorizationClient client, ServletFilterConfiguration servletFilterConfiguration) {
+        assureNotInitialised();
+        this.servletFilterService = new ServletFilterServiceImpl(client, servletFilterConfiguration);
+        this.config = servletFilterConfiguration;
+        this.fullyInitialized = true;
     }
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+        assureInitialised();
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         boolean redirect = false;
-        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-        Optional<String> accToken = validateTokenService.extractAccessToken(authHeader);
+        Optional<String> accToken = servletFilterService.extractAccessToken(request.getCookies(), request.getHeader(HttpHeaders.AUTHORIZATION));
         if (accToken.isPresent()) {
-            Optional<TokenInfo> info = validateTokenService.getAccessTokenInfo(config.getTokenInfoUrl(), accToken.get());
+            Optional<TokenInfo> info = servletFilterService.getAccessTokenInfo(request, accToken.get());
             if (info.isPresent()) {
                 request = new ServletFilterHttpRequestWrapper(request, info.get(), config);
             } else {
@@ -53,7 +83,7 @@ public class ServletFilter implements Filter {
         }
 
         if (redirect) {
-            response.sendRedirect(config.getRedirectLocation());
+            response.sendRedirect(config.getString(ConfigValues.REDIRECT_LOCATION_KEY));
         }
 
         filterChain.doFilter(request, response);

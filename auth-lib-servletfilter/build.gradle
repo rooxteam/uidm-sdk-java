@@ -3,7 +3,6 @@ buildscript {
         if (project.hasProperty('rooxExternalAccess')) {
             mavenLocal()
             mavenCentral()
-            maven { url 'http://repo.springsource.org/plugins-release/' }
         } else {
             maven { url 'http://nexus.rooxintra.net/content/repositories/releases' }
             maven { url 'http://nexus.rooxintra.net/content/repositories/public' }
@@ -22,6 +21,7 @@ plugins {
 
 apply plugin: 'roox-doc'
 apply plugin: 'roox-jar'
+apply plugin: 'war'
 apply from: 'gradle/jcenter.gradle'
 
 // give test dependencies access to compileOnly dependencies to emulate providedCompile
