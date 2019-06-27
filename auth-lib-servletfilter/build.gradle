@@ -33,7 +33,8 @@ sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
 dependencies {
-
+    compile("com.rooxteam.uidm.sdk:auth-lib-common:$authLibCommonVersion")
+    
     // for com.rooxteam.sso.aal.client.cookie.store.enablePerRequest, ok until UIDM needs sticky session
     compile("com.rooxteam.sso:request-cookie-store:$requestCookieStoreVersion")
 
