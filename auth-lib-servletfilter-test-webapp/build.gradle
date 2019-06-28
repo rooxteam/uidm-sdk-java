@@ -34,12 +34,6 @@ targetCompatibility = JavaVersion.VERSION_1_8
 
 dependencies {
     compile("com.rooxteam.uidm.sdk:auth-lib-servletfilter:$authServletFilterLib")
-    
-    // for com.rooxteam.sso.aal.client.cookie.store.enablePerRequest, ok until UIDM needs sticky session
-    compile("com.rooxteam.sso:request-cookie-store:$requestCookieStoreVersion")
-
-    // for HttpClient, ok for now
-    compile("org.apache.httpcomponents:httpclient:$apacheHttpClientVersion")
 
     compileOnly("ch.qos.logback:logback-classic:$logbackVersion")
 
@@ -56,9 +50,6 @@ dependencies {
     // for json processing, ok for now
     compile("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
     compile("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
-
-    // for JWT, ok
-    compile("com.nimbusds:nimbus-jose-jwt:${nimbusJoseJwtVersion}")
 
     // for compiling upon servlet api
     compileOnly("javax.servlet:servlet-api:${servletVersion}")
