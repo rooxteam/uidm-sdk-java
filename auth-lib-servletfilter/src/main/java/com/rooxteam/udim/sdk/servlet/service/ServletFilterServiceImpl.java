@@ -1,17 +1,13 @@
 package com.rooxteam.udim.sdk.servlet.service;
 
 import com.rooxteam.sso.aal.Principal;
-import com.rooxteam.sso.aal.PropertyScope;
 import com.rooxteam.sso.aal.client.CommonSsoAuthorizationClient;
 import com.rooxteam.sso.aal.exception.AuthorizationException;
 import com.rooxteam.udim.sdk.servlet.configuration.ServletFilterServiceConfiguration;
-import com.rooxteam.udim.sdk.servlet.dto.TokenInfo;
-import com.rooxteam.udim.sdk.servlet.dto.TokenPropertyNames;
 import com.rooxteam.udim.sdk.servlet.util.ExtractAccessTokenUtils;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -27,20 +23,12 @@ public class ServletFilterServiceImpl implements ServletFilterService {
     }
 
     @Override
-    public Optional<TokenInfo> getAccessTokenInfo(HttpServletRequest request, String accessToken) {
-        Principal principal;
+    public Optional<Principal> getPrincipal(HttpServletRequest request, String accessToken) {
         try {
-            principal = commonSsoAuthorizationClient.validate(request, accessToken);
+            return Optional.of(commonSsoAuthorizationClient.validate(request, accessToken));
         } catch (AuthorizationException e) {
             return Optional.empty();
         }
-        TokenInfo tokenInfo = new TokenInfo();
-        tokenInfo.setPrincipal((String) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, TokenPropertyNames.PRINCIPAL));
-        tokenInfo.setAuthLevel(((List<String>) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, TokenPropertyNames.AUTH_LEVEL)).get(0));
-        tokenInfo.setRoles(((List<String>) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, TokenPropertyNames.ROLES)));
-        tokenInfo.setScopes(((List<String>) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, TokenPropertyNames.SCOPES)));
-        tokenInfo.setExpiresIn(principal.getExpirationTime().getTimeInMillis() / 1000);
-        return Optional.of(tokenInfo);
     }
 
     @Override
@@ -53,7 +41,7 @@ public class ServletFilterServiceImpl implements ServletFilterService {
                 break;
             }
         }
-        if (!token.isPresent() || "".equals(token.get())) {
+        if ((!token.isPresent() || "".equals(token.get())) && headerValue != null) {
             token = ExtractAccessTokenUtils.extractFromHeader(headerValue);
         }
         return token;

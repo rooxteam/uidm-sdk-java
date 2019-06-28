@@ -1,4 +1,4 @@
-package com.rooxteam.udim.sdk.servlet.testing;
+package com.rooxteam.uidm.sdk.servlet;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;

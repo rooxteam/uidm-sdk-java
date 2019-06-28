@@ -1,8 +1,11 @@
 package com.rooxteam.udim.sdk.servlet.filter;
 
+import com.rooxteam.sso.aal.Principal;
+import com.rooxteam.sso.aal.PropertyScope;
 import com.rooxteam.udim.sdk.servlet.configuration.ConfigValues;
 import com.rooxteam.udim.sdk.servlet.configuration.ServletFilterConfiguration;
-import com.rooxteam.udim.sdk.servlet.dto.TokenInfo;
+import com.rooxteam.udim.sdk.servlet.dto.PrincipalProperties;
+import com.rooxteam.udim.sdk.servlet.exceptions.InvalidForwardedPropertiesConfiguration;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
@@ -10,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -22,9 +27,14 @@ class ServletFilterHttpRequestWrapper extends HttpServletRequestWrapper {
     private Map<String, Collection<String>> virtualHeaders;
 
     private Collection<String> createCollection(Object object) {
-        ArrayList<String> arrayList = new ArrayList<>();
-        arrayList.add(object.toString());
-        return arrayList;
+        if (object instanceof Collection) {
+           return (Collection<String>) object;
+        } else if (object instanceof String) {
+            ArrayList<String> arrayList = new ArrayList<>();
+            arrayList.add(object.toString());
+            return arrayList;
+        }
+        return null;
     }
 
     private Collection<String> createCollection(Enumeration<String> strings) {
@@ -43,22 +53,31 @@ class ServletFilterHttpRequestWrapper extends HttpServletRequestWrapper {
     }
 
     ServletFilterHttpRequestWrapper(HttpServletRequest request,
-                                    TokenInfo tokenInfo,
+                                    Principal principal,
                                     ServletFilterConfiguration config) {
         super(request);
-        Objects.requireNonNull(tokenInfo);
+        Objects.requireNonNull(principal);
         Objects.requireNonNull(config);
-        this.principal = tokenInfo.getPrincipal();
-        this.roles = tokenInfo.getRoles() != null
-                ? Collections.unmodifiableSet(new TreeSet<>(tokenInfo.getRoles()))
+        this.principal = (String) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, PrincipalProperties.prn.name());
+        Object uncastRoles = principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, PrincipalProperties.roles.name());
+        this.roles = uncastRoles != null
+                ? Collections.unmodifiableSet(new TreeSet<>((List<String>) uncastRoles))
                 : Collections.unmodifiableSet(new TreeSet<>());
 
         this.virtualHeaders = new TreeMap<>();
-        putIntoHeader(config.getString(ConfigValues.PRINCIPAL_KEY), createCollection(principal));
-        putIntoHeader(config.getString(ConfigValues.ROLES_KEY), roles);
-        putIntoHeader(config.getString(ConfigValues.AUTH_LEVEL_KEY), createCollection(tokenInfo.getAuthLevel()));
-        putIntoHeader(config.getString(ConfigValues.EXPIRES_IN_KEY), createCollection(tokenInfo.getExpiresIn()));
-        putIntoHeader(config.getString(ConfigValues.SCOPES_KEY), createCollection(tokenInfo.getScopes()));
+        List<String> properties = config.getList(ConfigValues.PROPERTIES_KEY);
+        List<String> headers = config.getList(ConfigValues.HEADER_NAMES_OF_PROPERTIES_KEY);
+        if (properties.size() != headers.size()) {
+            throw new InvalidForwardedPropertiesConfiguration();
+        }
+        Iterator<String> propIter = properties.iterator();
+        Iterator<String> headerIter = headers.iterator();
+        while (propIter.hasNext()) {
+            String prop = propIter.next();
+            String header = headerIter.next();
+            Object propValue = principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, prop);
+            putIntoHeader(header, createCollection(propValue));
+        }
 
         Enumeration<String> iter = request.getHeaderNames();
         while (iter.hasMoreElements()) {

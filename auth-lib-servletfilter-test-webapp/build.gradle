@@ -21,6 +21,7 @@ plugins {
 
 apply plugin: 'roox-doc'
 apply plugin: 'roox-jar'
+apply plugin: 'war'
 apply from: 'gradle/jcenter.gradle'
 
 // give test dependencies access to compileOnly dependencies to emulate providedCompile
@@ -32,7 +33,10 @@ sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
 dependencies {
-    compile("com.rooxteam.uidm.sdk:auth-lib-common:$authLibCommonVersion")
+    compile("com.rooxteam.uidm.sdk:auth-lib-servletfilter:$authServletFilterLib")
+    
+    // for com.rooxteam.sso.aal.client.cookie.store.enablePerRequest, ok until UIDM needs sticky session
+    compile("com.rooxteam.sso:request-cookie-store:$requestCookieStoreVersion")
 
     // for HttpClient, ok for now
     compile("org.apache.httpcomponents:httpclient:$apacheHttpClientVersion")
@@ -44,11 +48,17 @@ dependencies {
     compileOnly("org.jboss.logging:jboss-logging-processor:$jbossLoggingExtensionsVersion")
     compileOnly("org.jboss.logging:jboss-logging-annotations:$jbossLoggingExtensionsVersion")
 
+    // for cache, ok for now
+    compile("com.google.guava:guava:$guavaVersion")
+
     compileOnly("io.micrometer:micrometer-core:$micrometerVersion")
 
     // for json processing, ok for now
     compile("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
     compile("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
+
+    // for JWT, ok
+    compile("com.nimbusds:nimbus-jose-jwt:${nimbusJoseJwtVersion}")
 
     // for compiling upon servlet api
     compileOnly("javax.servlet:servlet-api:${servletVersion}")

@@ -1,6 +1,6 @@
 package com.rooxteam.udim.sdk.servlet.service;
 
-import com.rooxteam.udim.sdk.servlet.dto.TokenInfo;
+import com.rooxteam.sso.aal.Principal;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -11,9 +11,9 @@ public interface ServletFilterService {
      * Attempts to validate access token. Returns empty Optional if networks fails or access token is not valid.
      * @param request - http request.
      * @param accessToken - user access token extracted from request.
-     * @return Optional of token information.
+     * @return Optional of information about principal.
      */
-    Optional<TokenInfo> getAccessTokenInfo(HttpServletRequest request, String accessToken);
+    Optional<Principal> getPrincipal(HttpServletRequest request, String accessToken);
 
     /**
      * Attempts to extract access token cookie or from header.

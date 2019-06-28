@@ -1,11 +1,12 @@
 package com.rooxteam.udim.sdk.servlet.filter;
 
+import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.client.CommonSsoAuthorizationClient;
 import com.rooxteam.sso.aal.client.SsoAuthorizationClientByConfig;
+import com.rooxteam.sso.aal.client.SsoAuthorizationClientByJwt;
 import com.rooxteam.udim.sdk.servlet.configuration.ConfigValues;
 import com.rooxteam.udim.sdk.servlet.configuration.ServletFilterConfiguration;
-import com.rooxteam.udim.sdk.servlet.dto.TokenInfo;
-import com.rooxteam.udim.sdk.servlet.exceptions.AlreadyIniliazedException;
+import com.rooxteam.udim.sdk.servlet.exceptions.AlreadyInitializedException;
 import com.rooxteam.udim.sdk.servlet.exceptions.NotInitializedException;
 import com.rooxteam.udim.sdk.servlet.service.ServletFilterService;
 import com.rooxteam.udim.sdk.servlet.service.ServletFilterServiceImpl;
@@ -24,14 +25,14 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Optional;
 
-public class ServletFilter implements Filter {
+public class ServletAuthFilter implements Filter {
     private ServletFilterService servletFilterService;
     private ServletFilterConfiguration config;
     private boolean fullyInitialized = false;
 
     private void assureNotInitialised() {
         if (fullyInitialized) {
-            throw new AlreadyIniliazedException();
+            throw new AlreadyInitializedException();
         }
     }
 
@@ -53,7 +54,7 @@ public class ServletFilter implements Filter {
         CloseableHttpClient closeableHttpClient = HttpClientBuilder
                 .create()
                 .build();
-        SsoAuthorizationClientByConfig client = new SsoAuthorizationClientByConfig(servletFilterConfiguration, closeableHttpClient);
+        SsoAuthorizationClientByJwt client = new SsoAuthorizationClientByJwt(new AalConfigAdapter(servletFilterConfiguration), closeableHttpClient);
         finishInit(client, servletFilterConfiguration);
     }
 
@@ -72,7 +73,7 @@ public class ServletFilter implements Filter {
         boolean redirect = false;
         Optional<String> accToken = servletFilterService.extractAccessToken(request.getCookies(), request.getHeader(HttpHeaders.AUTHORIZATION));
         if (accToken.isPresent()) {
-            Optional<TokenInfo> info = servletFilterService.getAccessTokenInfo(request, accToken.get());
+            Optional<Principal> info = servletFilterService.getPrincipal(request, accToken.get());
             if (info.isPresent()) {
                 request = new ServletFilterHttpRequestWrapper(request, info.get(), config);
             } else {

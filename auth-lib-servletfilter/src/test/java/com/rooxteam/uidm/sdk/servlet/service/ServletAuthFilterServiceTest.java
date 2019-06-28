@@ -13,7 +13,7 @@ import java.util.Collections;
 
 import static org.mockito.Mockito.when;
 
-public class ServletFilterServiceTest {
+public class ServletAuthFilterServiceTest {
 
     private  ServletFilterServiceImpl validateTokeService;
 
