@@ -19,7 +19,7 @@ import java.util.TreeMap;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Mockito.when;
 
-public class ServletAuthFilterServiceTest {
+public class ServletFilterHelperTest {
 
     public ServletFilterHelper prepare(String principalId, String token, List<String> scopes, List<String> roles) {
         Map<String, Object> sharedIdentityProperties = new TreeMap<>();
@@ -94,14 +94,18 @@ public class ServletAuthFilterServiceTest {
 
         String header1 = "Bearer " + token;
         Assert.assertEquals(token, helper.extractAccessToken(cookies1, header1).get());
+        Assert.assertEquals(token, helper.extractAccessToken(null, header1).get());
 
         String header2 = "Bearer sso_1.2_" + token;
         Assert.assertEquals(token, helper.extractAccessToken(cookies1, header2).get());
+        Assert.assertEquals(token, helper.extractAccessToken(null, header2).get());
 
         String header3 = "Bearer " + token;
         Assert.assertEquals(token, helper.extractAccessToken(cookies2, header3).get());
+        Assert.assertEquals(token, helper.extractAccessToken(null, header3).get());
 
         String header4 = "Bearer sso_1.2_" + token;
         Assert.assertEquals(token, helper.extractAccessToken(cookies2, header4).get());
+        Assert.assertEquals(token, helper.extractAccessToken(null, header4).get());
     }
 }
