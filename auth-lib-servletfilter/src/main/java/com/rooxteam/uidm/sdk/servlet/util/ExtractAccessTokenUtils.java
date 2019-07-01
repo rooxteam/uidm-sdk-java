@@ -1,4 +1,4 @@
-package com.rooxteam.udim.sdk.servlet.util;
+package com.rooxteam.uidm.sdk.servlet.util;
 
 import java.util.Optional;
 import java.util.regex.Matcher;

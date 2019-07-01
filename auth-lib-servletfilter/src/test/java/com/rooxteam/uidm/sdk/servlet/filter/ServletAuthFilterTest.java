@@ -1,16 +1,16 @@
 package com.rooxteam.uidm.sdk.servlet.filter;
 
+import com.rooxteam.sso.aal.AuthenticationAuthorizationLibrary;
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.PrincipalImpl;
-import com.rooxteam.sso.aal.client.CommonSsoAuthorizationClient;
-import com.rooxteam.udim.sdk.servlet.filter.ServletAuthFilter;
-import com.rooxteam.uidm.sdk.servlet.ServletFilterConfigurationForTesting;
+import com.rooxteam.uidm.sdk.servlet.configuration.ServletFilterConfigurationForTesting;
 import lombok.Getter;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -28,12 +28,15 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class ServletAuthFilterTest {
 
     private ServletAuthFilter getFilter(String principalId) {
+        FilterConfig filterConfig = new ServletFilterConfigurationForTesting();
         String token = "sdfsdfsfds";
         Map<String, Object> sharedIdentityProperties = new TreeMap<>();
         sharedIdentityProperties.put("scopes", Arrays.asList("scope1", "scope2"));
@@ -43,10 +46,14 @@ public class ServletAuthFilterTest {
         Calendar expirationTime = new GregorianCalendar();
         Principal principal = new PrincipalImpl(token, sharedIdentityProperties, expirationTime);
 
+        AuthenticationAuthorizationLibrary aal = Mockito.mock(AuthenticationAuthorizationLibrary.class);
+        when(aal.authenticate(anyMap())).thenReturn(principal);
+
+        ServletFilterHelper servletFilterHelper = new ServletFilterHelper(filterConfig, aal);
+
         ServletAuthFilter servletAuthFilter = new ServletAuthFilter();
-        CommonSsoAuthorizationClient ssoAuthorizationClient = Mockito.mock(CommonSsoAuthorizationClient.class);
-        when(ssoAuthorizationClient.validate(any(), any())).thenReturn(principal);
-        servletAuthFilter.finishInit(ssoAuthorizationClient, new ServletFilterConfigurationForTesting());
+        servletAuthFilter.init(new ServletFilterConfigurationForTesting(), servletFilterHelper);
+
         return servletAuthFilter;
     }
 

@@ -34,22 +34,6 @@ targetCompatibility = JavaVersion.VERSION_1_8
 dependencies {
     compile("com.rooxteam.uidm.sdk:auth-lib-common:$authLibCommonVersion")
 
-    // for HttpClient, ok for now
-    compile("org.apache.httpcomponents:httpclient:$apacheHttpClientVersion")
-
-    compileOnly("ch.qos.logback:logback-classic:$logbackVersion")
-
-    // for typed logging, ok for now
-    compile("org.jboss.logging:jboss-logging:$jbossLoggingVersion")
-    compileOnly("org.jboss.logging:jboss-logging-processor:$jbossLoggingExtensionsVersion")
-    compileOnly("org.jboss.logging:jboss-logging-annotations:$jbossLoggingExtensionsVersion")
-
-    compileOnly("io.micrometer:micrometer-core:$micrometerVersion")
-
-    // for json processing, ok for now
-    compile("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
-    compile("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
-
     // for compiling upon servlet api
     compileOnly("javax.servlet:servlet-api:${servletVersion}")
 

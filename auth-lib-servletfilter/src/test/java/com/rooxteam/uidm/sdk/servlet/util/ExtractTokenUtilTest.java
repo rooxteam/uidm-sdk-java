@@ -1,6 +1,5 @@
 package com.rooxteam.uidm.sdk.servlet.util;
 
-import com.rooxteam.udim.sdk.servlet.util.ExtractAccessTokenUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
