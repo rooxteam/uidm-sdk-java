@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
     <servlet>
         <servlet-name>testServlet</servlet-name>
-        <servlet-class>com.rooxteam.udim.sdk.servlet.ServletForTesting</servlet-class>
+        <servlet-class>com.rooxteam.uidm.sdk.servlet.ServletForTesting</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>testServlet</servlet-name>
