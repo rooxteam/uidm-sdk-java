@@ -10,11 +10,9 @@ out
 .idea/*.xml
 .idea/artifacts
 
-auth-lib-servletfilter-test-webapp/.idea
-auth-lib-servletfilter-test-webapp/.idea/uiDesigner.xml 
+auth-lib-servletfilter-test-webapp/.idea/
 auth-lib-servletfilter-test-webapp/.gradle
-auth-lib-servletfilter/.idea
-auth-lib-servletfilter/.idea/uiDesigner.xml 
+auth-lib-servletfilter/.idea/
 auth-lib-servletfilter/.gradle
 auth-lib-common/.gradle/
 auth-lib-common/.idea/

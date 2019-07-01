@@ -7,12 +7,12 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>testServlet</servlet-name>
-        <url-pattern>/testFilter</url-pattern>
+        <url-pattern>/testAuthFilter</url-pattern>
     </servlet-mapping>
 
     <filter>
         <filter-name>authFilter</filter-name>
-        <filter-class>com.rooxteam.udim.sdk.servlet.TestServletFilter</filter-class>
+        <filter-class>com.rooxteam.uidm.sdk.servlet.filter.ServletAuthFilter</filter-class>
     </filter>
     <filter-mapping>
         <filter-name>authFilter</filter-name>
