@@ -1,4 +1,4 @@
-package com.rooxteam.uidm.sdk.servlet.filter;
+package com.rooxteam.uidm.sdk.servlet.service;
 
 import com.rooxteam.sso.aal.AalFactory;
 import com.rooxteam.sso.aal.AuthParamType;
@@ -19,24 +19,24 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-class ServletAuthFilterHelper {
+public class ServletAuthFilterServiceImpl implements ServletAuthFilterService {
     private FilterConfig config;
     private AuthenticationAuthorizationLibrary aal;
     private Set<String> cookieNames;
 
-    ServletAuthFilterHelper(FilterConfig filterConfig) {
+    public ServletAuthFilterServiceImpl(FilterConfig filterConfig) {
         this.config = filterConfig;
         this.aal = AalFactory.create(new AalConfigurationAdapter(filterConfig));
         this.cookieNames = getCookieNames(filterConfig);
     }
 
-    ServletAuthFilterHelper(FilterConfig filterConfig, AuthenticationAuthorizationLibrary aal) {
+    public ServletAuthFilterServiceImpl(FilterConfig filterConfig, AuthenticationAuthorizationLibrary aal) {
         this.config = filterConfig;
         this.aal = aal;
         this.cookieNames = getCookieNames(filterConfig);
     }
 
-    Optional<Principal> authenticate(String accessToken) {
+    public Optional<Principal> authenticate(String accessToken) {
         Map<String, String> params = new TreeMap<>();
         params.put(AuthParamType.JWT.getValue(), accessToken);
         try {
@@ -47,7 +47,7 @@ class ServletAuthFilterHelper {
         }
     }
 
-    Optional<String> extractAccessToken(HttpServletRequest request) {
+    public Optional<String> extractAccessToken(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         String headerValue = request.getHeader("Authorization");
         Optional<String> token = Optional.empty();
@@ -65,8 +65,12 @@ class ServletAuthFilterHelper {
         return token;
     }
 
-    String trimAccessTokenForLogging(String token) {
-        return token.substring(0, 16);
+    public String trimAccessTokenForLogging(String token) {
+        if (token.length() > 16) {
+            return token.substring(0, 16);
+        } else {
+            return token;
+        }
     }
 
     private Set<String> getCookieNames(FilterConfig filterConfig) {

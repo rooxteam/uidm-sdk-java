@@ -4,6 +4,8 @@ import com.rooxteam.sso.aal.AuthenticationAuthorizationLibrary;
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.PrincipalImpl;
 import com.rooxteam.uidm.sdk.servlet.configuration.ServletFilterConfigurationForTesting;
+import com.rooxteam.uidm.sdk.servlet.service.ServletAuthFilterService;
+import com.rooxteam.uidm.sdk.servlet.service.ServletAuthFilterServiceImpl;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -45,7 +47,7 @@ public class ServletAuthFilterTest {
         AuthenticationAuthorizationLibrary aal = Mockito.mock(AuthenticationAuthorizationLibrary.class);
         when(aal.authenticate(anyMap())).thenReturn(principal);
 
-        ServletAuthFilterHelper servletAuthFilterHelper = new ServletAuthFilterHelper(filterConfig, aal);
+        ServletAuthFilterService servletAuthFilterHelper = new ServletAuthFilterServiceImpl(filterConfig, aal);
 
         ServletAuthFilter servletAuthFilter = new ServletAuthFilter();
         servletAuthFilter.init(new ServletFilterConfigurationForTesting(), servletAuthFilterHelper);

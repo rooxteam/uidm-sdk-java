@@ -3,6 +3,8 @@ package com.rooxteam.uidm.sdk.servlet.filter;
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.uidm.sdk.servlet.AuthFilterLogger;
 import com.rooxteam.uidm.sdk.servlet.configuration.FilterConfigKeys;
+import com.rooxteam.uidm.sdk.servlet.service.ServletAuthFilterService;
+import com.rooxteam.uidm.sdk.servlet.service.ServletAuthFilterServiceImpl;
 import com.rooxteam.uidm.sdk.servlet.util.StringUtils;
 
 import javax.servlet.Filter;
@@ -25,17 +27,17 @@ import java.util.Optional;
  */
 public class ServletAuthFilter implements Filter {
     private FilterConfig filterConfig = null;
-    private ServletAuthFilterHelper servletAuthFilterHelper = null;
+    private ServletAuthFilterService servletAuthFilterHelper = null;
     private String redirectLocation = null;
     private Map<String, String> claimHead = null;
     private Map<String, String> claimAttribute = null;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        init(filterConfig, new ServletAuthFilterHelper(filterConfig));
+        init(filterConfig, new ServletAuthFilterServiceImpl(filterConfig));
     }
 
-    void init(FilterConfig filterConfig, ServletAuthFilterHelper servletAuthFilterHelper) {
+    void init(FilterConfig filterConfig, ServletAuthFilterService servletAuthFilterHelper) {
         this.filterConfig = filterConfig;
         this.servletAuthFilterHelper = servletAuthFilterHelper;
         this.redirectLocation = filterConfig.getInitParameter(FilterConfigKeys.REDIRECT_LOCATION_KEY);
@@ -64,6 +66,7 @@ public class ServletAuthFilter implements Filter {
                 response.sendRedirect(redirectLocation);
             }
         } else {
+            AuthFilterLogger.LOG.infoRedirectDueToNoToken(request.getRemoteAddr());
             response.sendRedirect(redirectLocation);
         }
     }

@@ -22,7 +22,7 @@ public class ServletForTesting extends HttpServlet {
         out.println("<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>");
         out.println("<title>Servlet for auth filter testing</title></head>");
         out.println("<body>");
-        out.println("<h1>This is a response from testing servlet</h1>");  // says Hello
+        out.println("<h1>This is a response from testing servlet</h1>"); 
         // Echo client's request information
         out.println("<p>Request URI:   " + request.getRequestURI() + "</p>");
         out.println("<p>Remote user:   " + request.getRemoteUser() + "</p>");

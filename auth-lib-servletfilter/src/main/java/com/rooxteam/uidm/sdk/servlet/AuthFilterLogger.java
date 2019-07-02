@@ -42,4 +42,10 @@ public interface AuthFilterLogger extends BasicLogger {
     @Message(id = 6002, format = Format.MESSAGE_FORMAT,
             value = "The user with access token {0} has been successfully authenticated. Token claims have been placed in http request.")
     void infoSuccessAuthentication(String token);
+
+
+    @LogMessage(level = Level.INFO)
+    @Message(id = 6003, format = Format.MESSAGE_FORMAT,
+            value = "The user from remote address {0} is being redirected to authentication endpoint as no access token has been provided.")
+    void infoRedirectDueToNoToken(String add);
 }
