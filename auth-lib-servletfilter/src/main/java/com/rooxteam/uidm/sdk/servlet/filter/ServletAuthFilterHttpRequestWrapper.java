@@ -23,7 +23,7 @@ public class ServletAuthFilterHttpRequestWrapper extends HttpServletRequestWrapp
     private Map<String, Object> attributes;
     private Map<String, Collection<String>> headers;
 
-    private Collection<String> createCollection(Object object) {
+    private Collection<String> getCollection(Object object) {
         if (object instanceof Collection) {
            return (Collection<String>) object;
         } else if (object instanceof String) {
@@ -66,7 +66,7 @@ public class ServletAuthFilterHttpRequestWrapper extends HttpServletRequestWrapp
 
         claimHeader.forEach((key, value) -> {
             Object propValue = principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, key);
-            putIntoHeader(key, createCollection(propValue));
+            putIntoHeader(key, getCollection(propValue));
         });
 
         claimAttribute.forEach((key, value) -> {

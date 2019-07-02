@@ -34,7 +34,6 @@ class ServletAuthFilterHelper {
         this.config = filterConfig;
         this.aal = aal;
         this.cookieNames = getCookieNames(filterConfig);
-
     }
 
     Optional<Principal> authenticate(String accessToken) {
