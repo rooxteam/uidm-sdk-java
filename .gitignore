@@ -10,7 +10,5 @@ out
 .idea/*.xml
 .idea/artifacts
 
-auth-lib-servletfilter-test-webapp/.*
-auth-lib-servletfilter/.*
-auth-lib-common/.*
-auth-lib-spring/.*
+*/.idea/
+*/.gradle/
