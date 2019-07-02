@@ -4,7 +4,6 @@ import com.rooxteam.sso.aal.AuthenticationAuthorizationLibrary;
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.PrincipalImpl;
 import com.rooxteam.uidm.sdk.servlet.configuration.ServletFilterConfigurationForTesting;
-import lombok.Getter;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -17,7 +16,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,10 +25,8 @@ import java.util.GregorianCalendar;
 import java.util.Map;
 import java.util.TreeMap;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class ServletAuthFilterTest {
@@ -49,10 +45,10 @@ public class ServletAuthFilterTest {
         AuthenticationAuthorizationLibrary aal = Mockito.mock(AuthenticationAuthorizationLibrary.class);
         when(aal.authenticate(anyMap())).thenReturn(principal);
 
-        ServletFilterHelper servletFilterHelper = new ServletFilterHelper(filterConfig, aal);
+        ServletAuthFilterHelper servletAuthFilterHelper = new ServletAuthFilterHelper(filterConfig, aal);
 
         ServletAuthFilter servletAuthFilter = new ServletAuthFilter();
-        servletAuthFilter.init(new ServletFilterConfigurationForTesting(), servletFilterHelper);
+        servletAuthFilter.init(new ServletFilterConfigurationForTesting(), servletAuthFilterHelper);
 
         return servletAuthFilter;
     }
@@ -78,7 +74,7 @@ public class ServletAuthFilterTest {
 
         Chain chain1 = new Chain();
         servletAuthFilter.doFilter(request, response, chain1);
-        Assert.assertEquals(principalId, chain1.getServletRequest().getRemoteUser());
+        Assert.assertEquals(principalId, chain1.servletRequest.getRemoteUser());
 
         HttpServletRequest request2 = Mockito.mock(HttpServletRequest.class);
         when(request2.getCookies()).thenReturn(cookies2);
@@ -86,13 +82,12 @@ public class ServletAuthFilterTest {
         when(request2.getHeaderNames()).thenReturn(Collections.enumeration(new ArrayList<>()));
         Chain chain2 = new Chain();
         servletAuthFilter.doFilter(request2, response, chain2);
-        Assert.assertEquals(principalId, chain2.getServletRequest().getRemoteUser());
+        Assert.assertEquals(principalId, chain2.servletRequest.getRemoteUser());
     }
 
-    @Getter
     private static class Chain implements FilterChain {
-        private HttpServletResponse servletResponse = null;
-        private HttpServletRequest servletRequest = null;
+        HttpServletResponse servletResponse = null;
+        HttpServletRequest servletRequest = null;
 
         @Override
         public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse) throws IOException, ServletException {

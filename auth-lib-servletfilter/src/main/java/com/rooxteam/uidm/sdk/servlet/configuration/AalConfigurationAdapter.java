@@ -1,10 +1,10 @@
 package com.rooxteam.uidm.sdk.servlet.configuration;
 
 import com.rooxteam.sso.aal.configuration.Configuration;
+import com.rooxteam.uidm.sdk.servlet.util.StringUtils;
 
 import javax.servlet.FilterConfig;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,7 +49,7 @@ public class AalConfigurationAdapter implements Configuration {
     public List getList(String property) {
         String prop = config.getInitParameter(property);
         if (prop != null && !prop.isEmpty()) {
-            return Arrays.asList(prop.split(","));
+            return StringUtils.parseConfigValueAsList(prop);
         } else {
             return new ArrayList();
         }

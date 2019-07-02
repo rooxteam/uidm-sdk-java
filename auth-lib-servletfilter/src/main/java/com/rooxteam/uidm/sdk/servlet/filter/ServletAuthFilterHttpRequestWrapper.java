@@ -2,19 +2,14 @@ package com.rooxteam.uidm.sdk.servlet.filter;
 
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.PropertyScope;
-import com.rooxteam.uidm.sdk.servlet.configuration.FilterConfigKeys;
 import com.rooxteam.uidm.sdk.servlet.dto.PrincipalClaims;
-import com.rooxteam.uidm.sdk.servlet.exceptions.InvalidForwardedPropertiesConfiguration;
 
-import javax.servlet.FilterConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -22,21 +17,17 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-public class ServletFilterHttpRequestWrapper extends HttpServletRequestWrapper {
-    public static final String ATTRIBUTE_NAME_PREFIX = "com.rooxteam.uidm.sdk.servlet.filter.attribute.";
-
+public class ServletAuthFilterHttpRequestWrapper extends HttpServletRequestWrapper {
     private String principal;
     private Set<String> roles;
     private Map<String, Object> attributes;
-    private Map<String, Collection<String>> virtualHeaders;
+    private Map<String, Collection<String>> headers;
 
     private Collection<String> createCollection(Object object) {
         if (object instanceof Collection) {
            return (Collection<String>) object;
         } else if (object instanceof String) {
-            ArrayList<String> arrayList = new ArrayList<>();
-            arrayList.add(object.toString());
-            return arrayList;
+            return Collections.singletonList((String) object);
         }
         return null;
     }
@@ -52,55 +43,41 @@ public class ServletFilterHttpRequestWrapper extends HttpServletRequestWrapper {
 
     private void putIntoHeader(String key, Collection<String> value) {
         if (key != null && value != null) {
-            this.virtualHeaders.put(key, value);
+            this.headers.put(key, value);
         }
     }
 
-    private List<String> parseConfigString(String str) {
-        if (str == null || str.isEmpty()) {
-            return new ArrayList<>();
-        } else {
-            return Arrays.asList(str.split(","));
-        }
-    }
-
-    ServletFilterHttpRequestWrapper(HttpServletRequest request,
-                                    Principal principal,
-                                    FilterConfig config) {
+    ServletAuthFilterHttpRequestWrapper(HttpServletRequest request,
+                                        Principal principal,
+                                        Map<String, String> claimHeader,
+                                        Map<String, String> claimAttribute) {
         super(request);
         Objects.requireNonNull(principal);
-        Objects.requireNonNull(config);
+        Objects.requireNonNull(claimAttribute);
+        Objects.requireNonNull(claimHeader);
         this.principal = (String) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, PrincipalClaims.prn.name());
         Object uncastRoles = principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, PrincipalClaims.roles.name());
         this.roles = uncastRoles != null
                 ? Collections.unmodifiableSet(new TreeSet<>((List<String>) uncastRoles))
                 : Collections.unmodifiableSet(new TreeSet<>());
 
-        this.virtualHeaders = new TreeMap<>();
+        this.headers = new TreeMap<>();
         this.attributes = new TreeMap<>();
-        List<String> claims = parseConfigString(config.getInitParameter(FilterConfigKeys.CLAIMS_KEY));
-        List<String> headersNames = parseConfigString(config.getInitParameter(FilterConfigKeys.HEADER_NAMES_OF_CLAIMS_KEY));
-        List<String> attributeNames = parseConfigString(config.getInitParameter(FilterConfigKeys.ATTRIBUTE_NAMES_OF_CLAIMS_KEY));
 
-        if (claims.size() != headersNames.size() || claims.size() != attributeNames.size()) {
-            throw new InvalidForwardedPropertiesConfiguration();
-        }
-        Iterator<String> claimIter = claims.iterator();
-        Iterator<String> headerIter = headersNames.iterator();
-        Iterator<String> attributeIter = attributeNames.iterator();
-        while (claimIter.hasNext()) {
-            String prop = claimIter.next();
-            String header = headerIter.next();
-            String attr = attributeIter.next();
-            Object propValue = principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, prop);
-            putIntoHeader(header, createCollection(propValue));
-            this.attributes.put(ATTRIBUTE_NAME_PREFIX + attr, propValue);
-        }
+        claimHeader.forEach((key, value) -> {
+            Object propValue = principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, key);
+            putIntoHeader(key, createCollection(propValue));
+        });
+
+        claimAttribute.forEach((key, value) -> {
+            Object propValue = principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, key);
+            this.attributes.put(value, propValue);
+        });
 
         Enumeration<String> headerNamesIter = request.getHeaderNames();
         while (headerNamesIter != null && headerNamesIter.hasMoreElements()) {
             String header = headerNamesIter.nextElement();
-            this.virtualHeaders.put(header, createCollection(request.getHeaders(header)));
+            this.headers.put(header, createCollection(request.getHeaders(header)));
         }
 
         Enumeration<String> attributeNamesIter = request.getAttributeNames();
@@ -131,8 +108,8 @@ public class ServletFilterHttpRequestWrapper extends HttpServletRequestWrapper {
 
     @Override
     public Enumeration<String> getHeaders(String header) {
-        if (header != null && virtualHeaders.get(header) != null) {
-            return Collections.enumeration(virtualHeaders.get(header));
+        if (header != null && headers.get(header) != null) {
+            return Collections.enumeration(headers.get(header));
         } else {
             return null;
         }
@@ -140,7 +117,7 @@ public class ServletFilterHttpRequestWrapper extends HttpServletRequestWrapper {
 
     @Override
     public Enumeration<String> getHeaderNames() {
-        return Collections.enumeration(virtualHeaders.keySet());
+        return Collections.enumeration(headers.keySet());
     }
 
     @Override

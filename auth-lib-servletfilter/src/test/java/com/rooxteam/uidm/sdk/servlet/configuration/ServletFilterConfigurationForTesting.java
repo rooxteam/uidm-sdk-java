@@ -15,9 +15,8 @@ public class ServletFilterConfigurationForTesting implements FilterConfig {
         map.put(ConfigKeys.LOCAL_POLICIES, "{}");
         map.put(FilterConfigKeys.REDIRECT_LOCATION_KEY, "localhost");
         map.put(ConfigKeys.SSO_URL, "localhost");
-        map.put(FilterConfigKeys.CLAIMS_KEY, "roles,scopes,authLevel");
-        map.put(FilterConfigKeys.HEADER_NAMES_OF_CLAIMS_KEY, "Roles,Scopes,AuthLevel");
-        map.put(FilterConfigKeys.ATTRIBUTE_NAMES_OF_CLAIMS_KEY, "roles,scopes,authLevel");
+        map.put(FilterConfigKeys.CLAIMS_HEADERS_MAP_KEY, "roles=Roles,scopes=Scopes");
+        map.put(FilterConfigKeys.CLAIMS_ATTRIBUTES_MAP_KEY, "roles=Roles,scopes=Scopes");
         map.put(FilterConfigKeys.AUTHORIZATION_COOKIE_NAMES_KEY, "at");
     }
 

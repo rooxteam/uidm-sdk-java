@@ -19,9 +19,9 @@ import java.util.TreeMap;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Mockito.when;
 
-public class ServletFilterHelperTest {
+public class ServletAuthFilterHelperTest {
 
-    public ServletFilterHelper prepare(String principalId, String token, List<String> scopes, List<String> roles) {
+    public ServletAuthFilterHelper prepare(String principalId, String token, List<String> scopes, List<String> roles) {
         Map<String, Object> sharedIdentityProperties = new TreeMap<>();
         sharedIdentityProperties.put("scopes", scopes);
         sharedIdentityProperties.put("roles", roles);
@@ -32,12 +32,12 @@ public class ServletFilterHelperTest {
         AuthenticationAuthorizationLibrary aal = Mockito.mock(AuthenticationAuthorizationLibrary.class);
         when(aal.authenticate(anyMap())).thenReturn(principal);
 
-        return new ServletFilterHelper(new ServletFilterConfigurationForTesting(), aal);
+        return new ServletAuthFilterHelper(new ServletFilterConfigurationForTesting(), aal);
     }
 
     @Test
     public void test_extract_token_from_header_service_impl() {
-        ServletFilterHelper helper = prepare("222", "d2112",  Arrays.asList("scope1", "scope2"), Arrays.asList("role1", "role2") );
+        ServletAuthFilterHelper helper = prepare("222", "d2112",  Arrays.asList("scope1", "scope2"), Arrays.asList("role1", "role2") );
 
         Cookie[] cookiesNoToken = new Cookie[2];
         cookiesNoToken[0] = new Cookie("test", "test");
@@ -62,7 +62,7 @@ public class ServletFilterHelperTest {
 
     @Test
     public void test_extract_token_from_cookies_service_impl() {
-        ServletFilterHelper helper = prepare("222", "d2112",  Arrays.asList("scope1", "scope2"), Arrays.asList("role1", "role2") );
+        ServletAuthFilterHelper helper = prepare("222", "d2112",  Arrays.asList("scope1", "scope2"), Arrays.asList("role1", "role2") );
 
         String token = "JDjkdofdyu43u";
         Cookie[] cookies = new Cookie[2];
@@ -81,7 +81,7 @@ public class ServletFilterHelperTest {
 
     @Test
     public void test_extract_token_from_header_no_cookie_service_impl() {
-        ServletFilterHelper helper = prepare("222", "d2112",  Arrays.asList("scope1", "scope2"), Arrays.asList("role1", "role2") );
+        ServletAuthFilterHelper helper = prepare("222", "d2112",  Arrays.asList("scope1", "scope2"), Arrays.asList("role1", "role2") );
 
         String token = "sdf324rwfs43u";
         Cookie[] cookies1 = new Cookie[2];

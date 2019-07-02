@@ -33,12 +33,13 @@ targetCompatibility = JavaVersion.VERSION_1_8
 
 dependencies {
     compile("com.rooxteam.uidm.sdk:auth-lib-common:$authLibCommonVersion")
+    
+    compile("org.jboss.logging:jboss-logging:$jbossLoggingVersion")
+    compileOnly("org.jboss.logging:jboss-logging-processor:$jbossLoggingExtensionsVersion")
+    compileOnly("org.jboss.logging:jboss-logging-annotations:$jbossLoggingExtensionsVersion")
 
     // for compiling upon servlet api
     compileOnly("javax.servlet:servlet-api:${servletVersion}")
-
-    // for lombok magic
-	compileOnly("org.projectlombok:lombok:${lombokVersion}")
 
     // for testing
     testCompile("junit:junit:$junitVersion")

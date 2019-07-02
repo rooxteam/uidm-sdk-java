@@ -2,27 +2,22 @@ package com.rooxteam.uidm.sdk.servlet.configuration;
 
 public interface FilterConfigKeys {
     /**
-     * Arrays of comma denominated String values.
+     * Key which value is a dictionary of token claims that are placed in the request in corresponding headers.
      */
-    String CLAIMS_KEY = "com.rooxteam.uidm.sdk.servlet.filter.forwarded_token_claims";
+    String CLAIMS_HEADERS_MAP_KEY = "com.rooxteam.uidm.sdk.servlet.filter.token_claims_header_names";
 
     /**
-     * Arrays of comma denominated String values.
+     * Key which value is a dictionary of token claims that are placed in request in corresponding attributes.
      */
-    String HEADER_NAMES_OF_CLAIMS_KEY = "com.rooxteam.uidm.sdk.servlet.filter.forwarded_token_claims_header_names";
+    String CLAIMS_ATTRIBUTES_MAP_KEY = "com.rooxteam.uidm.sdk.servlet.filter.token_claims_attribute_names";
 
     /**
-     * Arrays of comma denominated String values.
-     */
-    String ATTRIBUTE_NAMES_OF_CLAIMS_KEY = "com.rooxteam.uidm.sdk.servlet.filter.forwarded_token_claims_attribute_names";
-
-    /**
-     * Array of comma denominated names of authorization cookies. Access token extracted from the cookie with leftmost name in the array has priority.
+     * Key which value is an array of cookie names where the access token can be stored.
      */
     String AUTHORIZATION_COOKIE_NAMES_KEY = "com.rooxteam.uidm.sdk.servlet.filter.authorization_cookie_names";
 
     /**
-     * Url to redirect to.
+     * Redirection url in case of authentication failure.
      */
     String REDIRECT_LOCATION_KEY = "com.rooxteam.uidm.sdk.servlet.filter.redirect_location";
 }
