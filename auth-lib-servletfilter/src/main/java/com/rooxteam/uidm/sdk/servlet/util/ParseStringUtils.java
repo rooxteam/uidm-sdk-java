@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 public class ParseStringUtils {
 
     private final static String group = "[a-zA-Z_.\\-0-9]*";
-    private final static Pattern dictionary = Pattern.compile("\\s*("+group+")\\s*=\\s*("+group+")\\s*,?");
+    private final static Pattern dictionary = Pattern.compile("[\\s\n]*("+group+")[\\s\n]*=[\\s\n]*("+group+")[\\s\n]*,?");
     public static Map<String, String> parseConfigValueAsMap(String str) {
         TreeMap<String, String> map = new TreeMap<>();
         Matcher matcher = dictionary.matcher(str);
@@ -23,7 +23,7 @@ public class ParseStringUtils {
         return map;
     }
 
-    private final static Pattern listPattern = Pattern.compile("\\s*("+group+")\\s*,?");
+    private final static Pattern listPattern = Pattern.compile("[\\s\n]*("+group+")[\\s\n]*,?");
     public static List<String> parseConfigValueAsList(String str) {
         ArrayList<String> list = new ArrayList<>();
         Matcher matcher = listPattern.matcher(str);
