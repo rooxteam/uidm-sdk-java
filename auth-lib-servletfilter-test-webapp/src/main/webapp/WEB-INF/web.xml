@@ -21,7 +21,7 @@
     <filter>
         <filter-name>authFilter</filter-name>
         <filter-class>com.rooxteam.uidm.sdk.servlet.filter.ServletAuthFilter</filter-class>
-        <!-- Replace "supply_value" with test configuration parameters depending of test environment.-->
+        <!-- Replace "supply_value" with test configuration parameters depending on test environment.-->
         <init-param>
             <param-name>com.rooxteam.sso.endpoint</param-name>
             <param-value>supply_value</param-value>
