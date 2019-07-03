@@ -3,19 +3,63 @@
          xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
     <servlet>
         <servlet-name>testServlet</servlet-name>
-        <servlet-class>com.rooxteam.uidm.sdk.servlet.ServletForTesting</servlet-class>
+        <servlet-class>com.rooxteam.uidm.sdk.servlet.TestAuthServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>testServlet</servlet-name>
         <url-pattern>/testAuthFilter</url-pattern>
     </servlet-mapping>
+    <servlet>
+        <servlet-name>testRedirectServlet</servlet-name>
+        <servlet-class>com.rooxteam.uidm.sdk.servlet.TestRedirectServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>testRedirectServlet</servlet-name>
+        <url-pattern>/redirect</url-pattern>
+    </servlet-mapping>
 
     <filter>
         <filter-name>authFilter</filter-name>
         <filter-class>com.rooxteam.uidm.sdk.servlet.filter.ServletAuthFilter</filter-class>
+        <init-param>
+            <param-name>com.rooxteam.sso.endpoint</param-name>
+            <param-value>https://sso-mgf.demo.rooxteam.com/sso</param-value>
+        </init-param>
+        <init-param>
+            <param-name>com.rooxteam.aal.sso.endpoint</param-name>
+            <param-value>https://sso-mgf.demo.rooxteam.com/sso</param-value>
+        </init-param>
+        <init-param>
+            <param-name>com.rooxteam.aal.jwt.issuer</param-name>
+            <param-value>https://ocb-msb.demo.rooxteam.com/sso</param-value>
+        </init-param>
+        <init-param>
+            <param-name>com.rooxteam.aal.auth.client</param-name>
+            <param-value>mlk</param-value>
+        </init-param>
+        <init-param>
+            <param-name>com.rooxteam.aal.auth.password</param-name>
+            <param-value>password</param-value>
+        </init-param>
+        <init-param>
+            <param-name>com.rooxteam.uidm.sdk.servlet.filter.token_claims_header_names</param-name>
+            <param-value>authLevel=TestAuthLevel,scopes=TestScopes,sub=TestSub,roles=TestRoles</param-value>
+        </init-param>
+        <init-param>
+            <param-name>com.rooxteam.uidm.sdk.servlet.filter.token_claims_attribute_names</param-name>
+            <param-value>authLevel=TestAuthLevel,scopes=TestScopes,sub=TestSub,roles=TestRoles</param-value>
+        </init-param>
+        <init-param>
+            <param-name>com.rooxteam.uidm.sdk.servlet.filter.authorization_cookie_names</param-name>
+            <param-value>at</param-value>
+        </init-param>
+        <init-param>
+            <param-name>com.rooxteam.uidm.sdk.servlet.filter.redirect_location</param-name>
+            <param-value>redirect</param-value>
+        </init-param>
     </filter>
     <filter-mapping>
         <filter-name>authFilter</filter-name>
-        <url-pattern>/*</url-pattern>
+        <url-pattern>/testAuthFilter</url-pattern>
     </filter-mapping>
 </web-app>

@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -33,6 +34,7 @@ public class ServletAuthFilterServiceImplTest {
 
         AuthenticationAuthorizationLibrary aal = Mockito.mock(AuthenticationAuthorizationLibrary.class);
         when(aal.authenticate(anyMap())).thenReturn(principal);
+        when(aal.validate(anyString())).thenReturn(principal);
 
         return new ServletAuthFilterServiceImpl(new ServletFilterConfigurationForTesting(), aal);
     }

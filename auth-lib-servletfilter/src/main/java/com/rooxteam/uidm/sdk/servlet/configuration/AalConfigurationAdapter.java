@@ -1,7 +1,7 @@
 package com.rooxteam.uidm.sdk.servlet.configuration;
 
 import com.rooxteam.sso.aal.configuration.Configuration;
-import com.rooxteam.uidm.sdk.servlet.util.StringUtils;
+import com.rooxteam.uidm.sdk.servlet.util.ParseStringUtils;
 
 import javax.servlet.FilterConfig;
 import java.util.ArrayList;
@@ -49,7 +49,7 @@ public class AalConfigurationAdapter implements Configuration {
     public List getList(String property) {
         String prop = config.getInitParameter(property);
         if (prop != null && !prop.isEmpty()) {
-            return StringUtils.parseConfigValueAsList(prop);
+            return ParseStringUtils.parseConfigValueAsList(prop);
         } else {
             return new ArrayList();
         }
@@ -57,6 +57,14 @@ public class AalConfigurationAdapter implements Configuration {
 
     @Override
     public String[] getStringArray(String tokenInfoAttributesForward) {
-        return (String[]) this.getList(tokenInfoAttributesForward).toArray();
+        String prop = config.getInitParameter(tokenInfoAttributesForward);
+        if (prop != null) {
+            List<String> list = ParseStringUtils.parseConfigValueAsList(prop);
+            String[] arr = new String[list.size()];
+            arr = list.toArray(arr);
+            return arr;
+        } else {
+            return new String[0];
+        }
     }
 }

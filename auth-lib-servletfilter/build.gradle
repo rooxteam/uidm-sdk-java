@@ -45,6 +45,7 @@ dependencies {
     testCompile("junit:junit:$junitVersion")
     testCompile("org.mockito:mockito-all:$mockitoVersion")
     testCompile('javax.servlet:servlet-api:2.5')
+    testCompile("org.jboss.logging:jboss-logging:$jbossLoggingVersion")
 }
 
 javadoc {

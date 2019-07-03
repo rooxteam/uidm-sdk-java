@@ -35,6 +35,10 @@ targetCompatibility = JavaVersion.VERSION_1_8
 dependencies {
     compile("com.rooxteam.uidm.sdk:auth-lib-servletfilter:$authServletFilterLib")
 
+    //auth-lib-common dependency
+    compile("io.micrometer:micrometer-core:$micrometerVersion")
+    compile("commons-configuration:commons-configuration:$apacheConfigurationVersion")
+
     // for compiling upon servlet api
     compileOnly("javax.servlet:servlet-api:${servletVersion}")
     

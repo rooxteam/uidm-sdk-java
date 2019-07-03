@@ -47,5 +47,5 @@ public interface AuthFilterLogger extends BasicLogger {
     @LogMessage(level = Level.INFO)
     @Message(id = 6003, format = Format.MESSAGE_FORMAT,
             value = "The user from remote address {0} is being redirected to authentication endpoint as no access token has been provided.")
-    void infoRedirectDueToNoToken(String add);
+    void infoRedirectDueToNoToken(String addr);
 }

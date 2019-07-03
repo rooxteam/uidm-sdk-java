@@ -8,7 +8,7 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class StringUtils {
+public class ParseStringUtils {
 
     private final static String group = "[a-zA-Z_.\\-0-9]*";
     private final static Pattern dictionary = Pattern.compile("\\s*("+group+")\\s*=\\s*("+group+")\\s*,?");

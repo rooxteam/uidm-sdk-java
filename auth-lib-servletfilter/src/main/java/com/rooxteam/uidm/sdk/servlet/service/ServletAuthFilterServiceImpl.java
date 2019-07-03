@@ -8,7 +8,8 @@ import com.rooxteam.sso.aal.exception.AuthorizationException;
 import com.rooxteam.uidm.sdk.servlet.AuthFilterLogger;
 import com.rooxteam.uidm.sdk.servlet.configuration.AalConfigurationAdapter;
 import com.rooxteam.uidm.sdk.servlet.configuration.FilterConfigKeys;
-import com.rooxteam.uidm.sdk.servlet.util.StringUtils;
+import com.rooxteam.uidm.sdk.servlet.util.LoggerUtils;
+import com.rooxteam.uidm.sdk.servlet.util.ParseStringUtils;
 
 import javax.servlet.FilterConfig;
 import javax.servlet.http.Cookie;
@@ -37,12 +38,10 @@ public class ServletAuthFilterServiceImpl implements ServletAuthFilterService {
     }
 
     public Optional<Principal> authenticate(String accessToken) {
-        Map<String, String> params = new TreeMap<>();
-        params.put(AuthParamType.JWT.getValue(), accessToken);
         try {
-            return Optional.of(aal.authenticate(params));
+            return Optional.ofNullable(aal.validate(accessToken));
         } catch (AuthorizationException e) {
-            AuthFilterLogger.LOG.errorAuthentication(trimAccessTokenForLogging(accessToken), e);
+            AuthFilterLogger.LOG.errorAuthentication(LoggerUtils.trimAccessTokenForLogging(accessToken), e);
             return Optional.empty();
         }
     }
@@ -60,23 +59,15 @@ public class ServletAuthFilterServiceImpl implements ServletAuthFilterService {
             }
         }
         if ((!token.isPresent() || "".equals(token.get())) && headerValue != null) {
-            token = StringUtils.parseAuthorizationHeader(headerValue);
+            token = ParseStringUtils.parseAuthorizationHeader(headerValue);
         }
         return token;
-    }
-
-    public String trimAccessTokenForLogging(String token) {
-        if (token.length() > 16) {
-            return token.substring(0, 16);
-        } else {
-            return token;
-        }
     }
 
     private Set<String> getCookieNames(FilterConfig filterConfig) {
         String str = filterConfig.getInitParameter(FilterConfigKeys.AUTHORIZATION_COOKIE_NAMES_KEY);
         if (str != null && !str.isEmpty()) {
-            return new TreeSet<>(StringUtils.parseConfigValueAsList(str));
+            return new TreeSet<>(ParseStringUtils.parseConfigValueAsList(str));
         } else {
             return new TreeSet<>();
         }

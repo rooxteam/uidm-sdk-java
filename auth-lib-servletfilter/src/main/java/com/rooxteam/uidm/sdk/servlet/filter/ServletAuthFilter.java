@@ -5,7 +5,8 @@ import com.rooxteam.uidm.sdk.servlet.AuthFilterLogger;
 import com.rooxteam.uidm.sdk.servlet.configuration.FilterConfigKeys;
 import com.rooxteam.uidm.sdk.servlet.service.ServletAuthFilterService;
 import com.rooxteam.uidm.sdk.servlet.service.ServletAuthFilterServiceImpl;
-import com.rooxteam.uidm.sdk.servlet.util.StringUtils;
+import com.rooxteam.uidm.sdk.servlet.util.LoggerUtils;
+import com.rooxteam.uidm.sdk.servlet.util.ParseStringUtils;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -29,8 +30,8 @@ public class ServletAuthFilter implements Filter {
     private FilterConfig filterConfig = null;
     private ServletAuthFilterService servletAuthFilterHelper = null;
     private String redirectLocation = null;
-    private Map<String, String> claimHead = null;
-    private Map<String, String> claimAttribute = null;
+    private Map<String, String> headerNameOfTokenClaim = null;
+    private Map<String, String> attributeNameOfTokenClaim = null;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -41,10 +42,10 @@ public class ServletAuthFilter implements Filter {
         this.filterConfig = filterConfig;
         this.servletAuthFilterHelper = servletAuthFilterHelper;
         this.redirectLocation = filterConfig.getInitParameter(FilterConfigKeys.REDIRECT_LOCATION_KEY);
-        this.claimHead = StringUtils.parseConfigValueAsMap(
+        this.headerNameOfTokenClaim = ParseStringUtils.parseConfigValueAsMap(
                 filterConfig.getInitParameter(FilterConfigKeys.CLAIMS_HEADERS_MAP_KEY)
         );
-        this.claimAttribute = StringUtils.parseConfigValueAsMap(
+        this.attributeNameOfTokenClaim = ParseStringUtils.parseConfigValueAsMap(
                 filterConfig.getInitParameter(FilterConfigKeys.CLAIMS_ATTRIBUTES_MAP_KEY)
         );
     }
@@ -58,11 +59,11 @@ public class ServletAuthFilter implements Filter {
         if (accToken.isPresent()) {
             Optional<Principal> principal = servletAuthFilterHelper.authenticate(accToken.get());
             if (principal.isPresent()) {
-                request = new ServletAuthFilterHttpRequestWrapper(request, principal.get(), claimHead, claimAttribute);
-                AuthFilterLogger.LOG.infoSuccessAuthentication(servletAuthFilterHelper.trimAccessTokenForLogging(accToken.get()));
+                request = new ServletAuthFilterHttpRequestWrapper(request, principal.get(), headerNameOfTokenClaim, attributeNameOfTokenClaim);
+                AuthFilterLogger.LOG.infoSuccessAuthentication(LoggerUtils.trimAccessTokenForLogging(accToken.get()));
                 filterChain.doFilter(request, response);
             } else {
-                AuthFilterLogger.LOG.infoRedirectDueToBadToken(servletAuthFilterHelper.trimAccessTokenForLogging(accToken.get()));
+                AuthFilterLogger.LOG.infoRedirectDueToBadToken(LoggerUtils.trimAccessTokenForLogging(accToken.get()));
                 response.sendRedirect(redirectLocation);
             }
         } else {

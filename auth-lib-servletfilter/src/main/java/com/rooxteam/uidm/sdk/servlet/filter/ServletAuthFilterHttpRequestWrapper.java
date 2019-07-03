@@ -16,6 +16,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 public class ServletAuthFilterHttpRequestWrapper extends HttpServletRequestWrapper {
     private String principal;
@@ -25,7 +26,7 @@ public class ServletAuthFilterHttpRequestWrapper extends HttpServletRequestWrapp
 
     private Collection<String> getCollection(Object object) {
         if (object instanceof Collection) {
-           return (Collection<String>) object;
+           return ((Collection<Object>) object).stream().map(Object::toString).collect(Collectors.toList());
         } else if (object instanceof String) {
             return Collections.singletonList((String) object);
         }
@@ -49,12 +50,12 @@ public class ServletAuthFilterHttpRequestWrapper extends HttpServletRequestWrapp
 
     ServletAuthFilterHttpRequestWrapper(HttpServletRequest request,
                                         Principal principal,
-                                        Map<String, String> claimHeader,
-                                        Map<String, String> claimAttribute) {
+                                        Map<String, String> headerNamesOfTokenClaims,
+                                        Map<String, String> attributeNamesOfTokenClaims) {
         super(request);
         Objects.requireNonNull(principal);
-        Objects.requireNonNull(claimAttribute);
-        Objects.requireNonNull(claimHeader);
+        Objects.requireNonNull(attributeNamesOfTokenClaims);
+        Objects.requireNonNull(headerNamesOfTokenClaims);
         this.principal = (String) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, PrincipalClaims.prn.name());
         Object uncastRoles = principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, PrincipalClaims.roles.name());
         this.roles = uncastRoles != null
@@ -64,12 +65,12 @@ public class ServletAuthFilterHttpRequestWrapper extends HttpServletRequestWrapp
         this.headers = new TreeMap<>();
         this.attributes = new TreeMap<>();
 
-        claimHeader.forEach((key, value) -> {
+        headerNamesOfTokenClaims.forEach((key, value) -> {
             Object propValue = principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, key);
             putIntoHeader(key, getCollection(propValue));
         });
 
-        claimAttribute.forEach((key, value) -> {
+        attributeNamesOfTokenClaims.forEach((key, value) -> {
             Object propValue = principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, key);
             this.attributes.put(value, propValue);
         });
