@@ -21,25 +21,26 @@
     <filter>
         <filter-name>authFilter</filter-name>
         <filter-class>com.rooxteam.uidm.sdk.servlet.filter.ServletAuthFilter</filter-class>
+        <!-- Replace "supply_value" with test configuration parameters depending of test environment.-->
         <init-param>
             <param-name>com.rooxteam.sso.endpoint</param-name>
-            <param-value>https://sso-mgf.demo.rooxteam.com/sso</param-value>
+            <param-value>supply_value</param-value>
         </init-param>
         <init-param>
             <param-name>com.rooxteam.aal.sso.endpoint</param-name>
-            <param-value>https://sso-mgf.demo.rooxteam.com/sso</param-value>
+            <param-value>supply_value</param-value>
         </init-param>
         <init-param>
             <param-name>com.rooxteam.aal.jwt.issuer</param-name>
-            <param-value>https://ocb-msb.demo.rooxteam.com/sso</param-value>
+            <param-value>supply_value</param-value>
         </init-param>
         <init-param>
             <param-name>com.rooxteam.aal.auth.client</param-name>
-            <param-value>mlk</param-value>
+            <param-value>supply_value</param-value>
         </init-param>
         <init-param>
             <param-name>com.rooxteam.aal.auth.password</param-name>
-            <param-value>password</param-value>
+            <param-value>supply_value</param-value>
         </init-param>
         <init-param>
             <param-name>com.rooxteam.uidm.sdk.servlet.filter.token_claims_header_names</param-name>
