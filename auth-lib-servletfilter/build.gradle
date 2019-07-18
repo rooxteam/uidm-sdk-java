@@ -1,0 +1,61 @@
+buildscript {
+    repositories {
+        if (project.hasProperty('rooxExternalAccess')) {
+            mavenLocal()
+            mavenCentral()
+        } else {
+            maven { url 'http://nexus.rooxintra.net/content/repositories/releases' }
+            maven { url 'http://nexus.rooxintra.net/content/repositories/public' }
+        }
+    }
+    dependencies {
+        classpath("com.rooxteam.corporate:gradle-plugins:$rooxGradlePlugins")
+    }
+}
+
+plugins {
+    // for configuration see gradle/jcenter.gradle
+    id "com.jfrog.bintray" version "1.8.4"
+}
+
+
+apply plugin: 'roox-doc'
+apply plugin: 'roox-jar'
+apply from: 'gradle/jcenter.gradle'
+
+// give test dependencies access to compileOnly dependencies to emulate providedCompile
+configurations {
+    testImplementation.extendsFrom compileOnly
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+dependencies {
+    compile("com.rooxteam.uidm.sdk:auth-lib-common:$authLibCommonVersion")
+    
+    compile("org.jboss.logging:jboss-logging:$jbossLoggingVersion")
+    compileOnly("org.jboss.logging:jboss-logging-processor:$jbossLoggingExtensionsVersion")
+    compileOnly("org.jboss.logging:jboss-logging-annotations:$jbossLoggingExtensionsVersion")
+
+    // for compiling upon servlet api
+    compileOnly("javax.servlet:servlet-api:${servletVersion}")
+
+    // for testing
+    testCompile("junit:junit:$junitVersion")
+    testCompile("org.mockito:mockito-all:$mockitoVersion")
+    testCompile('javax.servlet:servlet-api:2.5')
+    testCompile("org.jboss.logging:jboss-logging:$jbossLoggingVersion")
+}
+
+javadoc {
+    options.charSet = 'UTF-8'
+}
+
+tasks.withType(Javadoc) {
+    options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.10.2'
+}
