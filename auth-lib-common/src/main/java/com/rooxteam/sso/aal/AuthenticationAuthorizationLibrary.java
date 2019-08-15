@@ -192,9 +192,7 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
      *                                                     {@link java.lang.RuntimeException}
      * @throws java.lang.IllegalArgumentException          Если {@code jwt} равен null
      * @throws java.lang.IllegalStateException             Если параметры iat, nbf и другие с неправильными значениями
-     * @deprecated Используйте {@link #authenticate(Map)} вместо локальной проверки.
      */
-    @Deprecated
     Principal validate(HttpServletRequest request, String jwt);
 
     /**

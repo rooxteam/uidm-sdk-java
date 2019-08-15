@@ -22,13 +22,19 @@ import org.apache.http.util.EntityUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.rooxteam.sso.aal.AalLogger.LOG;
 
 /**
  * @author Ivan Volynkin
- *         ivolynkin@roox.ru
+ * ivolynkin@roox.ru
  */
 abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationClient {
     private static final String TOKEN_INFO_PATH = "/oauth2/tokeninfo";
@@ -75,31 +81,17 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
                 String responseJson = EntityUtils.toString(response.getEntity());
                 Map<String, Object> tokenClaims = parseJson(responseJson);
                 Map<String, Object> sharedIdentityProperties = new HashMap<>();
-                Object cn = tokenClaims.get("sub");
-                sharedIdentityProperties.put("prn", cn);
-                sharedIdentityProperties.put("sub", cn);
-                String[] toForward = config.getStringArray(ConfigKeys.TOKEN_INFO_ATTRIBUTES_FORWARD);
-                for (String attr : toForward) {
-                    if (tokenClaims.containsKey(attr)) {
-                        sharedIdentityProperties.put(attr, tokenClaims.get(attr));
-                    }
-                }
+                Object sub = tokenClaims.get("sub");
+                // legacy style claim for subject
+                sharedIdentityProperties.put("prn", sub);
+                tokenClaims.forEach(sharedIdentityProperties::put);
 
-                Object realm = tokenClaims.get("realm");
-                if (realm != null) {
-                    sharedIdentityProperties.put("realm", realm.toString());
-                }
-
+                // this is for backward compat because by some legacy nonsense authLevel has been defined as list
                 Object authLevel = tokenClaims.get("auth_level");
                 if (authLevel != null) {
                     sharedIdentityProperties.put("authLevel", Collections.singletonList(authLevel.toString()));
                 } else {
                     sharedIdentityProperties.put("authLevel", Collections.emptyList());
-                }
-
-                List<String> roles = (List<String>) tokenClaims.get("roles");
-                if (roles != null) {
-                    sharedIdentityProperties.put("roles", roles);
                 }
 
                 Calendar expiresIn = new GregorianCalendar();
