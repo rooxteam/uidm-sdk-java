@@ -166,35 +166,30 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
     /**
      * Преобразовать JWT токен в принципал. Созданный принципал будет иметь только свойства из скоупа Shared Identity Params.
      *
-     * @param jwt JWT токен для создания принципала
+     * @param jwt JWT токен, который требуется проверить
      * @return Principal с атрибутами из JWT
-     * @deprecated Используйте {@link #authenticate(Map)} вместо локальной проверки.
      */
-    @Deprecated
     Principal parseToken(String jwt);
 
     /**
-     * @deprecated Используйте {@link #authenticate(Map)} вместо локальной проверки.
      */
     default Principal validate(String jwt) {
         return validate(DummyRequest.getInstance(), jwt);
     }
 
     /**
-     * Проверить корректность токена без обращения к SSO.
+     * Проверить валидность токена
      *
      * @param jwt JWT токен для проверки
      * @return статус проверки
-     * @throws com.rooxteam.sso.aal.exception.AalException Может сождержать в себе причины (cause):
+     * @throws com.rooxteam.sso.aal.exception.AalException Может содержать в себе причины (cause):
      *                                                     {@link java.security.NoSuchAlgorithmException},
      *                                                     {@link java.security.spec.InvalidKeySpecException},
      *                                                     {@link com.nimbusds.jose.JOSEException},
      *                                                     {@link java.lang.RuntimeException}
      * @throws java.lang.IllegalArgumentException          Если {@code jwt} равен null
-     * @throws java.lang.IllegalStateException             Если параметры iat, nbf и другие с неправильными значениями
-     * @deprecated Используйте {@link #authenticate(Map)} вместо локальной проверки.
+     * @throws java.lang.IllegalStateException             Если параметры iat, nbf и другие с неправильными значениями*
      */
-    @Deprecated
     Principal validate(HttpServletRequest request, String jwt);
 
     /**
