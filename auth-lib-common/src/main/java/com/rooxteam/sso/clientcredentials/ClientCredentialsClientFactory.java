@@ -44,7 +44,7 @@ public final class ClientCredentialsClientFactory {
         }
 
         builder.params("client_id", config.getClientId());
-        builder.params("client_secret", config.getClientId());
+        builder.params("client_secret", config.getClientSecret());
         builder.params("grant_type", "client_credentials");
 
         if (!StringUtils.isEmpty(config.getUidmRealm())) {
