@@ -79,11 +79,11 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
             if (e.getStatusCode() == HttpStatus.FORBIDDEN) {
                 LOG.debugOnValidatingTokenTokenForbidden(tokenForLogging);
             } else {
-                LOG.errorOnValidatingToken(tokenForLogging, e);
+                LOG.errorOnValidatingToken(tokenValidationEndpoint, tokenForLogging, e);
             }
             return true;
         } catch (RestClientException e) {
-            LOG.errorOnValidatingToken(tokenForLogging, e);
+            LOG.errorOnValidatingToken(tokenValidationEndpoint, tokenForLogging, e);
             return true;
         }
     }
@@ -144,10 +144,10 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
         try {
             responseEntity = restTemplate.postForEntity(accessTokenEndpoint, request, TokenResponse.class);
         } catch (HttpStatusCodeException e) {
-            LOG.errorOnGetTokenHttp(paramsForLogging, e.getStatusCode(), trimBodyForLogging(e.getResponseBodyAsString()), e);
+            LOG.errorOnGetTokenHttp(accessTokenEndpoint, paramsForLogging, e.getStatusCode(), trimBodyForLogging(e.getResponseBodyAsString()), e);
             throw new ClientAuthenticationException("Cannot get client_credentials token", e);
         } catch (Exception e) {
-            LOG.errorOnGetToken(paramsForLogging, e);
+            LOG.errorOnGetToken(accessTokenEndpoint, paramsForLogging, e);
             throw new ClientAuthenticationException("Cannot get client_credentials token", e);
         }
 

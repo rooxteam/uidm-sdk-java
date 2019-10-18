@@ -10,7 +10,8 @@ import org.jboss.logging.annotations.ValidIdRanges;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpStatusCodeException;
-import org.springframework.web.client.RestClientException;
+
+import java.net.URI;
 
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.TRACE;
@@ -44,19 +45,26 @@ interface ClientCredentialsClientLogger {
 
     @LogMessage(level = ERROR)
     @Message(id = 3001, format = MESSAGE_FORMAT,
-            value = "An error during getting new token. {0}")
-    void errorOnGetToken(MultiValueMap<String, String> params, @Cause Exception e);
+            value = "An error during getting new token. {0} {1}")
+    void errorOnGetToken(final URI accessTokenEndpoint,
+                         final MultiValueMap<String, String> params,
+                         final @Cause Exception e);
 
     @LogMessage(level = ERROR)
     @Message(id = 3002, format = MESSAGE_FORMAT,
-            value = "HTTP error during getting new token. {0}")
-    void errorOnGetTokenHttp(MultiValueMap<String, String> paramsForLogging, HttpStatus statusCode,
-                             String trimmedBody, @Cause HttpStatusCodeException e);
+            value = "HTTP error during getting new token. {0} {1} {2} {3}")
+    void errorOnGetTokenHttp(final URI accessTokenEndpoint,
+                             final MultiValueMap<String, String> paramsForLogging,
+                             final HttpStatus statusCode,
+                             final String trimmedBody,
+                             final @Cause HttpStatusCodeException e);
 
     @LogMessage(level = ERROR)
     @Message(id = 3010, format = MESSAGE_FORMAT,
-            value = "An error during validating token. {0}")
-    void errorOnValidatingToken(String token, @Cause Exception e);
+            value = "An error during validating token. {0} {1}")
+    void errorOnValidatingToken(final URI accessTokenEndpoint,
+                                final String token,
+                                final @Cause Exception e);
 
 
     @LogMessage(level = TRACE)
