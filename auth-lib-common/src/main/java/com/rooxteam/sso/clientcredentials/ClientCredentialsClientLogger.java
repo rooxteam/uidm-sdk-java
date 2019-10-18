@@ -10,7 +10,6 @@ import org.jboss.logging.annotations.ValidIdRanges;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpStatusCodeException;
-
 import java.net.URI;
 
 import static org.jboss.logging.Logger.Level.ERROR;
