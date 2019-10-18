@@ -54,6 +54,10 @@ Maven
 
 # История изменений
 
+## 3.7.x
+
+- Добавлена поддержка OAuth2.0 Client Credentials Flow, смотреть пакет `com.rooxteam.sso.clientcredentials`
+
 ## 3.6.x
 
 - Удалена поддержка протокола OpenAM Policy Agent
