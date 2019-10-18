@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -131,7 +132,7 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
 
         final MultiValueMap<String, String> params = Optional.ofNullable(additionalRequestParameters).orElse(new LinkedMultiValueMap<>());
         MultiValueMap<String, String> paramsForLogging = clearParamsForLogging(params);
-        
+
         LOG.traceRequestNewToken(paramsForLogging);
 
         LinkedMultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
@@ -142,7 +143,10 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
         final ResponseEntity<TokenResponse> responseEntity;
         try {
             responseEntity = restTemplate.postForEntity(accessTokenEndpoint, request, TokenResponse.class);
-        } catch (RestClientException e) {
+        } catch (HttpStatusCodeException e) {
+            LOG.errorOnGetTokenHttp(paramsForLogging, e.getStatusCode(), trimBodyForLogging(e.getResponseBodyAsString()), e);
+            throw new ClientAuthenticationException("Cannot get client_credentials token", e);
+        } catch (Exception e) {
             LOG.errorOnGetToken(paramsForLogging, e);
             throw new ClientAuthenticationException("Cannot get client_credentials token", e);
         }
@@ -158,6 +162,12 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
     private String trimTokenForLogging(String token) {
         return Optional.ofNullable(token)
                 .map(s -> s.substring(0, Math.min(16, s.length())))
+                .orElse("<none>");
+    }
+
+    private String trimBodyForLogging(String body) {
+        return Optional.ofNullable(body)
+                .map(s -> s.substring(0, Math.min(200, s.length())))
                 .orElse("<none>");
     }
 

@@ -7,7 +7,9 @@ import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 import org.jboss.logging.annotations.ValidIdRanges;
+import org.springframework.http.HttpStatus;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 
 import static org.jboss.logging.Logger.Level.ERROR;
@@ -47,8 +49,14 @@ interface ClientCredentialsClientLogger {
 
     @LogMessage(level = ERROR)
     @Message(id = 3002, format = MESSAGE_FORMAT,
+            value = "HTTP error during getting new token. {0}")
+    void errorOnGetTokenHttp(MultiValueMap<String, String> paramsForLogging, HttpStatus statusCode,
+                             String trimmedBody, @Cause HttpStatusCodeException e);
+
+    @LogMessage(level = ERROR)
+    @Message(id = 3010, format = MESSAGE_FORMAT,
             value = "An error during validating token. {0}")
-    void errorOnValidatingToken(String token, @Cause RestClientException e);
+    void errorOnValidatingToken(String token, @Cause Exception e);
 
 
     @LogMessage(level = TRACE)
@@ -100,4 +108,5 @@ interface ClientCredentialsClientLogger {
     @Message(id = 9010, format = MESSAGE_FORMAT,
             value = "Got 403 response code, meaning token not valid, but not expired. {0}")
     void debugOnValidatingTokenTokenForbidden(String tokenForLogging);
+
 }
