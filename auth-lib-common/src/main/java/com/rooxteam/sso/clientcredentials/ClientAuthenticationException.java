@@ -1,6 +1,7 @@
 package com.rooxteam.sso.clientcredentials;
 
-final class ClientAuthenticationException extends Exception {
+@SuppressWarnings("WeakerAccess")
+public final class ClientAuthenticationException extends Exception {
 
     ClientAuthenticationException(String message) {
         super(message);
