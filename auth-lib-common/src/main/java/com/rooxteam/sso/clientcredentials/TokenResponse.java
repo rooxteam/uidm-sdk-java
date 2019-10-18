@@ -1,11 +1,12 @@
 package com.rooxteam.sso.clientcredentials;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
 import lombok.Value;
 
 import java.util.List;
 
-@Value
+@Data
 class TokenResponse {
     @JsonProperty("access_token")
     private String accessToken;

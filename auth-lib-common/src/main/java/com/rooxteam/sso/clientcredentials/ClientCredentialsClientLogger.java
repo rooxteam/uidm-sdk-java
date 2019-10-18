@@ -66,6 +66,14 @@ interface ClientCredentialsClientLogger {
                                 final String token,
                                 final @Cause Exception e);
 
+    @LogMessage(level = ERROR)
+    @Message(id = 3011, format = MESSAGE_FORMAT,
+            value = "HTTP error during validating token. {0} {1} {2} {3}")
+    void errorOnValidatingTokenHttp(final URI accessTokenEndpoint,
+                                    final String token,
+                                    final HttpStatus statusCode,
+                                    final String trimmedBody,
+                                    final @Cause Exception e);
 
     @LogMessage(level = TRACE)
     @Message(id = 9001, format = MESSAGE_FORMAT,

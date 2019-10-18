@@ -7,10 +7,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpStatusCodeException;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.util.Collections;
@@ -67,22 +66,28 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
 
 
     private boolean isExpired(String token) {
-        String tokenForLogging = trimTokenForLogging(token);
-
+        final String tokenForLogging = trimTokenForLogging(token);
+        final URI uri = UriComponentsBuilder.fromUri(tokenValidationEndpoint)
+                .queryParam("access_token", token)
+                .build().toUri();
         try {
-            restTemplate.getForEntity(tokenValidationEndpoint, Object.class);
+            restTemplate.getForEntity(uri, Object.class);
             return false;
-        } catch (HttpClientErrorException e) {
+        } catch (HttpStatusCodeException e) {
             if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
                 LOG.debugOnValidatingTokenTokenExpired(tokenForLogging);
             }
             if (e.getStatusCode() == HttpStatus.FORBIDDEN) {
                 LOG.debugOnValidatingTokenTokenForbidden(tokenForLogging);
             } else {
-                LOG.errorOnValidatingToken(tokenValidationEndpoint, tokenForLogging, e);
+                LOG.errorOnValidatingTokenHttp(tokenValidationEndpoint,
+                        tokenForLogging,
+                        e.getStatusCode(),
+                        trimBodyForLogging(e.getResponseBodyAsString()),
+                        e);
             }
             return true;
-        } catch (RestClientException e) {
+        } catch (Exception e) {
             LOG.errorOnValidatingToken(tokenValidationEndpoint, tokenForLogging, e);
             return true;
         }
