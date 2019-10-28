@@ -10,7 +10,6 @@ import org.jboss.logging.annotations.ValidIdRanges;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpStatusCodeException;
-
 import java.net.URI;
 
 import static org.jboss.logging.Logger.Level.ERROR;
@@ -118,11 +117,11 @@ interface ClientCredentialsClientLogger {
     @LogMessage(level = TRACE)
     @Message(id = 9009, format = MESSAGE_FORMAT,
             value = "Got 401 response code, meaning token expired. {0}")
-    void debugOnValidatingTokenTokenExpired(String token);
+    void traceOnValidatingTokenTokenExpired(String tokenForLogging);
 
     @LogMessage(level = TRACE)
     @Message(id = 9010, format = MESSAGE_FORMAT,
             value = "Got 403 response code, meaning token not valid, but not expired. {0}")
-    void debugOnValidatingTokenTokenForbidden(String tokenForLogging);
+    void traceOnValidatingTokenTokenForbidden(String tokenForLogging);
 
 }
