@@ -77,7 +77,7 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
             if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
                 LOG.traceOnValidatingTokenTokenExpired(tokenForLogging);
             } else if (e.getStatusCode() == HttpStatus.FORBIDDEN) {
-                LOG.debugOnValidatingTokenTokenForbidden(tokenForLogging);
+                LOG.traceOnValidatingTokenTokenForbidden(tokenForLogging);
             } else {
                 LOG.errorOnValidatingTokenHttp(tokenValidationEndpoint,
                         tokenForLogging,
