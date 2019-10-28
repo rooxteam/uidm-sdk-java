@@ -117,7 +117,7 @@ interface ClientCredentialsClientLogger {
     @LogMessage(level = TRACE)
     @Message(id = 9009, format = MESSAGE_FORMAT,
             value = "Got 401 response code, meaning token expired. {0}")
-    void debugOnValidatingTokenTokenExpired(String token);
+    void traceOnValidatingTokenTokenExpired(String token);
 
     @LogMessage(level = TRACE)
     @Message(id = 9010, format = MESSAGE_FORMAT,
