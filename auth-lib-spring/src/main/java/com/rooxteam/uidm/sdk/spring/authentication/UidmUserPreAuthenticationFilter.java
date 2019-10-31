@@ -29,7 +29,6 @@ public class UidmUserPreAuthenticationFilter extends AbstractUserPreAuthenticate
     public static final String SSO = "sso";
     public static final String TOKEN_VERSION_1_0 = "1.0";
     private String TOKEN_COOKIE_NAME_KEY = "com.rooxteam.aal.sso.token.cookie.name";
-    private String TOKEN_COOKIE_NAME_VALUE_DEFAULT = "at";
 
     /**
      * Список атрибутов из Principal.sharedIdentityProperties которые надо сложить в MDC
@@ -66,11 +65,12 @@ public class UidmUserPreAuthenticationFilter extends AbstractUserPreAuthenticate
     }
 
     private String extractToken(HttpServletRequest request) {
-        String authenticationToken = request.getHeader("Authorization");
+        String authenticationToken = null;
 
-        String tokenCookieName = config.getString(TOKEN_COOKIE_NAME_KEY, TOKEN_COOKIE_NAME_VALUE_DEFAULT);
+        String tokenCookieName = config.getString(TOKEN_COOKIE_NAME_KEY);
 
-        if (authenticationToken == null) {
+        if (tokenCookieName != null) {
+
             Cookie[] cookies = request.getCookies();
             if (cookies != null) {
                 for (Cookie ck : cookies) {
@@ -82,7 +82,10 @@ public class UidmUserPreAuthenticationFilter extends AbstractUserPreAuthenticate
                 return null;
             }
 
+        } else {
+            authenticationToken = request.getHeader("Authorization");
         }
+
 
         if (authenticationToken == null) {
             return null;
