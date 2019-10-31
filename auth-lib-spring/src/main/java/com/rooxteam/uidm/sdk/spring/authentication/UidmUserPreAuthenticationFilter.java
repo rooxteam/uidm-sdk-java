@@ -65,27 +65,24 @@ public class UidmUserPreAuthenticationFilter extends AbstractUserPreAuthenticate
     }
 
     private String extractToken(HttpServletRequest request) {
-        String authenticationToken = null;
+        String authenticationToken = request.getHeader("Authorization");
 
-        String tokenCookieName = config.getString(TOKEN_COOKIE_NAME_KEY);
+        if (authenticationToken == null) {
+            String tokenCookieName = config.getString(TOKEN_COOKIE_NAME_KEY);
 
-        if (tokenCookieName != null) {
-
-            Cookie[] cookies = request.getCookies();
-            if (cookies != null) {
-                for (Cookie ck : cookies) {
-                    if (tokenCookieName.equals(ck.getName())) {
-                        authenticationToken = String.format("%s %s_%s_%s", TOKEN_PATTERN_PREFIX, SSO, TOKEN_VERSION_1_0, ck.getValue());
+            if (tokenCookieName != null) {
+                Cookie[] cookies = request.getCookies();
+                if (cookies != null) {
+                    for (Cookie ck : cookies) {
+                        if (tokenCookieName.equals(ck.getName())) {
+                            authenticationToken = String.format("%s %s_%s_%s", TOKEN_PATTERN_PREFIX, SSO, TOKEN_VERSION_1_0, ck.getValue());
+                        }
                     }
+                } else {
+                    return null;
                 }
-            } else {
-                return null;
             }
-
-        } else {
-            authenticationToken = request.getHeader("Authorization");
         }
-
 
         if (authenticationToken == null) {
             return null;
