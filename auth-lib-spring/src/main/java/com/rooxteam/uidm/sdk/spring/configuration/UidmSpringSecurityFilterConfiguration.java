@@ -1,5 +1,6 @@
 package com.rooxteam.uidm.sdk.spring.configuration;
 
+import com.rooxteam.sso.aal.AuthenticationAuthorizationLibrary;
 import com.rooxteam.sso.aal.client.cookies.CookieStoreFactory;
 import com.rooxteam.sso.aal.client.cookies.RequestCookieStoreFilter;
 import com.rooxteam.uidm.sdk.spring.authentication.SsoAuthorizationClient;
@@ -18,8 +19,8 @@ public class UidmSpringSecurityFilterConfiguration {
 
 
     @Bean
-    public GenericFilterBean uidmUserPreAuthenticationFilter(SsoAuthorizationClient ssoAuthorizationClient) {
-        return new UidmUserPreAuthenticationFilter(ssoAuthorizationClient);
+    public GenericFilterBean uidmUserPreAuthenticationFilter(SsoAuthorizationClient ssoAuthorizationClient, AuthenticationAuthorizationLibrary aal) {
+        return new UidmUserPreAuthenticationFilter(ssoAuthorizationClient, aal.getConfiguration());
     }
 
 

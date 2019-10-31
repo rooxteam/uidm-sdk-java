@@ -1,5 +1,6 @@
 package com.rooxteam.uidm.sdk.spring.authentication;
 
+import com.rooxteam.sso.aal.configuration.Configuration;
 import lombok.Setter;
 import org.jboss.logging.MDC;
 import org.springframework.context.EnvironmentAware;
@@ -10,6 +11,7 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.regex.Matcher;
@@ -20,10 +22,14 @@ import java.util.regex.Pattern;
  */
 public class UidmUserPreAuthenticationFilter extends AbstractUserPreAuthenticatedProcessingFilter implements Ordered, EnvironmentAware {
 
-    private static final Pattern TOKEN_VALIDATION_PATTERN = Pattern.compile("Bearer ([a-zA-Z]+)_([\\.\\d]+)_(.+)");
+    private static final String TOKEN_PATTERN_PREFIX = "Bearer";
+    private static final Pattern TOKEN_VALIDATION_PATTERN = Pattern.compile(String.format("%s ([a-zA-Z]+)_([\\.\\d]+)_(.+)", TOKEN_PATTERN_PREFIX));
+
 
     public static final String SSO = "sso";
     public static final String TOKEN_VERSION_1_0 = "1.0";
+    private String TOKEN_COOKIE_NAME_KEY = "com.rooxteam.aal.sso.token.cookie.name";
+    private String TOKEN_COOKIE_NAME_VALUE_DEFAULT = "at";
 
     /**
      * Список атрибутов из Principal.sharedIdentityProperties которые надо сложить в MDC
@@ -32,11 +38,14 @@ public class UidmUserPreAuthenticationFilter extends AbstractUserPreAuthenticate
 
     private SsoAuthorizationClient ssoAuthorizationClient;
 
+    private final Configuration config;
+
     @Setter
     private Environment environment;
 
-    public UidmUserPreAuthenticationFilter(SsoAuthorizationClient ssoAuthorizationClient) {
+    public UidmUserPreAuthenticationFilter(SsoAuthorizationClient ssoAuthorizationClient, Configuration config) {
         this.ssoAuthorizationClient = ssoAuthorizationClient;
+        this.config = config;
     }
 
     @Override
@@ -58,6 +67,23 @@ public class UidmUserPreAuthenticationFilter extends AbstractUserPreAuthenticate
 
     private String extractToken(HttpServletRequest request) {
         String authenticationToken = request.getHeader("Authorization");
+
+        String tokenCookieName = config.getString(TOKEN_COOKIE_NAME_KEY, TOKEN_COOKIE_NAME_VALUE_DEFAULT);
+
+        if (authenticationToken == null) {
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie ck : cookies) {
+                    if (tokenCookieName.equals(ck.getName())) {
+                        authenticationToken = String.format("%s %s_%s_%s", TOKEN_PATTERN_PREFIX, SSO, TOKEN_VERSION_1_0, ck.getValue());
+                    }
+                }
+            } else {
+                return null;
+            }
+
+        }
+
         if (authenticationToken == null) {
             return null;
         }
