@@ -34,8 +34,7 @@ targetCompatibility = JavaVersion.VERSION_1_8
 
 dependencies {
 
-    // for com.rooxteam.sso.aal.client.cookie.store.enablePerRequest
-    compile("com.rooxteam.uidm.sdk:auth-lib-common:$authLibCommonVersion")
+    compile project(":auth-lib-common")
 
     // for lombok magic
     compileOnly("org.projectlombok:lombok:${lombokVersion}")
@@ -63,6 +62,3 @@ javadoc {
     options.charSet = 'UTF-8'
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.10.2'
-}

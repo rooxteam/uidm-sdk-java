@@ -3,6 +3,7 @@ package com.rooxteam.uidm.sdk.spring.configuration;
 import com.rooxteam.sso.aal.AuthenticationAuthorizationLibrary;
 import com.rooxteam.sso.aal.client.cookies.CookieStoreFactory;
 import com.rooxteam.sso.aal.client.cookies.RequestCookieStoreFilter;
+import com.rooxteam.uidm.sdk.spring.authentication.LegacySharedSecretSystemPreAuthenticationFilter;
 import com.rooxteam.uidm.sdk.spring.authentication.SsoAuthorizationClient;
 import com.rooxteam.uidm.sdk.spring.authentication.UidmUserPreAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
@@ -23,6 +24,11 @@ public class UidmSpringSecurityFilterConfiguration {
         return new UidmUserPreAuthenticationFilter(ssoAuthorizationClient, aal.getConfiguration());
     }
 
+
+    @Bean
+    public GenericFilterBean legacySharedSecretSystemPreAuthenticationFilter(SsoAuthorizationClient ssoAuthorizationClient, AuthenticationAuthorizationLibrary aal) {
+        return new LegacySharedSecretSystemPreAuthenticationFilter(aal.getConfiguration());
+    }
 
     @Bean
     @Order(0)
