@@ -17,6 +17,9 @@ import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.rooxteam.sso.aal.ConfigKeys.TOKEN_COOKIE_LEGACY_ROOX_PRODUCTS_KEY;
+import static com.rooxteam.sso.aal.ConfigKeys.TOKEN_COOKIE_NAME_KEY;
+
 /**
  * UidmUserPreAuthenticationFilter - фильтр, обеспечивает sso аутентификацию по токену используя сервер UIDM.
  */
@@ -28,7 +31,6 @@ public class UidmUserPreAuthenticationFilter extends AbstractUserPreAuthenticate
 
     public static final String SSO = "sso";
     public static final String TOKEN_VERSION_1_0 = "1.0";
-    private String TOKEN_COOKIE_NAME_KEY = "com.rooxteam.aal.sso.token.cookie.name";
 
     /**
      * Список атрибутов из Principal.sharedIdentityProperties которые надо сложить в MDC
@@ -68,7 +70,9 @@ public class UidmUserPreAuthenticationFilter extends AbstractUserPreAuthenticate
         String authenticationToken = request.getHeader("Authorization");
 
         if (authenticationToken == null) {
-            String tokenCookieName = config.getString(TOKEN_COOKIE_NAME_KEY);
+            String tokenCookieName = config.getString(TOKEN_COOKIE_NAME_KEY,
+                    config.getString(TOKEN_COOKIE_LEGACY_ROOX_PRODUCTS_KEY)
+            );
 
             if (tokenCookieName != null) {
                 Cookie[] cookies = request.getCookies();
