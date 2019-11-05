@@ -50,13 +50,20 @@ Maven
 
 2. Подключить библиотеку
 
+Смотреть пример https://bitbucket.org/rooxteam/uidm-sdk-java-samples/src/master/spring/
 
 
 # История изменений
 
+## 3.8.x
+
+- Добавлена поддержка Legacy варианта системной аутентификации через shared secret в конфигурации. По умолчанию выключена.
+
+
 ## 3.7.x
 
 - Добавлена поддержка OAuth2.0 Client Credentials Flow, смотреть пакет `com.rooxteam.sso.clientcredentials`
+- Токен теперь берется и из cookie, если настроено свойство `com.rooxteam.aal.sso.token.cookie.name`
 
 ## 3.6.x
 

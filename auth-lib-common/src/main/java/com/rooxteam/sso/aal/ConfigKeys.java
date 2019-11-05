@@ -241,4 +241,12 @@ public interface ConfigKeys {
      * Список атрибутов из информации о токене, которые необходимо пробросить в Principal.sharedIdentityProperties.
      */
     String TOKEN_INFO_ATTRIBUTES_FORWARD = "com.rooxteam.aal.token.info.forward.attributes";
+
+    /**
+     * Разделяемый секрет для легаси системной аутентификации.
+     * Используйте OAuth2.0 Client Credentials Flow в новых проектах
+     */
+    String INTERNAL_TOKEN_KEY = "com.rooxteam.webapi.auth.internal-token";
+
+
 }

@@ -87,7 +87,3 @@ javadoc {
 tasks.withType(Javadoc) {
     options.addStringOption('Xdoclint:none', '-quiet')
 }
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.10.2'
-}

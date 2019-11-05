@@ -1,0 +1,12 @@
+rootProject.name = 'uidm-sdk-java'
+
+// Java APIs
+include ':auth-lib-common'
+
+
+// Spring Aware Lib
+include ':auth-lib-spring'
+
+// Plain Servlet API Lib
+include ':auth-lib-servletfilter'
+include ':auth-lib-servletfilter-test-webapp'
