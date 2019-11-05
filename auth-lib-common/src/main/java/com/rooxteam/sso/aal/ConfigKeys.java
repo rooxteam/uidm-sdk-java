@@ -238,15 +238,19 @@ public interface ConfigKeys {
     String LOCAL_POLICIES = "com.rooxteam.aal.policies";
 
     /**
-     * Список атрибутов из информации о токене, которые необходимо пробросить в Principal.sharedIdentityProperties.
-     */
-    String TOKEN_INFO_ATTRIBUTES_FORWARD = "com.rooxteam.aal.token.info.forward.attributes";
-
-    /**
      * Разделяемый секрет для легаси системной аутентификации.
      * Используйте OAuth2.0 Client Credentials Flow в новых проектах
      */
     String INTERNAL_TOKEN_KEY = "com.rooxteam.webapi.auth.internal-token";
 
+    /**
+     * Имя куки, где лежит токен доступа
+     */
+    String TOKEN_COOKIE_NAME_KEY = "com.rooxteam.aal.sso.token.cookie.name";
+
+    /**
+     * Имя куки, где лежит токен доступа, старое имя свойства
+     */
+    String TOKEN_COOKIE_LEGACY_ROOX_PRODUCTS_KEY = "com.rooxteam.webapi.filters.cookieFilter.cookies.sso";
 
 }
