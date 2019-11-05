@@ -7,7 +7,10 @@ import org.junit.Test;
 import java.security.SignatureException;
 import java.text.ParseException;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class StringClaimCheckerTest {
 
@@ -49,7 +52,7 @@ public class StringClaimCheckerTest {
                 .thenReturn(jwtClaimsSet);
 
 
-        StringClaimChecker checker = new StringClaimChecker("TEST_CLAIM", "TEST_VALIE");
+        StringClaimChecker checker = new StringClaimChecker("TEST_CLAIM", "TEST_VALIE", true);
         checker.check(mockJwt);
 
         verify(mockJwt, times(1)).getJWTClaimsSet();
