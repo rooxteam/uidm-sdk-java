@@ -21,7 +21,6 @@ public class StringClaimChecker implements Checker {
     @Setter
     private String claimName;
 
-    @NonNull
     @Getter
     @Setter
     private String expectedValue;
@@ -32,6 +31,10 @@ public class StringClaimChecker implements Checker {
 
     @Override
     public void check(JWT jwt) throws SignatureException, ParseException {
+        if (isMandatory && StringUtils.isEmpty(expectedValue)) {
+            //fail fast if mandatory is not configured
+            throw new IllegalStateException(String.format("Mandatory claim %s not configured", claimName));
+        }
         JWTClaimsSet jwtClaimsSet = jwt.getJWTClaimsSet();
         String claim = jwtClaimsSet.getStringClaim(claimName);
         if (isMandatory && StringUtils.isEmpty(claim)) {
