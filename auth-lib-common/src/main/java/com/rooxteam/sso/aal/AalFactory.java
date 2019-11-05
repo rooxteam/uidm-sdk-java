@@ -141,9 +141,6 @@ public class AalFactory {
         NbfClaimChecker nbfClaimChecker = new NbfClaimChecker();
         IatClaimChecker iatClaimChecker = new IatClaimChecker();
         String issuer = config.getString(JWT_ISSUER);
-        if (issuer == null) {
-            throw new IllegalStateException(format(MISSING_PROPERTY_IN_CONFIGURATION, JWT_ISSUER));
-        }
         StringClaimChecker issuerClaimChecker = new StringClaimChecker("iss", issuer, true);
         return new JwtValidator(sharedKey, nbfClaimChecker, iatClaimChecker, issuerClaimChecker);
     }
