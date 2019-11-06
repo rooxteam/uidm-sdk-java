@@ -6,12 +6,15 @@ import com.rooxteam.errors.exception.ToResponseEntityTranslator;
 import com.rooxteam.sso.aal.AuthenticationAuthorizationLibrary;
 import com.rooxteam.uidm.sdk.spring.authorization.M2MOtpController;
 import com.rooxteam.uidm.sdk.spring.authorization.M2MOtpService;
+import com.rooxteam.uidm.sdk.spring.authorization.PolicyEvaluationController;
+import com.rooxteam.uidm.sdk.spring.authorization.PolicyEvaluationService;
+import com.rooxteam.uidm.sdk.spring.authorization.PolicyEvaluationServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 /**
- * Exposes /otp API that can handle OTP per operation UC.
+ * Exposes /otp and /policyEvaluation API that can handle OTP per operation Use Cases.
  * Alternative is to provide your own API that use
  */
 @Configuration
@@ -31,6 +34,16 @@ public class OtpPerOperationApiConfiguration {
     @Bean
     public M2MOtpController aalOtpController(M2MOtpService aalOtpService, ErrorTranlator errorTranslator) {
         return new M2MOtpController(aalOtpService, errorTranslator);
+    }
+
+    @Bean
+    public PolicyEvaluationService policyEvaluationService(AuthenticationAuthorizationLibrary aal) {
+        return new PolicyEvaluationServiceImpl(aal);
+    }
+
+    @Bean
+    public PolicyEvaluationController policyEvaluationController(final PolicyEvaluationService policyEvaluationService) {
+        return new PolicyEvaluationController(policyEvaluationService);
     }
 
     @Bean
