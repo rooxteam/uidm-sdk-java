@@ -4,11 +4,18 @@ import com.rooxteam.sso.aal.otp.OtpFlowState;
 import org.apache.http.HttpResponse;
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
-import org.jboss.logging.annotations.*;
+import org.jboss.logging.annotations.Cause;
+import org.jboss.logging.annotations.LogMessage;
+import org.jboss.logging.annotations.Message;
+import org.jboss.logging.annotations.MessageLogger;
+import org.jboss.logging.annotations.ValidIdRange;
+import org.jboss.logging.annotations.ValidIdRanges;
 
 import java.io.IOException;
 
-import static org.jboss.logging.Logger.Level.*;
+import static org.jboss.logging.Logger.Level.ERROR;
+import static org.jboss.logging.Logger.Level.TRACE;
+import static org.jboss.logging.Logger.Level.WARN;
 import static org.jboss.logging.annotations.Message.Format.MESSAGE_FORMAT;
 
 @MessageLogger(projectCode = "RX_UIDM_AAL___", length = 4)
@@ -135,10 +142,30 @@ public interface AalLogger extends BasicLogger {
     void errorSignatureParsingException(@Cause Exception e);
 
     @LogMessage(level = ERROR)
-    @Message(id = 3033, format = MESSAGE_FORMAT,
-            value = "Got error while authentication.\n" +
+    @Message(id = 3040, format = MESSAGE_FORMAT,
+            value = "Error while token validation. " +
+                    "URL: {0}, " +
+                    "Token: {1}." +
                     "For details see cause.")
-    void errorAuthentication(@Cause Exception e);
+    void errorOnTokenValidationGeneric(final String tokenInfoEndpoint,
+                                       final String tokenForLogging,
+                                       @Cause Exception e);
+
+    @LogMessage(level = ERROR)
+    @Message(id = 3041, format = MESSAGE_FORMAT,
+            value = "IO error during token validation. " +
+                    "URL: {0}, " +
+                    "Token: {1}." +
+                    "You can tune I/O timeouts if current are too low and service or network are not able to serve request." +
+                    "Connect timeout (affects connection establishment phase) `{2}` = {3} ms." +
+                    "Read timeout (affects waiting for each inbound packet) `{4}` = {5} ms.")
+    void errorOnTokenValidationIO(final String tokenInfoEndpoint,
+                                  final String tokenForLogging,
+                                  final String connectTimeoutKey,
+                                  final int connectTimeoutValue,
+                                  final String readTimeoutKey,
+                                  final int readTimeoutValue,
+                                  final @Cause IOException e);
 
     @LogMessage(level = ERROR)
     @Message(id = 3034, format = MESSAGE_FORMAT,
@@ -150,6 +177,12 @@ public interface AalLogger extends BasicLogger {
     @Message(id = 3035, format = MESSAGE_FORMAT,
             value = "Invalid response obtained from the remote SSO on policy evaluation: name ''{0}'', value ''{1}''")
     void errorInvalidAdviceContentType(String adviceName, String adviceValue);
+
+    @LogMessage(level = ERROR)
+    @Message(id = 3043, format = MESSAGE_FORMAT,
+            value = "Got error while authentication.\n" +
+                    "For details see cause.")
+    void errorAuthentication(@Cause Exception e);
 
     @LogMessage(level = WARN)
     @Message(id = 4001, format = MESSAGE_FORMAT,
