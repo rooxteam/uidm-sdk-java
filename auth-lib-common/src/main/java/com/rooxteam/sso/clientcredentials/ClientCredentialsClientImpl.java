@@ -1,5 +1,7 @@
 package com.rooxteam.sso.clientcredentials;
 
+import com.rooxteam.sso.aal.ConfigKeys;
+import com.rooxteam.sso.clientcredentials.configuration.Configuration;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -8,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -26,20 +29,23 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
     private final URI tokenValidationEndpoint;
     private final MultiValueMap<String, String> defaultParameters;
     private final String headerPrefix;
+    private final Configuration configuration;
 
     private final ConcurrentHashMap<MultiValueMap<String, String>, String> tokens = new ConcurrentHashMap<>();
 
 
-    ClientCredentialsClientImpl(RestTemplate restTemplate,
-                                URI accessTokenEndpoint,
-                                URI tokenValidationEndpoint,
-                                MultiValueMap<String, String> defaultParameters,
-                                String headerPrefix) {
+    ClientCredentialsClientImpl(final RestTemplate restTemplate,
+                                final URI accessTokenEndpoint,
+                                final URI tokenValidationEndpoint,
+                                final MultiValueMap<String, String> defaultParameters,
+                                final String headerPrefix,
+                                final Configuration configuration) {
         this.restTemplate = Objects.requireNonNull(restTemplate, "restTemplate");
         this.accessTokenEndpoint = Objects.requireNonNull(accessTokenEndpoint, "accessTokenEndpoint");
         this.tokenValidationEndpoint = Objects.requireNonNull(tokenValidationEndpoint, "tokenValidationEndpoint");
         this.defaultParameters = Optional.ofNullable(defaultParameters).orElse(new LinkedMultiValueMap<>());
         this.headerPrefix = headerPrefix;
+        this.configuration = configuration;
     }
 
     @Override
@@ -85,6 +91,15 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
                         trimBodyForLogging(e.getResponseBodyAsString()),
                         e);
             }
+            return true;
+        } catch (ResourceAccessException e) {
+            LOG.errorOnValidatingTokenIO(tokenValidationEndpoint,
+                    tokenForLogging,
+                    ConfigKeys.HTTP_CONNECTION_TIMEOUT,
+                    configuration.getConnectTimeout(),
+                    ConfigKeys.HTTP_SOCKET_TIMEOUT,
+                    configuration.getReadTimeout(),
+                    e);
             return true;
         } catch (Exception e) {
             LOG.errorOnValidatingToken(tokenValidationEndpoint, tokenForLogging, e);
@@ -149,6 +164,14 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
             responseEntity = restTemplate.postForEntity(accessTokenEndpoint, request, TokenResponse.class);
         } catch (HttpStatusCodeException e) {
             LOG.errorOnGetTokenHttp(accessTokenEndpoint, paramsForLogging, e.getStatusCode(), trimBodyForLogging(e.getResponseBodyAsString()), e);
+            throw new ClientAuthenticationException("Cannot get client_credentials token", e);
+        } catch (ResourceAccessException e) {
+            LOG.errorOnGetTokenIO(accessTokenEndpoint, paramsForLogging,
+                    ConfigKeys.HTTP_CONNECTION_TIMEOUT,
+                    configuration.getConnectTimeout(),
+                    ConfigKeys.HTTP_SOCKET_TIMEOUT,
+                    configuration.getReadTimeout(),
+                    e);
             throw new ClientAuthenticationException("Cannot get client_credentials token", e);
         } catch (Exception e) {
             LOG.errorOnGetToken(accessTokenEndpoint, paramsForLogging, e);

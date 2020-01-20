@@ -10,6 +10,8 @@ import org.jboss.logging.annotations.ValidIdRanges;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
+
 import java.net.URI;
 
 import static org.jboss.logging.Logger.Level.ERROR;
@@ -59,6 +61,22 @@ interface ClientCredentialsClientLogger {
                              final @Cause HttpStatusCodeException e);
 
     @LogMessage(level = ERROR)
+    @Message(id = 3003, format = MESSAGE_FORMAT,
+            value = "IO error during getting new token. " +
+                    "URL: {0}, " +
+                    "Params: {1}." +
+                    "You can tune I/O timeouts if current are too low and service or network are not able to serve requests." +
+                    "Connect timeout (affects connection establishment phase) `{2}` = {3} ms." +
+                    "Read timeout (affects waiting for each inbound packet) `{4}` = {5} ms.")
+    void errorOnGetTokenIO(final URI accessTokenEndpoint,
+                           final MultiValueMap<String, String> paramsForLogging,
+                           final String connectTimeoutKey,
+                           final int connectTimeoutValue,
+                           final String readTimeoutKey,
+                           final int readTimeoutValue,
+                           final @Cause ResourceAccessException e);
+
+    @LogMessage(level = ERROR)
     @Message(id = 3010, format = MESSAGE_FORMAT,
             value = "An error during validating token. {0} {1}")
     void errorOnValidatingToken(final URI accessTokenEndpoint,
@@ -73,6 +91,22 @@ interface ClientCredentialsClientLogger {
                                     final HttpStatus statusCode,
                                     final String trimmedBody,
                                     final @Cause Exception e);
+
+    @LogMessage(level = ERROR)
+    @Message(id = 3013, format = MESSAGE_FORMAT,
+            value = "IO error during validating token. " +
+                    "URL: {0}, " +
+                    "Token: {1}." +
+                    "You can tune I/O timeouts if current are too low and service or network are not able to serve requests." +
+                    "Connect timeout (affects connection establishment phase) `{2}` = {3} ms." +
+                    "Read timeout (affects waiting for each inbound packet) `{4}` = {5} ms.")
+    void errorOnValidatingTokenIO(final URI accessTokenEndpoint,
+                                  final String token,
+                           final String connectTimeoutKey,
+                           final int connectTimeoutValue,
+                           final String readTimeoutKey,
+                           final int readTimeoutValue,
+                           final @Cause ResourceAccessException e);
 
     @LogMessage(level = TRACE)
     @Message(id = 9001, format = MESSAGE_FORMAT,

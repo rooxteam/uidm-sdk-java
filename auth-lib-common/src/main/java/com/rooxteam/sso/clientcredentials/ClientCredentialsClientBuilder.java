@@ -1,5 +1,6 @@
 package com.rooxteam.sso.clientcredentials;
 
+import com.rooxteam.sso.clientcredentials.configuration.Configuration;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -15,13 +16,18 @@ final class ClientCredentialsClientBuilder {
     private final URI accessTokenEndpoint;
     private final URI tokenValidationEndpoint;
     private final RestTemplate restTemplate;
+    private final Configuration configuration;
     private MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
     private String headerPrefix = "";
 
-    ClientCredentialsClientBuilder(final RestTemplate restTemplate, final URI accessTokenEndpoint, final URI tokenValidationEndpoint) {
+    ClientCredentialsClientBuilder(final RestTemplate restTemplate,
+                                   final URI accessTokenEndpoint,
+                                   final URI tokenValidationEndpoint,
+                                   final Configuration configuration) {
         this.accessTokenEndpoint = accessTokenEndpoint;
         this.tokenValidationEndpoint = tokenValidationEndpoint;
         this.restTemplate = restTemplate;
+        this.configuration = configuration;
     }
 
     ClientCredentialsClientBuilder params(String key, String value) {
@@ -35,7 +41,12 @@ final class ClientCredentialsClientBuilder {
     }
 
     ClientCredentialsClientImpl build() {
-        return new ClientCredentialsClientImpl(restTemplate, accessTokenEndpoint, tokenValidationEndpoint, params, headerPrefix);
+        return new ClientCredentialsClientImpl(restTemplate,
+                accessTokenEndpoint,
+                tokenValidationEndpoint,
+                params,
+                headerPrefix,
+                configuration);
     }
 
     ClientCredentialsClientBuilder params(final Map<String, String> additionalRequestParameters) {
