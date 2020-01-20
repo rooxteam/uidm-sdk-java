@@ -29,6 +29,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.rooxteam.sso.aal.AalLogger.LOG;
 
@@ -67,6 +68,8 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
             return null;
         }
 
+        final String tokenForLogging = trimTokenForLogging(token);
+
         String url = config.getString(ConfigKeys.SSO_URL) + TOKEN_INFO_PATH;
         List<NameValuePair> params = new ArrayList<>();
         params.add(new BasicNameValuePair("access_token", token));
@@ -102,10 +105,18 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
             }
             return principal;
         } catch (IOException e) {
-            LOG.errorAuthentication(e);
-            throw new AuthorizationException("Failed to authorize because of communication or protocol error", e);
+            LOG.errorOnTokenValidationIO(url,
+                    tokenForLogging,
+                    ConfigKeys.HTTP_CONNECTION_TIMEOUT,
+                    config.getInt(ConfigKeys.HTTP_CONNECTION_TIMEOUT, ConfigKeys.HTTP_CONNECTION_TIMEOUT_DEFAULT),
+                    ConfigKeys.HTTP_SOCKET_TIMEOUT,
+                    config.getInt(ConfigKeys.HTTP_SOCKET_TIMEOUT, ConfigKeys.HTTP_SOCKET_TIMEOUT_DEFAULT),
+                    e);
+            throw new AuthorizationException("Failed to validate token because of communication or protocol error", e);
         } catch (RuntimeException e) {
-            LOG.errorAuthentication(e);
+            LOG.errorOnTokenValidationGeneric(url,
+                    tokenForLogging,
+                    e);
             throw e;
         }
     }
@@ -117,5 +128,12 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
             throw new ValidateException("Failed to parse json", e);
         }
     }
+
+    private String trimTokenForLogging(String token) {
+        return Optional.ofNullable(token)
+                .map(s -> s.substring(0, Math.min(16, s.length())))
+                .orElse("<none>");
+    }
+
 
 }

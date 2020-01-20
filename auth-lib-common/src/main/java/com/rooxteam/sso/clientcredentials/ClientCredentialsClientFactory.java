@@ -34,8 +34,8 @@ public final class ClientCredentialsClientFactory {
         final ClientCredentialsClientBuilder builder = new ClientCredentialsClientBuilder(
                 restTemplate,
                 config.getAccessTokenEndpoint(),
-                config.getTokenValidationEndpoint()
-        );
+                config.getTokenValidationEndpoint(),
+                config);
 
         if (!StringUtils.isEmpty(config.getHeaderPrefix())) {
             builder.headerPrefix(config.getHeaderPrefix());
