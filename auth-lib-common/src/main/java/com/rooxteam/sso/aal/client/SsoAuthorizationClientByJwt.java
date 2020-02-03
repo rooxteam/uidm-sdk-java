@@ -11,6 +11,7 @@ import com.rooxteam.sso.aal.client.model.EvaluationRequest;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.exception.AuthorizationException;
+import com.rooxteam.sso.aal.exception.NetworkErrorException;
 import com.rooxteam.sso.aal.utils.StringUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -75,7 +76,7 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
             return doIsAllowedPost(post);
         } catch (IOException e) {
             LOG.errorAuthentication(e);
-            throw new AuthorizationException("Failed to authorize because of communication or protocol error", e);
+            throw new NetworkErrorException("Failed to authorize because of communication or protocol error", e);
         } catch (Exception e) {
             LOG.errorAuthentication(e);
             throw e;
@@ -119,7 +120,7 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
             return result;
         } catch (IOException e) {
             LOG.errorAuthentication(e);
-            throw new AuthorizationException("Failed to authorize because of communication or protocol error", e);
+            throw new NetworkErrorException("Failed to authorize because of communication or protocol error", e);
         } catch (Exception e) {
             LOG.errorAuthentication(e);
             throw e;
@@ -164,12 +165,12 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
                         return result;
                     }
                 } catch (IOException e) {
-                    throw new AuthorizationException("Failed to read a response from the server:" + response.getStatusLine(), e);
+                    throw new NetworkErrorException("Failed to read a response from the server:" + response.getStatusLine(), e);
                 }
             }
         }
         if (result == null) {
-            throw new AuthorizationException("Empty response from the server");
+            throw new NetworkErrorException("Empty response from the server");
         }
 
         return result;

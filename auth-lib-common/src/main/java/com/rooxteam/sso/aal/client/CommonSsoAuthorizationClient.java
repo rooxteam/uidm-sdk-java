@@ -6,7 +6,7 @@ import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.PrincipalImpl;
 import com.rooxteam.sso.aal.configuration.Configuration;
-import com.rooxteam.sso.aal.exception.AuthorizationException;
+import com.rooxteam.sso.aal.exception.NetworkErrorException;
 import com.rooxteam.sso.aal.exception.ValidateException;
 import lombok.SneakyThrows;
 import org.apache.http.HttpStatus;
@@ -112,7 +112,7 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
                     ConfigKeys.HTTP_SOCKET_TIMEOUT,
                     config.getInt(ConfigKeys.HTTP_SOCKET_TIMEOUT, ConfigKeys.HTTP_SOCKET_TIMEOUT_DEFAULT),
                     e);
-            throw new AuthorizationException("Failed to validate token because of communication or protocol error", e);
+            throw new NetworkErrorException("Failed to validate token because of communication or protocol error", e);
         } catch (RuntimeException e) {
             LOG.errorOnTokenValidationGeneric(url,
                     tokenForLogging,

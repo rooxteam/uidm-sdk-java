@@ -8,6 +8,7 @@ import com.rooxteam.sso.aal.client.model.JWTAuthenticationResponse;
 import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
 import com.rooxteam.sso.aal.exception.ErrorSubtypes;
+import com.rooxteam.sso.aal.exception.NetworkErrorException;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -88,7 +89,7 @@ public class SsoAuthenticationClient {
             return doAuthenticationPost(post);
         } catch (IOException e) {
             LOG.errorAuthentication(e);
-            throw new AuthenticationException("Failed to authenticate because of communication or protocol error", e);
+            throw new NetworkErrorException("Failed to authenticate because of communication or protocol error", e);
         } catch (AuthenticationException e) {
             if (e.getErrorSubtype() != null && e.getErrorSubtype().equals(ErrorSubtypes.IP_NOT_IN_POOL)) {
                 LOG.traceIpNotInPool();
@@ -134,7 +135,7 @@ public class SsoAuthenticationClient {
         try {
             jsonResult = (ObjectNode) jsonMapper.readTree(result);
         } catch (IOException e) {
-            throw new AuthenticationException("Failed to read response from server", e);
+            throw new NetworkErrorException("Failed to read response from server", e);
         }
         if (!jsonResult.has("error")) {
             return jsonMapper.convertValue(jsonResult, JWTAuthenticationResponse.class);
