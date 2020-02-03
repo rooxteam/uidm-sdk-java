@@ -15,24 +15,24 @@ public interface ClientCredentialsClient {
      * @param additionalRequestParameters
      * @return
      */
-    String getToken(MultiValueMap<String, String> additionalRequestParameters) throws ClientAuthenticationException;
+    String getToken(MultiValueMap<String, String> additionalRequestParameters);
 
     /**
      * Get valid token validating and refreshing previous if needed - using default params, passed to implementation on creation
      * @return client token
      */
-    String getToken() throws ClientAuthenticationException;
+    String getToken();
 
     /**
      * Get valid token validating and refreshing previous if needed.*
      * @param additionalRequestParameters
      * @return
      */
-    String getAuthHeaderValue(MultiValueMap<String, String> additionalRequestParameters) throws ClientAuthenticationException;
+    String getAuthHeaderValue(MultiValueMap<String, String> additionalRequestParameters);
 
     /**
      * Get valid token validating and refreshing previous if needed - using default params, passed to implementation on creation
      * @return value ready for usage as "Authorization" header value when making requests to API
      */
-    String getAuthHeaderValue() throws ClientAuthenticationException;
+    String getAuthHeaderValue();
 }

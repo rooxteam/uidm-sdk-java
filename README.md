@@ -55,6 +55,23 @@ Maven
 
 # История изменений
 
+## 3.10.0
+
+- Добавлен NetworkErrorException для ошибок при работе с сетевыми запросами;
+- Методы ClientCredentialsClient генерируют AalException вместо ClientAuthenticationException;
+- Удален ClientAuthenticationException.
+
+### Migration Guide
+
+При работе с ClientCredentialsClient для обработки исключений следует использовать следующие классы: 
+- AuthenticationException - ошибки аутентификации
+- NetworkErrorException - сетевые ошибки или ошибки SSO-server
+
+При работе с SsoAuthenticationClient и SsoAuthorizationClient 
+- если для обработки исключений использовались классы AuthenticationException и AuthorizationException, 
+то необходимо добавить обработку исключения NetworkErrorException;
+- если для обработки исключений использовался класс AalException, дополнительных действий не требуется. 
+
 ## 3.9.1
 
 - Ошибки при I/O таймауте получили более friendly описание. 
