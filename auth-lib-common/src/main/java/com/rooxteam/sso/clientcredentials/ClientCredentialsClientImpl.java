@@ -1,7 +1,6 @@
 package com.rooxteam.sso.clientcredentials;
 
 import com.rooxteam.sso.aal.ConfigKeys;
-import com.rooxteam.sso.aal.exception.AuthNetworkException;
 import com.rooxteam.sso.clientcredentials.configuration.Configuration;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -50,24 +49,24 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
     }
 
     @Override
-    public String getAuthHeaderValue(MultiValueMap<String, String> params) throws ClientAuthenticationException, AuthNetworkException {
+    public String getAuthHeaderValue(MultiValueMap<String, String> params) throws ClientAuthenticationException {
         String token = getTokenValidating(params);
         return headerPrefix + token;
     }
 
     @Override
-    public String getToken(MultiValueMap<String, String> params) throws ClientAuthenticationException, AuthNetworkException {
+    public String getToken(MultiValueMap<String, String> params) throws ClientAuthenticationException {
         return getTokenValidating(params);
     }
 
     @Override
-    public String getAuthHeaderValue() throws ClientAuthenticationException, AuthNetworkException {
+    public String getAuthHeaderValue() throws ClientAuthenticationException {
         String token = getTokenValidating(defaultParameters);
         return headerPrefix + token;
     }
 
     @Override
-    public String getToken() throws ClientAuthenticationException, AuthNetworkException {
+    public String getToken() throws ClientAuthenticationException {
         return getTokenValidating(defaultParameters);
     }
 
@@ -108,7 +107,7 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
         }
     }
 
-    private String getTokenValidating(MultiValueMap<String, String> requestParameters) throws ClientAuthenticationException, AuthNetworkException {
+    private String getTokenValidating(MultiValueMap<String, String> requestParameters) throws ClientAuthenticationException {
 
         MultiValueMap<String, String> mergedParams = new LinkedMultiValueMap<>();
         mergedParams.putAll(this.defaultParameters);
@@ -148,7 +147,7 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
         tokens.remove(params);
     }
 
-    private String authorizeAndGetToken(MultiValueMap<String, String> additionalRequestParameters) throws ClientAuthenticationException, AuthNetworkException {
+    private String authorizeAndGetToken(MultiValueMap<String, String> additionalRequestParameters) throws ClientAuthenticationException {
 
         final MultiValueMap<String, String> params = Optional.ofNullable(additionalRequestParameters).orElse(new LinkedMultiValueMap<>());
         MultiValueMap<String, String> paramsForLogging = clearParamsForLogging(params);
@@ -166,7 +165,7 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
         } catch (HttpStatusCodeException e) {
             LOG.errorOnGetTokenHttp(accessTokenEndpoint, paramsForLogging, e.getStatusCode(), trimBodyForLogging(e.getResponseBodyAsString()), e);
             if (e.getStatusCode().is5xxServerError()) {
-                throw new AuthNetworkException("Cannot get client_credentials token. SSO server error", e);
+                throw new ClientAuthNetworkErrorException("Cannot get client_credentials token. SSO server error", e);
             } else {
                 throw new ClientAuthenticationException("Cannot get client_credentials token", e);
             }

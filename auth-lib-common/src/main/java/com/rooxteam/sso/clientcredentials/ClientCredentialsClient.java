@@ -1,6 +1,5 @@
 package com.rooxteam.sso.clientcredentials;
 
-import com.rooxteam.sso.aal.exception.AuthNetworkException;
 import org.springframework.util.MultiValueMap;
 
 /**
@@ -16,24 +15,24 @@ public interface ClientCredentialsClient {
      * @param additionalRequestParameters
      * @return
      */
-    String getToken(MultiValueMap<String, String> additionalRequestParameters) throws ClientAuthenticationException, AuthNetworkException;
+    String getToken(MultiValueMap<String, String> additionalRequestParameters) throws ClientAuthenticationException;
 
     /**
      * Get valid token validating and refreshing previous if needed - using default params, passed to implementation on creation
      * @return client token
      */
-    String getToken() throws ClientAuthenticationException, AuthNetworkException;
+    String getToken() throws ClientAuthenticationException;
 
     /**
      * Get valid token validating and refreshing previous if needed.*
      * @param additionalRequestParameters
      * @return
      */
-    String getAuthHeaderValue(MultiValueMap<String, String> additionalRequestParameters) throws ClientAuthenticationException, AuthNetworkException;
+    String getAuthHeaderValue(MultiValueMap<String, String> additionalRequestParameters) throws ClientAuthenticationException;
 
     /**
      * Get valid token validating and refreshing previous if needed - using default params, passed to implementation on creation
      * @return value ready for usage as "Authorization" header value when making requests to API
      */
-    String getAuthHeaderValue() throws ClientAuthenticationException, AuthNetworkException;
+    String getAuthHeaderValue() throws ClientAuthenticationException;
 }
