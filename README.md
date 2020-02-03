@@ -58,7 +58,8 @@ Maven
 ## 3.10.0
 
 - Добавлен NetworkErrorException для ошибок при работе с сетевыми запросами;
-- Методы ClientCredentialsClient генерируют AalException вместо ClientAuthenticationException.
+- Методы ClientCredentialsClient генерируют AalException вместо ClientAuthenticationException;
+- Удален ClientAuthenticationException.
 
 ### Migration Guide
 
