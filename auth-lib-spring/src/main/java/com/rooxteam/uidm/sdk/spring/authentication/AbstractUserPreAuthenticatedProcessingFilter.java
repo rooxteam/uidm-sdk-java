@@ -5,9 +5,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
 import org.springframework.security.authentication.event.InteractiveAuthenticationSuccessEvent;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.WebAttributes;
 import org.springframework.web.filter.GenericFilterBean;
 
 import javax.servlet.FilterChain;
@@ -65,17 +63,9 @@ public abstract class AbstractUserPreAuthenticatedProcessingFilter extends Gener
         AuthenticationState principal = (AuthenticationState) getPreAuthenticatedUserPrincipal(request);
 
         if (principal == null) {
-            if (AalLogger.LOG.isDebugEnabled()) {
-                AalLogger.LOG.debug("Filter finished processing request, but returned empty auth state");
-            }
-            unsuccessfulUserAuthentication(request, response, null);
+            unsuccessfulUserAuthentication(request, response);
             return;
         }
-
-        if (AalLogger.LOG.isDebugEnabled()) {
-            AalLogger.LOG.debug("Filter = " + principal + ", trying to authenticate");
-        }
-
         successfulUserAuthentication(request, response, principal);
     }
 
@@ -121,10 +111,8 @@ public abstract class AbstractUserPreAuthenticatedProcessingFilter extends Gener
      * Caches the failure exception as a request attribute
      */
     protected void unsuccessfulUserAuthentication(HttpServletRequest request,
-                                                  HttpServletResponse response,
-                                                  AuthenticationException ex) {
-        AalLogger.LOG.errorFilterAuthenticationFailed(this.getClass().getSimpleName(), ex);
-        request.setAttribute(WebAttributes.AUTHENTICATION_EXCEPTION, ex);
+                                                  HttpServletResponse response) {
+        AalLogger.LOG.traceFilterAuthenticationFailed(this.getClass().getSimpleName());
     }
 
     /**

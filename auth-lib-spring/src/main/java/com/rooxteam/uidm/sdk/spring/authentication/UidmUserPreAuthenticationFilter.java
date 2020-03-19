@@ -1,5 +1,6 @@
 package com.rooxteam.uidm.sdk.spring.authentication;
 
+import com.rooxteam.sso.aal.AalLogger;
 import com.rooxteam.sso.aal.configuration.Configuration;
 import lombok.Setter;
 import org.jboss.logging.MDC;
@@ -53,6 +54,7 @@ public class UidmUserPreAuthenticationFilter extends AbstractUserPreAuthenticate
     public Object getPreAuthenticatedUserPrincipal(HttpServletRequest request) {
         String token = extractToken(request);
         if (token == null) {
+            AalLogger.LOG.debug("No token in request. Skipping filter");
             return null;
         }
         AuthenticationState authenticationState = ssoAuthorizationClient.validate(request, token);

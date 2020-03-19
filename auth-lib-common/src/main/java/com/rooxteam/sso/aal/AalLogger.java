@@ -14,6 +14,7 @@ import org.jboss.logging.annotations.ValidIdRanges;
 import java.io.IOException;
 
 import static org.jboss.logging.Logger.Level.ERROR;
+import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.WARN;
 import static org.jboss.logging.annotations.Message.Format.MESSAGE_FORMAT;
@@ -185,14 +186,10 @@ public interface AalLogger extends BasicLogger {
 
     @LogMessage(level = ERROR)
     @Message(id = 3043, format = MESSAGE_FORMAT,
-            value = "Got error while authentication. For details see cause.")
+            value = "Got error while user authentication. For details see cause.")
     void errorAuthentication(@Cause Exception e);
 
-    @LogMessage(level = ERROR)
-    @Message(id = 3050, format = MESSAGE_FORMAT,
-            value = "Filter {0} failed to authenticate. For details see cause.")
-    void errorFilterAuthenticationFailed(String simpleName,
-                                         @Cause Exception ex);
+
 
     @LogMessage(level = WARN)
     @Message(id = 4001, format = MESSAGE_FORMAT,
@@ -225,11 +222,12 @@ public interface AalLogger extends BasicLogger {
     void warnInvalidContextJson(Object evaluationContext,
                                 @Cause Exception e);
 
-    @LogMessage(level = WARN)
+    @LogMessage(level = INFO)
     @Message(id = 6001, format = MESSAGE_FORMAT,
             value = "Filter {0} authentication success: {1}")
     void infoFilterAuthenticationSuccess(String filter,
                                          Object principal);
+
 
     @LogMessage(level = TRACE)
     @Message(id = 9001, format = MESSAGE_FORMAT,
@@ -242,6 +240,11 @@ public interface AalLogger extends BasicLogger {
     void traceSsoAuthenticationRequest(String ip,
                                        String jwt,
                                        String clientIps);
+
+    @LogMessage(level = TRACE)
+    @Message(id = 9003, format = MESSAGE_FORMAT,
+            value = "Filter {0} refused authentication. Going further.")
+    void traceFilterAuthenticationFailed(String simpleName);
 
     @LogMessage(level = TRACE)
     @Message(id = 9004, format = MESSAGE_FORMAT,

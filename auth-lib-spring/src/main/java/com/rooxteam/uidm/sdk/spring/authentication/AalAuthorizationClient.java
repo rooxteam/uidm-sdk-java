@@ -1,5 +1,6 @@
 package com.rooxteam.uidm.sdk.spring.authentication;
 
+import com.rooxteam.sso.aal.AalLogger;
 import com.rooxteam.sso.aal.AnonymousPrincipalImpl;
 import com.rooxteam.sso.aal.AuthenticationAuthorizationLibrary;
 import com.rooxteam.sso.aal.AuthorizationType;
@@ -53,6 +54,7 @@ public class AalAuthorizationClient implements SsoAuthorizationClient, AalResour
         try {
             principal = aal.validate(request, jwt);
         } catch (Exception e) {
+            AalLogger.LOG.errorAuthentication(e);
             return null;
         }
         if (principal == null) {
