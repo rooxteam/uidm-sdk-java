@@ -59,6 +59,12 @@ Maven
 
 - Упрощена работа фильтров, они теперь не подвержены сессионным оптимизациям Spring.
 - Улучшено логирование в фильтрах
+- Убраны методы setContinueFilterChainOnUnsuccessfulAuthentication, setCheckForPrincipalChanges, setInvalidateSessionOnPrincipalChange поскольку фильтр теперь работает более прямолинейно, всегда пытаясь аутентифицировать запрос (если один из предыдущих фильтров в цепочке его еще не аутентифицировал)
+
+### Migration Guide
+
+- Если использовались методы setContinueFilterChainOnUnsuccessfulAuthentication, setCheckForPrincipalChanges, setInvalidateSessionOnPrincipalChange на фильтрах из библиотеки, то убрать их использование.
+ПравильнаярРабота приложения не пострадает.    
 
 ## 3.10.0
 
