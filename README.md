@@ -64,7 +64,7 @@ Maven
 ### Migration Guide
 
 - Если использовались методы setContinueFilterChainOnUnsuccessfulAuthentication, setCheckForPrincipalChanges, setInvalidateSessionOnPrincipalChange на фильтрах из библиотеки, то убрать их использование.
-ПравильнаярРабота приложения не пострадает.    
+Правильная работа приложения не пострадает.    
 
 ## 3.10.0
 
