@@ -3,7 +3,6 @@ package com.rooxteam.uidm.sdk.servlet.service;
 import com.rooxteam.sso.aal.Principal;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Optional;
 
 public interface ServletAuthFilterService {
     /**
@@ -11,7 +10,7 @@ public interface ServletAuthFilterService {
      * @param request to extract access token from.
      * @return Optional of extracted token.
      */
-    Optional<String> extractAccessToken(HttpServletRequest request);
+    String extractAccessToken(HttpServletRequest request);
 
     /**
      * This method attempts to validate the access token and returns token claims in the form of {@link Principal} in case of success.
@@ -19,5 +18,5 @@ public interface ServletAuthFilterService {
      * @param accessToken - access token to validate.
      * @return Optional with claims about principal.
      */
-    Optional<Principal> authenticate(String accessToken);
+    Principal authenticate(String accessToken);
 }

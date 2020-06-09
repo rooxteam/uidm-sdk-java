@@ -22,9 +22,9 @@ import static com.rooxteam.sso.aal.AalLogger.LOG;
  */
 public class PrincipalImpl extends AbstractPrincipal {
 
-    private final Map<String, Object> sharedIdentityProperties = new ConcurrentHashMap<>();
-    private final Map<String, Object> privateIdentityProperties = new ConcurrentHashMap<>();
-    private final Map<String, Object> sessionProperties = new ConcurrentHashMap<>();
+    private final Map<String, Object> sharedIdentityProperties = new ConcurrentHashMap<String, Object>();
+    private final Map<String, Object> privateIdentityProperties = new ConcurrentHashMap<String, Object>();
+    private final Map<String, Object> sessionProperties = new ConcurrentHashMap<String, Object>();
     private final String policyContextJwtToken;
     private final String publicJwtToken;
     private Calendar expirationTime;
@@ -102,13 +102,16 @@ public class PrincipalImpl extends AbstractPrincipal {
             }
             expirationTime = TokenHelper.expires(signedJwt);
             JWTClaimsSet claimsSet = signedJwt.getJWTClaimsSet();
-            claimsSet.getClaims().forEach((key, value) -> {
-                Object claimValue = claimsSet.getClaim(key);
+            for (Map.Entry<String, Object> entry : claimsSet.getClaims().entrySet()) {
+                Object claimValue = claimsSet.getClaim(entry.getKey());
                 if (claimValue != null) {
-                    sharedIdentityProperties.put(key, claimValue);
+                    sharedIdentityProperties.put(entry.getKey(), claimValue);
                 }
-            });
-        } catch (RuntimeException | ParseException e) {
+            }
+        } catch (RuntimeException e) {
+            LOG.errorCannotParseJwt(policyContextJwtToken, e);
+            throw new AalException(e);
+        } catch (ParseException e) {
             LOG.errorCannotParseJwt(policyContextJwtToken, e);
             throw new AalException(e);
         }

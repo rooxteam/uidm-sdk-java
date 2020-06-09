@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import static com.rooxteam.sso.aal.AALInvalidationTest.IP_229_213_38_0;
 import static org.junit.Assert.*;
@@ -87,7 +86,7 @@ public class AALIsAllowedTest {
 //                .thenReturn(mockSsoToken);
         when(mockSsoAuthorizationClient.isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET", Collections.EMPTY_MAP))
                 .thenReturn(new EvaluationResponse(Decision.Permit));
-        ConcurrentHashMap<PrincipalKey, Principal> PrincipalCacheMap = new ConcurrentHashMap<>();
+        ConcurrentHashMap<PrincipalKey, Principal> PrincipalCacheMap = new ConcurrentHashMap<PrincipalKey, Principal>();
         PrincipalKey PrincipalKey = new PrincipalKey(AuthParamType.IP, IP_229_213_38_0);
         PrincipalCacheMap.put(PrincipalKey, mockPrincipal);
         when(mockPrincipalCache.asMap())
@@ -114,7 +113,7 @@ public class AALIsAllowedTest {
         PolicyDecisionKey key = new PolicyDecisionKey(mockPrincipal, "/TestResource", "GET");
         when(mockPolicyDecisionsCache.getIfPresent(key))
                 .thenReturn(new EvaluationResponse(Decision.Permit));
-        ConcurrentHashMap<PrincipalKey, Principal> PrincipalCacheMap = new ConcurrentHashMap<>();
+        ConcurrentHashMap<PrincipalKey, Principal> PrincipalCacheMap = new ConcurrentHashMap<PrincipalKey, Principal>();
         PrincipalKey PrincipalKey = new PrincipalKey(AuthParamType.IP, IP_229_213_38_0);
         PrincipalCacheMap.put(PrincipalKey, mockPrincipal);
         when(mockPrincipalCache.asMap())
@@ -134,7 +133,7 @@ public class AALIsAllowedTest {
         PolicyDecisionKey key = new PolicyDecisionKey(mockPrincipal, "/TestResource", "GET");
         when(mockPolicyDecisionsCache.getIfPresent(key))
                 .thenReturn(new EvaluationResponse(Decision.Deny));
-        ConcurrentHashMap<PrincipalKey, Principal> PrincipalCacheMap = new ConcurrentHashMap<>();
+        ConcurrentHashMap<PrincipalKey, Principal> PrincipalCacheMap = new ConcurrentHashMap<PrincipalKey, Principal>();
         PrincipalKey PrincipalKey = new PrincipalKey(AuthParamType.IP, IP_229_213_38_0);
         PrincipalCacheMap.put(PrincipalKey, mockPrincipal);
         when(mockPrincipalCache.asMap())
@@ -152,7 +151,7 @@ public class AALIsAllowedTest {
     public void aal_should_reset_policy_decision_from_cache() {
         Principal mockPrincipal = mock(Principal.class);
         PolicyDecisionKey key = new PolicyDecisionKey(mockPrincipal, "/TestResource", "GET");
-        ConcurrentHashMap<PolicyDecisionKey, EvaluationResponse> policyDecisionsCacheMap = new ConcurrentHashMap<>();
+        ConcurrentHashMap<PolicyDecisionKey, EvaluationResponse> policyDecisionsCacheMap = new ConcurrentHashMap<PolicyDecisionKey, EvaluationResponse>();
         policyDecisionsCacheMap.put(key, new EvaluationResponse(Decision.Permit));
         when(mockPolicyDecisionsCache.asMap())
                 .thenReturn(policyDecisionsCacheMap);
@@ -166,7 +165,7 @@ public class AALIsAllowedTest {
     public void aal_should_reset_policy_decision_from_cache_on_invalidate() {
         Principal mockPrincipal = mock(Principal.class);
         PolicyDecisionKey key = new PolicyDecisionKey(mockPrincipal, "/TestResource", "GET");
-        ConcurrentHashMap<PolicyDecisionKey, EvaluationResponse> policyDecisionsCacheMap = new ConcurrentHashMap<>();
+        ConcurrentHashMap<PolicyDecisionKey, EvaluationResponse> policyDecisionsCacheMap = new ConcurrentHashMap<PolicyDecisionKey, EvaluationResponse>();
         policyDecisionsCacheMap.put(key, new EvaluationResponse(Decision.Permit));
         when(mockPolicyDecisionsCache.asMap())
                 .thenReturn(policyDecisionsCacheMap);

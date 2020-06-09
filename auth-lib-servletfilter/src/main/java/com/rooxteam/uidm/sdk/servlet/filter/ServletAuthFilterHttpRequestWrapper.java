@@ -1,5 +1,6 @@
 package com.rooxteam.uidm.sdk.servlet.filter;
 
+import com.rooxteam.compat.Objects;
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.PropertyScope;
 import com.rooxteam.uidm.sdk.servlet.dto.PrincipalClaims;
@@ -12,11 +13,9 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 public class ServletAuthFilterHttpRequestWrapper extends HttpServletRequestWrapper {
     private String principal;
@@ -26,7 +25,14 @@ public class ServletAuthFilterHttpRequestWrapper extends HttpServletRequestWrapp
 
     private Collection<String> getCollection(Object object) {
         if (object instanceof Collection) {
-           return ((Collection<Object>) object).stream().map(Object::toString).collect(Collectors.toList());
+            Collection<Object> objectCollection = (Collection<Object>) object;
+            List<String> ret = new ArrayList<String>();
+            for (Object o : objectCollection) {
+                if (o != null) {
+                    ret.add(o.toString());
+                }
+            }
+            return ret;
         } else if (object instanceof String) {
             return Collections.singletonList((String) object);
         }
@@ -34,7 +40,7 @@ public class ServletAuthFilterHttpRequestWrapper extends HttpServletRequestWrapp
     }
 
     private Collection<String> createCollection(Enumeration<String> strings) {
-        ArrayList<String> arrayList = new ArrayList<>();
+        ArrayList<String> arrayList = new ArrayList<String>();
         while (strings.hasMoreElements()) {
             arrayList.add(strings.nextElement());
         }
@@ -42,7 +48,8 @@ public class ServletAuthFilterHttpRequestWrapper extends HttpServletRequestWrapp
     }
 
 
-    private void putIntoHeader(String key, Collection<String> value) {
+    private void putIntoHeader(String key,
+                               Collection<String> value) {
         if (key != null && value != null) {
             this.headers.put(key, value);
         }
@@ -56,24 +63,25 @@ public class ServletAuthFilterHttpRequestWrapper extends HttpServletRequestWrapp
         Objects.requireNonNull(principal);
         Objects.requireNonNull(attributeNamesOfTokenClaims);
         Objects.requireNonNull(headerNamesOfTokenClaims);
-        this.principal = (String) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, PrincipalClaims.prn.name());
+        this.principal = (String) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS,
+                PrincipalClaims.prn.name());
         Object uncastRoles = principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, PrincipalClaims.roles.name());
         this.roles = uncastRoles != null
-                ? Collections.unmodifiableSet(new TreeSet<>((List<String>) uncastRoles))
-                : Collections.unmodifiableSet(new TreeSet<>());
+                ? Collections.unmodifiableSet(new TreeSet<String>((List<String>) uncastRoles))
+                : Collections.unmodifiableSet(new TreeSet<String>());
 
-        this.headers = new TreeMap<>();
-        this.attributes = new TreeMap<>();
+        this.headers = new TreeMap();
+        this.attributes = new TreeMap();
 
-        headerNamesOfTokenClaims.forEach((key, value) -> {
-            Object propValue = principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, key);
-            putIntoHeader(key, getCollection(propValue));
-        });
+        for (Map.Entry<String, String> entry : headerNamesOfTokenClaims.entrySet()) {
+            Object propValue = principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, entry.getKey());
+            putIntoHeader(entry.getValue(), getCollection(propValue));
+        }
 
-        attributeNamesOfTokenClaims.forEach((key, value) -> {
-            Object propValue = principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, key);
-            this.attributes.put(value, propValue);
-        });
+        for (Map.Entry<String, String> entry : attributeNamesOfTokenClaims.entrySet()) {
+            Object propValue = principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, entry.getKey());
+            this.attributes.put(entry.getValue(), propValue);
+        }
 
         Enumeration<String> headerNamesIter = request.getHeaderNames();
         while (headerNamesIter != null && headerNamesIter.hasMoreElements()) {
@@ -132,7 +140,8 @@ public class ServletAuthFilterHttpRequestWrapper extends HttpServletRequestWrapp
     }
 
     @Override
-    public void setAttribute(String var1, Object var2) {
+    public void setAttribute(String var1,
+                             Object var2) {
         attributes.put(var1, var2);
     }
 

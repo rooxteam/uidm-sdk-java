@@ -53,11 +53,11 @@ public class AALTest {
 
         final SsoAuthenticationClient mockSsoAuthenticationClient = mock(SsoAuthenticationClient.class);
 
-        HashMap<String, Object> params = new HashMap<>();
+        HashMap<String, Object> params = new HashMap<String, Object>();
         params.put("ip", "incorrect IP");
         when(mockSsoAuthenticationClient.authenticate(params)).thenReturn(null);
 
-        params = new HashMap<>();
+        params = new HashMap<String, Object>();
         params.put("ip", "incorrect IP");
         AuthenticationAuthorizationLibrary aal = new RooxAuthenticationAuthorizationLibrary(null,null, null, mockSsoAuthenticationClient,
                 null, null, null, null, null, AuthorizationType.JWT);

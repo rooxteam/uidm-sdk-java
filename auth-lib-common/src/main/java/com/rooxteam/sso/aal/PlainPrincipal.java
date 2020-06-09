@@ -10,7 +10,7 @@ import java.util.Map;
  */
 public class PlainPrincipal extends AbstractPrincipal {
     private final String publicToken;
-    private final Map<String, Object> sharedIdentityProperties = new HashMap<>();
+    private final Map<String, Object> sharedIdentityProperties = new HashMap<String, Object>();
 
     public PlainPrincipal(Map<String, Object> policyContext, String publicToken) {
         this.publicToken = publicToken;
@@ -39,12 +39,12 @@ public class PlainPrincipal extends AbstractPrincipal {
 
     @Override
     protected Map<String, Object> getPrivateIdentityProperties() {
-        return new HashMap<>();
+        return new HashMap<String, Object>();
     }
 
     @Override
     protected Map<String, Object> getSessionProperties() {
-        return new HashMap<>();
+        return new HashMap<String, Object>();
     }
 
     @Override

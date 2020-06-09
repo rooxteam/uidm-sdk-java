@@ -12,19 +12,19 @@ public class ParseStringUtilTest {
     public void test_parse_token_from_header() {
         String token1 = "JDjkdoiej83ijkfd893K";
         String header1 = "Bearer " + token1;
-        Assert.assertEquals(token1, ParseStringUtils.parseAuthorizationHeader(header1).get());
+        Assert.assertEquals(token1, ParseStringUtils.parseAuthorizationHeader(header1));
 
         String token2 = "ujdash394i90900jk3jk3333";
         String header2 = "Bearer sso_1.2_" + token2;
-        Assert.assertEquals(token2, ParseStringUtils.parseAuthorizationHeader(header2).get());
+        Assert.assertEquals(token2, ParseStringUtils.parseAuthorizationHeader(header2));
 
         String token3 = "kuuukukujkfsdk";
         String header3 = "Bearer" + token3;
-        Assert.assertFalse(ParseStringUtils.parseAuthorizationHeader(header3).isPresent());
+        Assert.assertNull(ParseStringUtils.parseAuthorizationHeader(header3));
 
         String token4 = "sfdfss";
         String header4 = "Bearerr " + token4;
-        Assert.assertFalse(ParseStringUtils.parseAuthorizationHeader(header4).isPresent());
+        Assert.assertNull(ParseStringUtils.parseAuthorizationHeader(header4));
     }
 
     @Test

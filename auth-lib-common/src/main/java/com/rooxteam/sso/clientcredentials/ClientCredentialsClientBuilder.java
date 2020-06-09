@@ -17,7 +17,7 @@ final class ClientCredentialsClientBuilder {
     private final URI tokenValidationEndpoint;
     private final RestTemplate restTemplate;
     private final Configuration configuration;
-    private MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+    private MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
     private String headerPrefix = "";
 
     ClientCredentialsClientBuilder(final RestTemplate restTemplate,
@@ -50,9 +50,9 @@ final class ClientCredentialsClientBuilder {
     }
 
     ClientCredentialsClientBuilder params(final Map<String, String> additionalRequestParameters) {
-        additionalRequestParameters.forEach((k, v) -> {
-            this.params.add(k, v);
-        });
+        for (Map.Entry<String, String> entry : additionalRequestParameters.entrySet()) {
+            this.params.add(entry.getKey(), entry.getValue());
+        }
         return this;
     }
 }

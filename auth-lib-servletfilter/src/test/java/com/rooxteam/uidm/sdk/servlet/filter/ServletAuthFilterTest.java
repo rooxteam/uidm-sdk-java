@@ -37,7 +37,7 @@ public class ServletAuthFilterTest {
     private ServletAuthFilter getFilter(String principalId) {
         FilterConfig filterConfig = new ServletFilterConfigurationForTesting();
         String token = "sdfsdfsfds";
-        Map<String, Object> sharedIdentityProperties = new TreeMap<>();
+        Map<String, Object> sharedIdentityProperties = new TreeMap<String, Object>();
         sharedIdentityProperties.put("scopes", Arrays.asList("scope1", "scope2"));
         sharedIdentityProperties.put("roles", Arrays.asList("role1", "role2"));
         sharedIdentityProperties.put("prn", principalId);
@@ -74,7 +74,7 @@ public class ServletAuthFilterTest {
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
         HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
         when(request.getCookies()).thenReturn(cookies1);
-        when(request.getHeaderNames()).thenReturn(Collections.enumeration(new ArrayList<>()));
+        when(request.getHeaderNames()).thenReturn(Collections.enumeration(new ArrayList()));
 
         Chain chain1 = new Chain();
         servletAuthFilter.doFilter(request, response, chain1);
@@ -83,7 +83,7 @@ public class ServletAuthFilterTest {
         HttpServletRequest request2 = Mockito.mock(HttpServletRequest.class);
         when(request2.getCookies()).thenReturn(cookies2);
         when(request2.getHeader(eq("Authorization"))).thenReturn("Bearer " + token2);
-        when(request2.getHeaderNames()).thenReturn(Collections.enumeration(new ArrayList<>()));
+        when(request2.getHeaderNames()).thenReturn(Collections.enumeration(new ArrayList()));
         Chain chain2 = new Chain();
         servletAuthFilter.doFilter(request2, response, chain2);
         Assert.assertEquals(principalId, chain2.servletRequest.getRemoteUser());

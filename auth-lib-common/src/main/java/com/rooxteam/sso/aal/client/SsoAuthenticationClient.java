@@ -9,6 +9,7 @@ import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
 import com.rooxteam.sso.aal.exception.ErrorSubtypes;
 import com.rooxteam.sso.aal.exception.NetworkErrorException;
+import lombok.SneakyThrows;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -42,7 +43,7 @@ public class SsoAuthenticationClient {
     public static final String JWT_PARAM_NAME = "jwt";
     public static final String UPDATE_LIFE_TIME_PARAM = "updateLifeTime";
 
-    public final static List<String> COMMON_PARAMS = new ArrayList<>();
+    public final static List<String> COMMON_PARAMS = new ArrayList<String>();
 
 
     private ObjectMapper jsonMapper = new ObjectMapper();
@@ -70,6 +71,7 @@ public class SsoAuthenticationClient {
      * @param params authentication params
      * @return JWT token or throws AuthenticationException
      */
+    @SneakyThrows
     public AuthenticationResponse authenticate(Map<String, ?> params) {
         List<NameValuePair> commonParams = getCommonNameValuePairs();
 
@@ -105,7 +107,7 @@ public class SsoAuthenticationClient {
 
 
     private List<NameValuePair> getCommonNameValuePairs() {
-        List<NameValuePair> params = new ArrayList<>();
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new BasicNameValuePair(CLIENT_ID_PARAM_NAME, config.getString(ConfigKeys.CLIENT_ID)));
         params.add(new BasicNameValuePair(CLIENT_SECRET, config.getString(ConfigKeys.CLIENT_SECRET)));
         params.add(new BasicNameValuePair(GRANT_TYPE, GRANT_TYPE_M2M));
@@ -124,14 +126,17 @@ public class SsoAuthenticationClient {
 
         HttpClientContext context = new HttpClientContext();
         context.setCookieStore(new BasicCookieStore());
-        try (CloseableHttpResponse response = httpClient.execute(post, context)) {
+        CloseableHttpResponse response = httpClient.execute(post, context);
+        try {
             result = EntityUtils.toString(response.getEntity());
+        } finally {
+            response.close();
         }
         if (result == null) {
             throw new AuthenticationException("No or empty response from server");
         }
 
-        ObjectNode jsonResult = null;
+        ObjectNode jsonResult;
         try {
             jsonResult = (ObjectNode) jsonMapper.readTree(result);
         } catch (IOException e) {

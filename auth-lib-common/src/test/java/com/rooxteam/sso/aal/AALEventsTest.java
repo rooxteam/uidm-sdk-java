@@ -47,7 +47,7 @@ public class AALEventsTest {
     @Test
     public void invalidate_principal_should_fire_onInvalidate_event() {
         Principal mockPrincipal = mock(Principal.class);
-        ConcurrentHashMap<PrincipalKey, Principal> PrincipalCacheMap = new ConcurrentHashMap<>();
+        ConcurrentHashMap<PrincipalKey, Principal> PrincipalCacheMap = new ConcurrentHashMap<PrincipalKey, Principal>();
         PrincipalKey PrincipalKey = new PrincipalKey(AuthParamType.IP, IP_229_213_38_0);
         PrincipalCacheMap.put(PrincipalKey, mockPrincipal);
         when(mockPrincipalCache.asMap())
@@ -67,7 +67,7 @@ public class AALEventsTest {
         final String jwtToken = "jwt token";
         Principal mockPrincipal = mock(Principal.class);
         when(mockPrincipal.getJwtToken()).thenReturn(jwtToken);
-        Map<String, Object> params = new HashMap<>();
+        Map<String, Object> params = new HashMap<String, Object>();
         params.put(SsoAuthenticationClient.JWT_PARAM_NAME, jwtToken);
         params.put(SsoAuthenticationClient.UPDATE_LIFE_TIME_PARAM, true);
         when(mockSsoAuthenticationClient.authenticate(params))

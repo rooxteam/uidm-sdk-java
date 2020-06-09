@@ -21,6 +21,7 @@ import com.rooxteam.sso.aal.otp.OtpResponse;
 import com.rooxteam.sso.aal.otp.ResendOtpParameter;
 import com.rooxteam.sso.aal.otp.SendOtpParameter;
 import com.rooxteam.sso.aal.otp.ValidateOtpParameter;
+import com.rooxteam.sso.aal.utils.DummyRequest;
 import io.micrometer.core.instrument.Tags;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -71,7 +72,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     private final Cache<PrincipalKey, Principal> principalCache;
 
     private final Timer timer;
-    private final CopyOnWriteArrayList<PrincipalEventListener> principalEventListeners = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<PrincipalEventListener> principalEventListeners = new CopyOnWriteArrayList<PrincipalEventListener>();
     private final JwtValidator jwtValidator;
     private final AuthorizationType authorizationType;
     private volatile PollingBean pollingBean;
@@ -111,7 +112,9 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
 
     @Override
     @Deprecated
-    public Principal authenticate(Map<String, ?> params, long timeOut, TimeUnit timeUnit) {
+    public Principal authenticate(Map<String, ?> params,
+                                  long timeOut,
+                                  TimeUnit timeUnit) {
         return authenticate(params);
     }
 
@@ -176,7 +179,8 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         AuthenticationResponse authResult = ssoAuthenticationClient.authenticate(params);
 
         if (authResult != null) {
-            Principal principal = TokenContextFactory.get(TokenContextFactory.TYPE.JWTToken).createPrincipal(authResult);
+            Principal principal =
+                    TokenContextFactory.get(TokenContextFactory.TYPE.JWTToken).createPrincipal(authResult);
             String authType = (String) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "authType");
             if (authType != null && authType.equals(AuthParamType.IP.getValue())) {
                 principalCache.put(new PrincipalKey(AuthParamType.IP, ip, clientIps), principal);
@@ -206,16 +210,20 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
 
     @Override
     @Deprecated
-    public Principal renew(Principal principal, boolean updateLifeTime, long timeOut, TimeUnit timeUnit) {
+    public Principal renew(Principal principal,
+                           boolean updateLifeTime,
+                           long timeOut,
+                           TimeUnit timeUnit) {
         return renew(principal, updateLifeTime);
     }
 
     @Override
-    public Principal renew(Principal principal, boolean updateLifeTime) {
+    public Principal renew(Principal principal,
+                           boolean updateLifeTime) {
         if (principal == null) {
             throw new IllegalArgumentException(PRINCIPAL_IS_MISSING_MESSAGE);
         }
-        Map<String, Object> params = new HashMap<>();
+        Map<String, Object> params = new HashMap<String, Object>();
         params.put(SsoAuthenticationClient.JWT_PARAM_NAME, principal.getJwtToken());
         params.put(SsoAuthenticationClient.UPDATE_LIFE_TIME_PARAM, updateLifeTime);
         AuthenticationResponse authenticationResponse = ssoAuthenticationClient.authenticate(params);
@@ -300,18 +308,29 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
 
     @Override
     @Deprecated
-    public boolean isAllowed(Principal subject, String resourceName, String actionName, Map<String, ?> envParameters, long timeOut, TimeUnit timeUnit) {
+    public boolean isAllowed(Principal subject,
+                             String resourceName,
+                             String actionName,
+                             Map<String, ?> envParameters,
+                             long timeOut,
+                             TimeUnit timeUnit) {
         return isAllowed(subject, resourceName, actionName, envParameters);
     }
 
     @Override
     @Deprecated
-    public boolean isAllowed(Principal subject, String resourceName, String actionName, Map<String, ?> envParameters) {
+    public boolean isAllowed(Principal subject,
+                             String resourceName,
+                             String actionName,
+                             Map<String, ?> envParameters) {
         return evaluatePolicy(subject, resourceName, actionName, envParameters).getDecision().isPositive();
     }
 
     @Override
-    public EvaluationResponse evaluatePolicy(Principal subject, String resourceName, String actionName, Map<String, ?> envParameters) {
+    public EvaluationResponse evaluatePolicy(Principal subject,
+                                             String resourceName,
+                                             String actionName,
+                                             Map<String, ?> envParameters) {
         if (subject == null) {
             LOG.errorIllegalSubjectParameter();
             throw new IllegalArgumentException(SUBJECT_SHOULD_BE_SPECIFIED);
@@ -341,7 +360,8 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     }
 
     @Override
-    public Map<EvaluationRequest, EvaluationResponse> evaluatePolicies(Principal subject, List<EvaluationRequest> policiesToCheck) {
+    public Map<EvaluationRequest, EvaluationResponse> evaluatePolicies(Principal subject,
+                                                                       List<EvaluationRequest> policiesToCheck) {
         if (subject == null) {
             LOG.errorIllegalSubjectParameter();
             throw new IllegalArgumentException(SUBJECT_SHOULD_BE_SPECIFIED);
@@ -366,7 +386,8 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
 
         Principal subject = key.getSubject();
 
-        EvaluationResponse result = ssoAuthorizationClient.isActionOnResourceAllowedByPolicy(subject, key.getResourceName(), key.getActionName(), key.getEnvParameters());
+        EvaluationResponse result = ssoAuthorizationClient.isActionOnResourceAllowedByPolicy(subject,
+                key.getResourceName(), key.getActionName(), key.getEnvParameters());
         isAllowedPolicyDecisionsCache.put(key, result);
         getPolicyCacheAddMeter().increment();
         return result;
@@ -398,7 +419,14 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     }
 
     @Override
-    public Principal validate(HttpServletRequest request, String token) {
+    @Deprecated
+    public Principal validate(String jwt) {
+        return ssoAuthorizationClient.validate(DummyRequest.getInstance(), jwt);
+    }
+
+    @Override
+    public Principal validate(HttpServletRequest request,
+                              String token) {
         return ssoAuthorizationClient.validate(request, token);
     }
 
@@ -418,14 +446,16 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     }
 
     @Override
-    public final void enablePolling(int period, TimeUnit unit) {
+    public final void enablePolling(int period,
+                                    TimeUnit unit) {
         // Both enable- and disable- methods are synchronized to preserve pollingBean
         // overwriting during disablePolling call.
         synchronized (timer) {
             if (isPollingEnabled()) {
                 disablePolling();
             }
-            pollingBean = new PollingBean(ssoTokenClient, isAllowedPolicyDecisionsCache, principalCache, principalEventListeners);
+            pollingBean = new PollingBean(ssoTokenClient, isAllowedPolicyDecisionsCache, principalCache,
+                    principalEventListeners);
             timer.schedule(pollingBean, 0, TimeUnit.MILLISECONDS.convert(period, unit));
         }
     }
@@ -442,7 +472,9 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
 
     @Override
     @Deprecated
-    public OtpResponse sendOtp(Principal principal, long timeOut, TimeUnit timeUnit) {
+    public OtpResponse sendOtp(Principal principal,
+                               long timeOut,
+                               TimeUnit timeUnit) {
         return sendOtp(principal);
     }
 
@@ -453,7 +485,8 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     }
 
     @Override
-    public OtpResponse sendOtpForOperation(Principal principal, EvaluationContext context) {
+    public OtpResponse sendOtpForOperation(Principal principal,
+                                           EvaluationContext context) {
         String jwtToken = principal != null ? principal.getJwtToken() : null;
         return otpClient.sendOtpForOperation(jwtToken, context);
     }
@@ -465,7 +498,9 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
 
     @Override
     @Deprecated
-    public OtpResponse resendOtp(OtpFlowState otpFlowState, long timeOut, TimeUnit timeUnit) {
+    public OtpResponse resendOtp(OtpFlowState otpFlowState,
+                                 long timeOut,
+                                 TimeUnit timeUnit) {
         return resendOtp(otpFlowState);
     }
 
@@ -481,19 +516,24 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
 
     @Override
     @Deprecated
-    public OtpResponse validateOtp(OtpFlowState otpState, Map<String, String> fields, long timeOut, TimeUnit timeUnit) {
+    public OtpResponse validateOtp(OtpFlowState otpState,
+                                   Map<String, String> fields,
+                                   long timeOut,
+                                   TimeUnit timeUnit) {
         return validateOtp(otpState, fields);
     }
 
     @Override
     @Deprecated
-    public OtpResponse validateOtp(OtpFlowState otpState, Map<String, String> fields) {
+    public OtpResponse validateOtp(OtpFlowState otpState,
+                                   Map<String, String> fields) {
         String otpCode = fields.get(OtpClient.OTP_CODE_PARAM_NAME);
         return validateOtp(otpState, otpCode);
     }
 
     @Override
-    public OtpResponse validateOtp(OtpFlowState otpState, String otpCode) {
+    public OtpResponse validateOtp(OtpFlowState otpState,
+                                   String otpCode) {
         return otpClient.validateOtp(otpState, otpCode);
     }
 

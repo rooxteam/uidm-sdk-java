@@ -1,5 +1,6 @@
 package com.rooxteam.sso.clientcredentials;
 
+import com.rooxteam.compat.Objects;
 import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
 import com.rooxteam.sso.aal.exception.NetworkErrorException;
@@ -18,8 +19,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.util.Collections;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.rooxteam.sso.clientcredentials.ClientCredentialsClientLogger.LOG;
@@ -33,7 +32,8 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
     private final String headerPrefix;
     private final Configuration configuration;
 
-    private final ConcurrentHashMap<MultiValueMap<String, String>, String> tokens = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<MultiValueMap<String, String>, String> tokens =
+            new ConcurrentHashMap<MultiValueMap<String, String>, String>();
 
 
     ClientCredentialsClientImpl(final RestTemplate restTemplate,
@@ -45,7 +45,11 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
         this.restTemplate = Objects.requireNonNull(restTemplate, "restTemplate");
         this.accessTokenEndpoint = Objects.requireNonNull(accessTokenEndpoint, "accessTokenEndpoint");
         this.tokenValidationEndpoint = Objects.requireNonNull(tokenValidationEndpoint, "tokenValidationEndpoint");
-        this.defaultParameters = Optional.ofNullable(defaultParameters).orElse(new LinkedMultiValueMap<>());
+        if (defaultParameters != null) {
+            this.defaultParameters = defaultParameters;
+        } else {
+            this.defaultParameters = new LinkedMultiValueMap<String, String>();
+        }
         this.headerPrefix = headerPrefix;
         this.configuration = configuration;
     }
@@ -111,7 +115,7 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
 
     private String getTokenValidating(MultiValueMap<String, String> requestParameters) {
 
-        MultiValueMap<String, String> mergedParams = new LinkedMultiValueMap<>();
+        MultiValueMap<String, String> mergedParams = new LinkedMultiValueMap<String, String>();
         mergedParams.putAll(this.defaultParameters);
         mergedParams.putAll(requestParameters);
 
@@ -139,7 +143,8 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
         return token;
     }
 
-    private void putToken(MultiValueMap<String, String> params, String token) {
+    private void putToken(MultiValueMap<String, String> params,
+                          String token) {
         LOG.tracePutTokenInStore(clearParamsForLogging(params), trimTokenForLogging(token));
         tokens.put(params, token);
     }
@@ -151,12 +156,17 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
 
     private String authorizeAndGetToken(MultiValueMap<String, String> additionalRequestParameters) {
 
-        final MultiValueMap<String, String> params = Optional.ofNullable(additionalRequestParameters).orElse(new LinkedMultiValueMap<>());
+        final MultiValueMap<String, String> params;
+        if (additionalRequestParameters != null) {
+            params = additionalRequestParameters;
+        } else {
+            params = new LinkedMultiValueMap<String, String>();
+        }
         MultiValueMap<String, String> paramsForLogging = clearParamsForLogging(params);
 
         LOG.traceRequestNewToken(paramsForLogging);
 
-        LinkedMultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+        LinkedMultiValueMap<String, String> requestBody = new LinkedMultiValueMap<String, String>();
         requestBody.putAll(this.defaultParameters);
         requestBody.putAll(params);
         HttpEntity<MultiValueMap<String, String>> request = createEntity(requestBody);
@@ -165,7 +175,8 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
         try {
             responseEntity = restTemplate.postForEntity(accessTokenEndpoint, request, TokenResponse.class);
         } catch (HttpStatusCodeException e) {
-            LOG.errorOnGetTokenHttp(accessTokenEndpoint, paramsForLogging, e.getStatusCode(), trimBodyForLogging(e.getResponseBodyAsString()), e);
+            LOG.errorOnGetTokenHttp(accessTokenEndpoint, paramsForLogging, e.getStatusCode(),
+                    trimBodyForLogging(e.getResponseBodyAsString()), e);
             if (e.getStatusCode().is5xxServerError()) {
                 throw new NetworkErrorException("Cannot get client_credentials token. SSO server error", e);
             } else {
@@ -193,19 +204,23 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
     }
 
     private String trimTokenForLogging(String token) {
-        return Optional.ofNullable(token)
-                .map(s -> s.substring(0, Math.min(16, s.length())))
-                .orElse("<none>");
+        if (token == null) {
+            return "<none>";
+        } else {
+            return token.substring(0, Math.min(16, token.length()));
+        }
     }
 
     private String trimBodyForLogging(String body) {
-        return Optional.ofNullable(body)
-                .map(s -> s.substring(0, Math.min(200, s.length())))
-                .orElse("<none>");
+        if (body == null) {
+            return "<none>";
+        } else {
+            return body.substring(0, Math.min(200, body.length()));
+        }
     }
 
     private MultiValueMap<String, String> clearParamsForLogging(MultiValueMap<String, String> params) {
-        LinkedMultiValueMap<String, String> ret = new LinkedMultiValueMap<>(params);
+        LinkedMultiValueMap<String, String> ret = new LinkedMultiValueMap<String, String>(params);
         if (ret.containsKey("client_secret")) {
             ret.set("client_secret", "***");
         }
@@ -217,7 +232,7 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
-        return new HttpEntity<>(params, headers);
+        return new HttpEntity<MultiValueMap<String, String>>(params, headers);
     }
 
 }

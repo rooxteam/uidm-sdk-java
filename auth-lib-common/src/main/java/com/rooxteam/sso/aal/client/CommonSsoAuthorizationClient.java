@@ -29,7 +29,6 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static com.rooxteam.sso.aal.AalLogger.LOG;
 
@@ -71,39 +70,46 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
         final String tokenForLogging = trimTokenForLogging(token);
 
         String url = config.getString(ConfigKeys.SSO_URL) + TOKEN_INFO_PATH;
-        List<NameValuePair> params = new ArrayList<>();
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new BasicNameValuePair("access_token", token));
         HttpPost post = HttpHelper.getHttpPost(url, params);
         post.setEntity(new StringEntity(mapper.writeValueAsString(requestContextCollector.collect(request)), ContentType.APPLICATION_JSON));
         HttpClientContext context = new HttpClientContext();
-        try (CloseableHttpResponse response = httpClient.execute(post, context)) {
-            int statusCode = response.getStatusLine().getStatusCode();
-            Principal principal = null;
+        try {
+            CloseableHttpResponse response = httpClient.execute(post, context);
+            try {
+                int statusCode = response.getStatusLine().getStatusCode();
+                Principal principal = null;
 
-            if (statusCode == HttpStatus.SC_OK) {
-                String responseJson = EntityUtils.toString(response.getEntity());
-                Map<String, Object> tokenClaims = parseJson(responseJson);
-                Map<String, Object> sharedIdentityProperties = new HashMap<>();
-                Object sub = tokenClaims.get("sub");
-                // legacy style claim for subject
-                sharedIdentityProperties.put("prn", sub);
-                tokenClaims.forEach(sharedIdentityProperties::put);
+                if (statusCode == HttpStatus.SC_OK) {
+                    String responseJson = EntityUtils.toString(response.getEntity());
+                    Map<String, Object> tokenClaims = parseJson(responseJson);
+                    Map<String, Object> sharedIdentityProperties = new HashMap<String, Object>();
+                    Object sub = tokenClaims.get("sub");
+                    // legacy style claim for subject
+                    sharedIdentityProperties.put("prn", sub);
+                    for (Map.Entry<String, Object> entry : tokenClaims.entrySet()) {
+                        sharedIdentityProperties.put(entry.getKey(),entry.getValue());
+                    }
 
-                // this is for backward compat because by some legacy nonsense authLevel has been defined as list
-                Object authLevel = tokenClaims.get("auth_level");
-                if (authLevel != null) {
-                    sharedIdentityProperties.put("authLevel", Collections.singletonList(authLevel.toString()));
-                } else {
-                    sharedIdentityProperties.put("authLevel", Collections.emptyList());
+                    // this is for backward compat because by some legacy nonsense authLevel has been defined as list
+                    Object authLevel = tokenClaims.get("auth_level");
+                    if (authLevel != null) {
+                        sharedIdentityProperties.put("authLevel", Collections.singletonList(authLevel.toString()));
+                    } else {
+                        sharedIdentityProperties.put("authLevel", Collections.emptyList());
+                    }
+
+                    Calendar expiresIn = new GregorianCalendar();
+                    expiresIn.set(Calendar.HOUR, 0);
+                    expiresIn.set(Calendar.MINUTE, Integer.valueOf(tokenClaims.get("expires_in").toString()));
+                    expiresIn.set(Calendar.SECOND, 0);
+                    principal = new PrincipalImpl(token, sharedIdentityProperties, expiresIn);
                 }
-
-                Calendar expiresIn = new GregorianCalendar();
-                expiresIn.set(Calendar.HOUR, 0);
-                expiresIn.set(Calendar.MINUTE, Integer.valueOf(tokenClaims.get("expires_in").toString()));
-                expiresIn.set(Calendar.SECOND, 0);
-                principal = new PrincipalImpl(token, sharedIdentityProperties, expiresIn);
+                return principal;
+            } finally {
+                response.close();
             }
-            return principal;
         } catch (IOException e) {
             LOG.errorOnTokenValidationIO(url,
                     tokenForLogging,
@@ -130,9 +136,11 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
     }
 
     private String trimTokenForLogging(String token) {
-        return Optional.ofNullable(token)
-                .map(s -> s.substring(0, Math.min(16, s.length())))
-                .orElse("<none>");
+        if(token!=null){
+            return token.substring(0, Math.min(16, token.length()));
+        }else{
+            return "<none>";
+        }
     }
 
 

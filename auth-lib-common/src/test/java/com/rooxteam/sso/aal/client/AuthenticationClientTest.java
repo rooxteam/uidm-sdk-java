@@ -39,7 +39,7 @@ public class AuthenticationClientTest {
 
         SsoAuthenticationClient instance = new SsoAuthenticationClient(ConfigurationBuilder.fromApacheCommonsConfiguration(config), client);
 
-        HashMap<String, Object> params = new HashMap<>();
+        HashMap<String, Object> params = new HashMap<String, Object>();
         params.put("ip", "10.0.0.0");
         String token = instance.authenticate(params).getPublicToken();
 
@@ -64,7 +64,7 @@ public class AuthenticationClientTest {
 
         SsoAuthenticationClient instance = new SsoAuthenticationClient(ConfigurationBuilder.fromApacheCommonsConfiguration(config), client);
 
-        HashMap<String, Object> params = new HashMap<>();
+        HashMap<String, Object> params = new HashMap<String, Object>();
         params.put("ip", "229.213.38.10");
         String token = null;
         try {

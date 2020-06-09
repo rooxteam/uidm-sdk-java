@@ -23,6 +23,6 @@ class PolicyDecisionKey implements AalCacheKey {
         this.subject = subject;
         this.resourceName = resourceName;
         this.actionName = actionName;
-        this.envParameters = new HashMap<>();
+        this.envParameters = new HashMap<String, Object>();
     }
 }

@@ -1,7 +1,6 @@
 package com.rooxteam.sso.aal.configuration;
 
 import java.math.BigInteger;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,8 +15,10 @@ final class MapConfigurationImpl implements Configuration {
 
     @Override
     public String getString(String property, String defaultValue) {
-        Object value = configuration.getOrDefault(property, defaultValue);
-        if (value == null) return null;
+        Object value = configuration.get(property);
+        if (value == null) {
+            return defaultValue;
+        }
         return value.toString();
     }
 
@@ -30,32 +31,36 @@ final class MapConfigurationImpl implements Configuration {
 
     @Override
     public boolean getBoolean(String property, boolean defaultValue) {
-        Object value = configuration.getOrDefault(property, defaultValue);
-        if (value == null) return defaultValue;
+        Object value = configuration.get(property);
+        if (value == null) {
+            return defaultValue;
+        }
         if (value instanceof Boolean) {
-            return (boolean) value;
+            return (Boolean) value;
         }
         return Boolean.parseBoolean(String.valueOf(value));
     }
 
     @Override
     public int getInt(String property, int defaultValue) {
-        Object value = configuration.getOrDefault(property, defaultValue);
-        if (value == null) return defaultValue;
+        Object value = configuration.get(property);
+        if (value == null) {
+            return defaultValue;
+        }
         if (value instanceof Byte) {
-            return (byte) value;
+            return (Byte) value;
         }
         if (value instanceof Short) {
-            return (short) value;
+            return (Short) value;
         }
         if (value instanceof Integer) {
-            return (int) value;
+            return (Integer) value;
         }
         if (value instanceof Long) {
-            return (int)((long) value);
+            return (int)(long)((Long) value);
         }
         if (value instanceof BigInteger) {
-            return ((BigInteger)value).intValueExact();
+            return ((BigInteger)value).intValue();
         }
         return Integer.parseInt(String.valueOf(value));
     }

@@ -2,6 +2,7 @@ package com.rooxteam.sso.aal;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.rooxteam.compat.Objects;
 import com.rooxteam.jwt.IatClaimChecker;
 import com.rooxteam.jwt.NbfClaimChecker;
 import com.rooxteam.jwt.StringClaimChecker;
@@ -19,12 +20,10 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Objects;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 
 import static com.rooxteam.sso.aal.ConfigKeys.*;
-import static java.text.MessageFormat.format;
 
 @SuppressWarnings({"WeakerAccess", "UnstableApiUsage"})
 public class AalFactory {
@@ -164,7 +163,13 @@ public class AalFactory {
                     (SsoAuthorizationClient) aClass
                             .getConstructor(Configuration.class, CloseableHttpClient.class)
                             .newInstance(config, httpClient);
-        } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
+        } catch (NoSuchMethodException e) {
+            throw new IllegalArgumentException("Fail while creating policy provider. Check authorization_client_class_name property.");
+        } catch (IllegalAccessException e) {
+            throw new IllegalArgumentException("Fail while creating policy provider. Check authorization_client_class_name property.");
+        } catch (InstantiationException e) {
+            throw new IllegalArgumentException("Fail while creating policy provider. Check authorization_client_class_name property.");
+        } catch (InvocationTargetException e) {
             throw new IllegalArgumentException("Fail while creating policy provider. Check authorization_client_class_name property.");
         }
 

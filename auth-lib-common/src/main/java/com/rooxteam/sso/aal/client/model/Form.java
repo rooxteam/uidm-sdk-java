@@ -13,7 +13,7 @@ import java.util.Map;
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Form {
-    private Map<String, Object> fields = new HashMap<>();
-    private List<ResponseError> errors = new ArrayList<>();
+    private Map<String, Object> fields = new HashMap<String, Object>();
+    private List<ResponseError> errors = new ArrayList<ResponseError>();
     private String name;
 }

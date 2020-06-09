@@ -25,7 +25,7 @@ import static org.mockito.Mockito.when;
 public class ServletAuthFilterServiceImplTest {
 
     private ServletAuthFilterService prepare(String principalId, String token, List<String> scopes, List<String> roles) {
-        Map<String, Object> sharedIdentityProperties = new TreeMap<>();
+        Map<String, Object> sharedIdentityProperties = new TreeMap<String, Object>();
         sharedIdentityProperties.put("scopes", scopes);
         sharedIdentityProperties.put("roles", roles);
         sharedIdentityProperties.put("prn", principalId);
@@ -56,19 +56,19 @@ public class ServletAuthFilterServiceImplTest {
 
         String token1 = "JDjkdoiej83ijkfd893K";
         String header1 = "Bearer " + token1;
-        Assert.assertEquals(token1, service.extractAccessToken(prepareHttpServletRequest(cookiesNoToken, header1)).get());
+        Assert.assertEquals(token1, service.extractAccessToken(prepareHttpServletRequest(cookiesNoToken, header1)));
 
         String token2 = "ujdash394i90900jk3jk3333";
         String header2 = "Bearer sso_1.2_" + token2;
-        Assert.assertEquals(token2, service.extractAccessToken(prepareHttpServletRequest(cookiesNoToken, header2)).get());
+        Assert.assertEquals(token2, service.extractAccessToken(prepareHttpServletRequest(cookiesNoToken, header2)));
 
         String token3 = "kuuukukujkfsdk";
         String header3 = "Bearer" + token3;
-        Assert.assertFalse(service.extractAccessToken(prepareHttpServletRequest(cookiesNoToken, header3)).isPresent());
+        Assert.assertNull(service.extractAccessToken(prepareHttpServletRequest(cookiesNoToken, header3)));
 
         String token4 = "sfdfss";
         String header4 = "Bearerr " + token4;
-        Assert.assertFalse(service.extractAccessToken(prepareHttpServletRequest(cookiesNoToken, header4)).isPresent());
+        Assert.assertNull(service.extractAccessToken(prepareHttpServletRequest(cookiesNoToken, header4)));
     }
 
     @Test
@@ -81,13 +81,13 @@ public class ServletAuthFilterServiceImplTest {
         cookies[1] = new Cookie("test2", "test2");
 
         String header1 = "Bearer " + token + "xxxxxxx";
-        Assert.assertEquals(token, service.extractAccessToken(prepareHttpServletRequest(cookies, header1)).get());
+        Assert.assertEquals(token, service.extractAccessToken(prepareHttpServletRequest(cookies, header1)));
 
         String header2 = "Bearer sso_1.2_" + token + "xxxxxxx";
-        Assert.assertEquals(token, service.extractAccessToken(prepareHttpServletRequest(cookies, header2)).get());
+        Assert.assertEquals(token, service.extractAccessToken(prepareHttpServletRequest(cookies, header2)));
 
         String header3 = "Bearer" + token + "xxxxxxx";
-        Assert.assertEquals(token, service.extractAccessToken(prepareHttpServletRequest(cookies, header3)).get());
+        Assert.assertEquals(token, service.extractAccessToken(prepareHttpServletRequest(cookies, header3)));
     }
 
     @Test
@@ -104,19 +104,19 @@ public class ServletAuthFilterServiceImplTest {
         cookies2[1] = new Cookie("test2", "test2");
 
         String header1 = "Bearer " + token;
-        Assert.assertEquals(token, service.extractAccessToken(prepareHttpServletRequest(cookies1, header1)).get());
-        Assert.assertEquals(token, service.extractAccessToken(prepareHttpServletRequest(null, header1)).get());
+        Assert.assertEquals(token, service.extractAccessToken(prepareHttpServletRequest(cookies1, header1)));
+        Assert.assertEquals(token, service.extractAccessToken(prepareHttpServletRequest(null, header1)));
 
         String header2 = "Bearer sso_1.2_" + token;
-        Assert.assertEquals(token, service.extractAccessToken(prepareHttpServletRequest(cookies1, header2)).get());
-        Assert.assertEquals(token, service.extractAccessToken(prepareHttpServletRequest(null, header2)).get());
+        Assert.assertEquals(token, service.extractAccessToken(prepareHttpServletRequest(cookies1, header2)));
+        Assert.assertEquals(token, service.extractAccessToken(prepareHttpServletRequest(null, header2)));
 
         String header3 = "Bearer " + token;
-        Assert.assertEquals(token, service.extractAccessToken(prepareHttpServletRequest(cookies2, header3)).get());
-        Assert.assertEquals(token, service.extractAccessToken(prepareHttpServletRequest(null, header3)).get());
+        Assert.assertEquals(token, service.extractAccessToken(prepareHttpServletRequest(cookies2, header3)));
+        Assert.assertEquals(token, service.extractAccessToken(prepareHttpServletRequest(null, header3)));
 
         String header4 = "Bearer sso_1.2_" + token;
-        Assert.assertEquals(token, service.extractAccessToken(prepareHttpServletRequest(cookies2, header4)).get());
-        Assert.assertEquals(token, service.extractAccessToken(prepareHttpServletRequest(null, header4)).get());
+        Assert.assertEquals(token, service.extractAccessToken(prepareHttpServletRequest(cookies2, header4)));
+        Assert.assertEquals(token, service.extractAccessToken(prepareHttpServletRequest(null, header4)));
     }
 }

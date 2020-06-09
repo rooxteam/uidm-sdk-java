@@ -85,7 +85,7 @@ public class AalAuthorizationClient implements SsoAuthorizationClient, AalResour
             return Collections.singleton(new SimpleGrantedAuthority("ROLE_CUSTOMER"));
         }
 
-        Set<GrantedAuthority> result = new LinkedHashSet<>();
+        Set<GrantedAuthority> result = new LinkedHashSet<GrantedAuthority>();
         for (String role : (List<String>) roles) {
             result.add(new SimpleGrantedAuthority(role));
         }
@@ -146,7 +146,7 @@ public class AalAuthorizationClient implements SsoAuthorizationClient, AalResour
 
     private Principal reconstructPrincipalFromAuthState(AuthenticationState authenticationState) {
         Principal aalPrincipal;// reconstruct principal from available auth state
-        Map<String, Object> sharedIdentityProperties = new HashMap<>();
+        Map<String, Object> sharedIdentityProperties = new HashMap<String, Object>();
         // auth level
         Integer authLevel = authenticationState.getAuthLevel();
         if (authLevel == null) {

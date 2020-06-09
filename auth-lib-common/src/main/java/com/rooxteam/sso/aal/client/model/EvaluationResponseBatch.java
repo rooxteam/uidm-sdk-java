@@ -2,7 +2,8 @@ package com.rooxteam.sso.aal.client.model;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
+
+import com.rooxteam.compat.Objects;
 import lombok.Value;
 
 @Value
@@ -15,10 +16,12 @@ public class EvaluationResponseBatch {
     }
 
     public Decision getDecision() {
-        return items.stream()
-                .map(EvaluationResponse::getDecision)
-                .anyMatch(v -> !v.isPositive())
-                ? Decision.Deny : Decision.Permit;
+        for (EvaluationResponse item : items) {
+            if(!item.getDecision().isPositive()){
+                return Decision.Deny;
+            }
+        }
+        return Decision.Permit;
     }
 }
 
