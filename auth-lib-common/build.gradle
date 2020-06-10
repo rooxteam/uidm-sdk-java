@@ -70,7 +70,7 @@ dependencies {
     compileOnly("javax.servlet:servlet-api:${servletVersion}")
 
     // for lombok magic
-	compileOnly("org.projectlombok:lombok:${lombokVersion}")
+    compileOnly("org.projectlombok:lombok:${lombokVersion}")
 
     // for testing
     testCompile("junit:junit:$junitVersion")
@@ -84,4 +84,12 @@ javadoc {
 
 tasks.withType(Javadoc) {
     options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+tasks.withType(Test) {
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStackTraces = true
+        exceptionFormat = TestExceptionFormat.FULL
+    }
 }
