@@ -90,6 +90,7 @@ tasks.withType(Test) {
     testLogging {
         events("passed", "skipped", "failed")
         showStackTraces = true
-        exceptionFormat = TestExceptionFormat.FULL
+        showCauses = true
+        exceptionFormat = 'FULL'
     }
 }
