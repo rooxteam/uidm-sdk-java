@@ -222,6 +222,11 @@ public interface AalLogger extends BasicLogger {
     void warnInvalidContextJson(Object evaluationContext,
                                 @Cause Exception e);
 
+
+    @LogMessage(level = WARN)
+    @Message(id = 4007, format = MESSAGE_FORMAT, value = "Request cookie store context is not defined!")
+    void warnRequestCookieStoreContextIsNotDefined();
+
     @LogMessage(level = INFO)
     @Message(id = 6001, format = MESSAGE_FORMAT,
             value = "Filter {0} authentication success: {1}")

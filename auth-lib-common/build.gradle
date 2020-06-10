@@ -37,9 +37,6 @@ dependencies {
     // TODO: for HttpStatus, needs fixing
     compileOnly(group: 'org.springframework', name: 'spring-web', version: springVersion)
 
-    // for com.rooxteam.sso.aal.client.cookie.store.enablePerRequest, ok until UIDM needs sticky session
-    compile("com.rooxteam.sso:request-cookie-store:$requestCookieStoreVersion")
-
     // for backward compat, ok to have it provided
     compileOnly("commons-configuration:commons-configuration:$apacheConfigurationVersion")
 
