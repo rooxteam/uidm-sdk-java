@@ -15,14 +15,13 @@ import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.context.TokenContextFactory;
 import com.rooxteam.sso.aal.exception.AalException;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
-import com.rooxteam.sso.aal.metrics.AalMetricsHelper;
+import com.rooxteam.sso.aal.metrics.MetricsIntegration;
 import com.rooxteam.sso.aal.otp.OtpFlowState;
 import com.rooxteam.sso.aal.otp.OtpResponse;
 import com.rooxteam.sso.aal.otp.ResendOtpParameter;
 import com.rooxteam.sso.aal.otp.SendOtpParameter;
 import com.rooxteam.sso.aal.otp.ValidateOtpParameter;
 import com.rooxteam.sso.aal.utils.DummyRequest;
-import io.micrometer.core.instrument.Tags;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 
@@ -39,10 +38,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
 import static com.rooxteam.sso.aal.AalLogger.LOG;
-import static com.rooxteam.sso.aal.metrics.AalMetricsHelper.METRIC_POLICY_DECISIONS_COUNT_IN_CACHE;
-import static com.rooxteam.sso.aal.metrics.AalMetricsHelper.METRIC_PRINCIPALS_COUNT_IN_CACHE;
-import static com.rooxteam.sso.aal.metrics.AalMetricsHelper.getMetricRegistry;
-import static com.rooxteam.sso.aal.metrics.AalMetricsHelper.getPolicyCacheAddMeter;
+import static com.rooxteam.sso.aal.metrics.MetricNames.METRIC_POLICY_DECISIONS_COUNT_IN_CACHE;
+import static com.rooxteam.sso.aal.metrics.MetricNames.METRIC_PRINCIPALS_COUNT_IN_CACHE;
 
 /**
  * Реализация AuthenticationAuthorizationLibrary, работающая с ForgeRock OpenAM
@@ -72,9 +69,11 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     private final Cache<PrincipalKey, Principal> principalCache;
 
     private final Timer timer;
-    private final CopyOnWriteArrayList<PrincipalEventListener> principalEventListeners = new CopyOnWriteArrayList<PrincipalEventListener>();
+    private final CopyOnWriteArrayList<PrincipalEventListener> principalEventListeners =
+            new CopyOnWriteArrayList<PrincipalEventListener>();
     private final JwtValidator jwtValidator;
     private final AuthorizationType authorizationType;
+    private final MetricsIntegration metricsIntegration;
     private volatile PollingBean pollingBean;
     private Configuration configuration;
 
@@ -87,7 +86,8 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
                                            Cache<PolicyDecisionKey, EvaluationResponse> policyDecisionsCache,
                                            Cache<PrincipalKey, Principal> principalCache,
                                            JwtValidator jwtValidator,
-                                           AuthorizationType authorizationType) {
+                                           AuthorizationType authorizationType,
+                                           MetricsIntegration metricsIntegration) {
         this.configuration = configuration;
         this.ssoAuthorizationClient = ssoAuthorizationClient;
         this.ssoAuthenticationClient = ssoAuthenticationClient;
@@ -98,14 +98,14 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         this.timer = timer;
         this.jwtValidator = jwtValidator;
         this.authorizationType = authorizationType;
+        this.metricsIntegration = metricsIntegration;
 
-
-        getMetricRegistry().gaugeMapSize(METRIC_POLICY_DECISIONS_COUNT_IN_CACHE,
-                Tags.empty(),
+        metricsIntegration.registerMapSizeGauge(METRIC_POLICY_DECISIONS_COUNT_IN_CACHE,
+                new HashMap<String, String>(),
                 isAllowedPolicyDecisionsCache.asMap()
         );
-        getMetricRegistry().gaugeMapSize(METRIC_PRINCIPALS_COUNT_IN_CACHE,
-                Tags.empty(),
+        metricsIntegration.registerMapSizeGauge(METRIC_PRINCIPALS_COUNT_IN_CACHE,
+                new HashMap<String, String>(),
                 RooxAuthenticationAuthorizationLibrary.this.principalCache.asMap()
         );
     }
@@ -161,9 +161,9 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         Principal result;
         result = principalCache.getIfPresent(key);
         if (result != null) {
-            AalMetricsHelper.getPrincipalCacheHitMeter().increment();
+            metricsIntegration.incrementPrincipalCacheHitMeter();
         } else {
-            AalMetricsHelper.getPrincipalCacheMissMeter().increment();
+            metricsIntegration.incrementPrincipalCacheMissMeter();
         }
         return result;
     }
@@ -184,7 +184,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
             String authType = (String) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "authType");
             if (authType != null && authType.equals(AuthParamType.IP.getValue())) {
                 principalCache.put(new PrincipalKey(AuthParamType.IP, ip, clientIps), principal);
-                AalMetricsHelper.getPrincipalCacheAddMeter().increment();
+                metricsIntegration.incrementPrincipalCacheAddMeter();
             }
             return principal;
         } else {
@@ -350,9 +350,9 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         LOG.traceGetPolicyDecision(key);
         EvaluationResponse result = isAllowedPolicyDecisionsCache.getIfPresent(key);
         if (result != null) {
-            AalMetricsHelper.getPolicyCacheHitMeter().increment();
+            metricsIntegration.incrementPolicyCacheHitMeter();
         } else {
-            AalMetricsHelper.getPolicyCacheMissMeter().increment();
+            metricsIntegration.incrementPolicyCacheMissMeter();
             result = evaluatePolicyOnResource(key);
         }
 
@@ -389,7 +389,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         EvaluationResponse result = ssoAuthorizationClient.isActionOnResourceAllowedByPolicy(subject,
                 key.getResourceName(), key.getActionName(), key.getEnvParameters());
         isAllowedPolicyDecisionsCache.put(key, result);
-        getPolicyCacheAddMeter().increment();
+        metricsIntegration.incrementPolicyCacheAddMeter();
         return result;
     }
 

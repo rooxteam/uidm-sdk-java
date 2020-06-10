@@ -56,6 +56,7 @@ dependencies {
     // for cache, ok for now
     compile("com.google.guava:guava:$guavaVersion")
 
+    // for micrometer metrics, optional
     compileOnly("io.micrometer:micrometer-core:$micrometerVersion")
 
     // for json processing, ok for now

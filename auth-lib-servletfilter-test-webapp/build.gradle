@@ -37,7 +37,6 @@ dependencies {
     compile(project(':auth-lib-servletfilter'))
 
     //auth-lib-common dependency
-    compile("io.micrometer:micrometer-core:$micrometerVersion")
     compile("commons-configuration:commons-configuration:$apacheConfigurationVersion")
 
     // for compiling upon servlet api

@@ -12,6 +12,7 @@ import java.util.Map;
 @ToString
 @EqualsAndHashCode
 @AllArgsConstructor
+public
 class PolicyDecisionKey implements AalCacheKey {
 
     private final Principal subject;

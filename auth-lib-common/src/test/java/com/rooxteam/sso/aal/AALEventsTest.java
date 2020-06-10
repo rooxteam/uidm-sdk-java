@@ -4,6 +4,7 @@ import com.google.common.cache.Cache;
 import com.rooxteam.sso.aal.client.SsoAuthenticationClient;
 import com.rooxteam.sso.aal.client.SsoAuthorizationClient;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
+import com.rooxteam.sso.aal.metrics.NoOpMetricsIntegration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,7 +36,7 @@ public class AALEventsTest {
         reset(mockSsoAuthenticationClient, mockSsoAuthorizationClient, mockPrincipalCache, mockPolicyDecisionsCache, mockListener);
         aal = new RooxAuthenticationAuthorizationLibrary(
                 null,null, mockSsoAuthorizationClient, mockSsoAuthenticationClient, null, null,
-                mockPolicyDecisionsCache, mockPrincipalCache, null, AuthorizationType.JWT);
+                mockPolicyDecisionsCache, mockPrincipalCache, null, AuthorizationType.JWT, new NoOpMetricsIntegration());
         aal.addPrincipalListener(mockListener);
     }
 

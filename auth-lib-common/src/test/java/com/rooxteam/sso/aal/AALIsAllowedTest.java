@@ -5,6 +5,7 @@ import com.rooxteam.sso.aal.client.SsoAuthenticationClient;
 import com.rooxteam.sso.aal.client.SsoAuthorizationClient;
 import com.rooxteam.sso.aal.client.model.Decision;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
+import com.rooxteam.sso.aal.metrics.NoOpMetricsIntegration;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -32,7 +33,8 @@ public class AALIsAllowedTest {
     public void setUp() {
         reset(mockPolicyDecisionsCache, mockPrincipalCache, mockSsoAuthorizationClient, mockSsoAuthenticationClient);
         aal = new RooxAuthenticationAuthorizationLibrary(null,null, mockSsoAuthorizationClient, mockSsoAuthenticationClient,
-                null, null, mockPolicyDecisionsCache, mockPrincipalCache, null, AuthorizationType.JWT);
+                null, null, mockPolicyDecisionsCache, mockPrincipalCache, null, AuthorizationType.JWT,
+                new NoOpMetricsIntegration());
     }
 
 
