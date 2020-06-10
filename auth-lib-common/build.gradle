@@ -24,10 +24,6 @@ apply plugin: 'roox-doc'
 apply plugin: 'roox-jar'
 apply from: 'gradle/jcenter.gradle'
 
-// give test dependencies access to compileOnly dependencies to emulate providedCompile
-configurations {
-    testImplementation.extendsFrom compileOnly
-}
 
 sourceCompatibility = JavaVersion.VERSION_1_6
 targetCompatibility = JavaVersion.VERSION_1_6
@@ -36,15 +32,18 @@ dependencies {
 
     // TODO: for HttpStatus, needs fixing
     compileOnly(group: 'org.springframework', name: 'spring-web', version: springVersion)
+    testCompile(group: 'org.springframework', name: 'spring-web', version: springVersion)
 
     // for backward compat, ok to have it provided
     compileOnly("commons-configuration:commons-configuration:$apacheConfigurationVersion")
+    testCompile("commons-configuration:commons-configuration:$apacheConfigurationVersion")
 
     // for RooxconfigConfiguration, ok to have it provided
     compileOnly("com.rooxteam.commons:rooxconfig:$rooxconfigVersion")
 
     // for HttpClient, ok for now
     compile("org.apache.httpcomponents:httpclient:$apacheHttpClientVersion")
+    testCompile("org.apache.httpcomponents:httpclient:$apacheHttpClientVersion")
 
     compileOnly("ch.qos.logback:logback-classic:$logbackVersion")
 
