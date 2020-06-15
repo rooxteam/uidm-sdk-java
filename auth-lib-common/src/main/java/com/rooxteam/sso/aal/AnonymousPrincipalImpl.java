@@ -3,7 +3,6 @@ package com.rooxteam.sso.aal;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Used for evaluation of anonymous context

@@ -1,5 +1,6 @@
 package com.rooxteam.uidm.sdk.spring.authentication;
 
+import com.rooxteam.compat.Objects;
 import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.configuration.Configuration;
 import org.springframework.context.EnvironmentAware;
@@ -7,7 +8,6 @@ import org.springframework.core.Ordered;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
