@@ -1,10 +1,10 @@
 package com.rooxteam.sso.clientcredentials;
 
+import com.rooxteam.compat.Objects;
 import com.rooxteam.sso.aal.utils.StringUtils;
 import com.rooxteam.sso.clientcredentials.configuration.Configuration;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Objects;
 
 @SuppressWarnings("unused")
 public final class ClientCredentialsClientFactory {
@@ -12,7 +12,8 @@ public final class ClientCredentialsClientFactory {
     /**
      * Instantiate new instance of ClientCredentialsClient.
      * Use one instance of ClientCredentialsClient for each client_id.
-     * @param config       configuration. Use Configuration Factory for instantiation from different sources
+     *
+     * @param config configuration. Use Configuration Factory for instantiation from different sources
      * @return ClientCredentialsClient
      */
     public static ClientCredentialsClient create(final Configuration config) {
@@ -22,14 +23,22 @@ public final class ClientCredentialsClientFactory {
     /**
      * Instantiate new instance of ClientCredentialsClient.
      * Use one instance of ClientCredentialsClient for each client_id.
+     *
      * @param config       configuration. Use Configuration Factory for instantiation from different sources
      * @param restTemplate RestTemplate used for makng requests. When using this signature it's caller responsibility
-     *                     to configure it properly. Otherwise use ClientCredentialsClient create(final Configuration config) signature
+     *                     to configure it properly. Otherwise use ClientCredentialsClient create(final Configuration
+     *                     config) signature
      * @return ClientCredentialsClient
      */
     @SuppressWarnings("WeakerAccess")
-    public static ClientCredentialsClient create(final Configuration config, final RestTemplate restTemplate) {
+    public static ClientCredentialsClient create(final Configuration config,
+                                                 final RestTemplate restTemplate) {
         Objects.requireNonNull(config, "config");
+        Objects.requireNonNull(config, "restTemplate");
+        if (restTemplate.getErrorHandler() != null) {
+            throw new IllegalArgumentException("restTemplate can't have error handler because this will fail " +
+                    "client credentials token refresh");
+        }
 
         final ClientCredentialsClientBuilder builder = new ClientCredentialsClientBuilder(
                 restTemplate,

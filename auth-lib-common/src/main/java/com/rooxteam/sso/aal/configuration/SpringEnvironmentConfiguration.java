@@ -1,10 +1,10 @@
 package com.rooxteam.sso.aal.configuration;
 
+import com.rooxteam.compat.Objects;
 import org.springframework.core.env.Environment;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Адаптер конфигурации, принимающий Spring Environment
