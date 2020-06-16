@@ -83,7 +83,7 @@ public class M2MOtpController {
                 .otpCode(otpCode)
                 .service(service)
                 .build();
-        return new ResponseEntity<>(otpService.validate(validateOtpParameter), HttpStatus.OK);
+        return new ResponseEntity<Response>(otpService.validate(validateOtpParameter), HttpStatus.OK);
     }
 
     @RequestMapping(method = POST, value = "/check")

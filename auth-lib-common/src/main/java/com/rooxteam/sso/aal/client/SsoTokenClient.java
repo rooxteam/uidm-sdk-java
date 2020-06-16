@@ -43,7 +43,8 @@ public class SsoTokenClient {
     public boolean queryExistence(String tokenId) {
         try {
             HttpGet request = createRequest(tokenId);
-            try (CloseableHttpResponse response = closableHttpClient.execute(request)) {
+            CloseableHttpResponse response = closableHttpClient.execute(request);
+            try {
                 if (success(response)) {
                     return true;
                 }
@@ -51,6 +52,8 @@ public class SsoTokenClient {
                     LOG.errorUnexpectedTokenApiResponse(response);
                 }
                 return false;
+            } finally {
+                response.close();
             }
         } catch (IOException e) {
             LOG.errorTokenRequestFailed(e);

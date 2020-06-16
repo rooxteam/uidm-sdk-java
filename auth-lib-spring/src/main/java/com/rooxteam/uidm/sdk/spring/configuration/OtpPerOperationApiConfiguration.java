@@ -52,13 +52,10 @@ public class OtpPerOperationApiConfiguration {
         com.rooxteam.sso.aal.configuration.Configuration configuration = aal.getConfiguration();
         // respond or rethrow
         String errorTranslateMethod = configuration.getString(ERROR_TRANSLATION_PROPERTY, ERROR_TRANSLATION_RESPOND);
-        switch (errorTranslateMethod) {
-            case ERROR_TRANSLATION_RESPOND: {
-                return new ToResponseEntityTranslator();
-            }
-            case ERROR_TRANSLATION_RETHROW: {
-                return new RethrowingEntityTranslator();
-            }
+        if (ERROR_TRANSLATION_RESPOND.equals(errorTranslateMethod)) {
+            return new ToResponseEntityTranslator();
+        } else if (ERROR_TRANSLATION_RETHROW.equals(errorTranslateMethod)) {
+            return new RethrowingEntityTranslator();
         }
         throw new IllegalArgumentException("'com.rooxteam.uidm.sdk.error.translation' should be one of 'respond' or 'rethrow'");
     }

@@ -12,7 +12,9 @@ import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.exception.AuthorizationException;
 import com.rooxteam.sso.aal.exception.NetworkErrorException;
+import com.rooxteam.sso.aal.utils.DummyRequest;
 import com.rooxteam.sso.aal.utils.StringUtils;
+import lombok.SneakyThrows;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
@@ -39,12 +41,17 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
     private static final String WHICH_ALLOWED_PATH = "/api/policyEvaluation/whichAllowed";
     private static final String TOKEN_INFO_PATH = "/oauth2/tokeninfo";
 
-    public SsoAuthorizationClientByJwt(Configuration rooxConfig, CloseableHttpClient httpClient) {
+    public SsoAuthorizationClientByJwt(Configuration rooxConfig,
+                                       CloseableHttpClient httpClient) {
         super(rooxConfig, httpClient);
     }
 
     @Override
-    public EvaluationResponse isActionOnResourceAllowedByPolicy(Principal subject, String resource, String method, Map<String, ?> env) {
+    @SneakyThrows
+    public EvaluationResponse isActionOnResourceAllowedByPolicy(Principal subject,
+                                                                String resource,
+                                                                String method,
+                                                                Map<String, ?> env) {
         String token = getJwtToken(subject);
 
         if (token == null) {
@@ -84,7 +91,9 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
     }
 
     @Override
-    public Map<EvaluationRequest, EvaluationResponse> whichActionAreAllowed(Principal subject, List<EvaluationRequest> policies) {
+    @SneakyThrows
+    public Map<EvaluationRequest, EvaluationResponse> whichActionAreAllowed(Principal subject,
+                                                                            List<EvaluationRequest> policies) {
         String token = getJwtToken(subject);
 
         if (token == null) {
@@ -94,7 +103,7 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
 
         try {
             String realm = (String) subject.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "realm");
-            List<EvaluationContext> contexts = new ArrayList<>();
+            List<EvaluationContext> contexts = new ArrayList<EvaluationContext>();
             for (EvaluationRequest policy : policies) {
                 String method = policy.getActionName();
                 String resource = policy.getResourceName();
@@ -111,7 +120,7 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
                 throw new IllegalStateException("Wrong number of results");
             }
 
-            Map<EvaluationRequest, EvaluationResponse> result = new HashMap<>();
+            Map<EvaluationRequest, EvaluationResponse> result = new HashMap<EvaluationRequest, EvaluationResponse>();
 
             for (int i = 0; i < responses.length; i++) {
                 result.put(policies.get(i), responses[i]);
@@ -125,6 +134,11 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
             LOG.errorAuthentication(e);
             throw e;
         }
+    }
+
+    @Override
+    public Principal validate(final String token) {
+        return validate(DummyRequest.getInstance(), token);
     }
 
     private String getJwtToken(Principal subject) {
@@ -152,7 +166,8 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
         HttpClientContext context = new HttpClientContext();
         context.setCookieStore(new BasicCookieStore());
         String result;
-        try (CloseableHttpResponse response = httpClient.execute(post, context)) {
+        CloseableHttpResponse response = httpClient.execute(post, context);
+        try {
             result = EntityUtils.toString(response.getEntity());
 
             if (response.getStatusLine().getStatusCode() != 200) {
@@ -168,6 +183,8 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
                     throw new NetworkErrorException("Failed to read a response from the server:" + response.getStatusLine(), e);
                 }
             }
+        } finally {
+            response.close();
         }
         if (result == null) {
             throw new NetworkErrorException("Empty response from the server");

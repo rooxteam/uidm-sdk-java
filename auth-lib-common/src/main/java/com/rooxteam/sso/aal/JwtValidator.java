@@ -31,7 +31,7 @@ class JwtValidator {
     private JWSVerifier verifier;
     private JwtParser jwtParser;
     private AalException suppressionException;
-    private final List<Checker> checkers = new ArrayList<>();
+    private final List<Checker> checkers = new ArrayList<Checker>();
 
     JwtValidator(String base64SharedKey, Checker... checkers) {
         this(base64SharedKey, new JwtParser(), checkers);
@@ -54,7 +54,16 @@ class JwtValidator {
                 PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(decodedPrivateKey);
                 PrivateKey privateKey = keyFactory.generatePrivate(privateKeySpec);
                 verifier = new MACVerifier(privateKey.getEncoded());
-            } catch (JOSEException | NoSuchAlgorithmException | InvalidKeySpecException | RuntimeException e) {
+            } catch (JOSEException e) {
+                LOG.warnJwtValidatorGotSuppressedException(e);
+                suppressionException = new AalException(e);
+            } catch (NoSuchAlgorithmException e) {
+                LOG.warnJwtValidatorGotSuppressedException(e);
+                suppressionException = new AalException(e);
+            } catch (InvalidKeySpecException e) {
+                LOG.warnJwtValidatorGotSuppressedException(e);
+                suppressionException = new AalException(e);
+            } catch (RuntimeException e) {
                 LOG.warnJwtValidatorGotSuppressedException(e);
                 suppressionException = new AalException(e);
             }

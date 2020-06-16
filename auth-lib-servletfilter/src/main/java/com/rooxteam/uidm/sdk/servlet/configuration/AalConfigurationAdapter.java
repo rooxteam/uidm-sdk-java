@@ -6,7 +6,6 @@ import com.rooxteam.uidm.sdk.servlet.util.ParseStringUtils;
 import javax.servlet.FilterConfig;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class AalConfigurationAdapter implements Configuration {
     private final FilterConfig config;
@@ -16,8 +15,13 @@ public class AalConfigurationAdapter implements Configuration {
     }
 
     @Override
-    public String getString(String property, String defaultValue) {
-        return Optional.ofNullable(config.getInitParameter(property)).orElse(defaultValue);
+    public String getString(String property,
+                            String defaultValue) {
+        if (config.getInitParameter(property) != null) {
+            return config.getInitParameter(property);
+        } else {
+            return defaultValue;
+        }
     }
 
     @Override
@@ -26,7 +30,8 @@ public class AalConfigurationAdapter implements Configuration {
     }
 
     @Override
-    public boolean getBoolean(String property, boolean defaultValue) {
+    public boolean getBoolean(String property,
+                              boolean defaultValue) {
         String prop = config.getInitParameter(property);
         if (prop != null) {
             return Boolean.parseBoolean(prop);
@@ -36,7 +41,8 @@ public class AalConfigurationAdapter implements Configuration {
     }
 
     @Override
-    public int getInt(String property, int defaultValue) {
+    public int getInt(String property,
+                      int defaultValue) {
         String prop = config.getInitParameter(property);
         if (prop != null) {
             return Integer.parseInt(prop);

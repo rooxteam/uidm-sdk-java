@@ -2,6 +2,7 @@ package com.rooxteam.sso.aal.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rooxteam.compat.StandardCharsets;
 import com.rooxteam.errors.exception.ApiException;
 import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.client.exception.UnknownResponseException;
@@ -10,6 +11,7 @@ import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.context.TokenContextFactory;
 import com.rooxteam.sso.aal.otp.*;
 import com.rooxteam.sso.aal.utils.StringUtils;
+import lombok.SneakyThrows;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.NameValuePair;
@@ -29,7 +31,6 @@ import org.apache.http.util.EntityUtils;
 import org.springframework.http.HttpStatus;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -71,7 +72,7 @@ public class OtpClient {
         this.config = config;
         this.jsonMapper = new ObjectMapper();
         this.httpClient = httpClient;
-        responseTypes = new HashMap<>();
+        responseTypes = new HashMap<String, Class<? extends AuthenticationResponse>>();
         responseTypes.put("Bearer", BearerAuthenticationResponse.class);
         responseTypes.put("JWTToken", BearerAuthenticationResponse.class);
     }
@@ -154,6 +155,7 @@ public class OtpClient {
         return config.getString(ConfigKeys.OTP_CURRENT_TOKEN_PARAM_NAME, ConfigKeys.OTP_CURRENT_TOKEN_PARAM_NAME_DEFAULT);
     }
 
+    @SneakyThrows
     private OtpResponse makeOtpRequest(List<NameValuePair> params, OtpFlowState otpState) {
         HttpPost post = new HttpPost(config.getString(ConfigKeys.SSO_URL) + OAUTH2_ACCESS_TOKEN_PATH);
         post.addHeader(new BasicHeader(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON.getMimeType()));
@@ -198,7 +200,7 @@ public class OtpClient {
             service = getDefaultService();
         }
 
-        List<NameValuePair> params = new ArrayList<>();
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new BasicNameValuePair(REALM_PARAM_NAME, config.getString(ConfigKeys.REALM, ConfigKeys.REALM_DEFAULT)));
         params.add(new BasicNameValuePair(CLIENT_ID_PARAM_NAME, config.getString(ConfigKeys.CLIENT_ID)));
         params.add(new BasicNameValuePair(CLIENT_SECRET, config.getString(ConfigKeys.CLIENT_SECRET)));

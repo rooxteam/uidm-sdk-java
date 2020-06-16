@@ -11,6 +11,7 @@ import com.rooxteam.sso.aal.client.model.EvaluationRequest;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.exception.AuthorizationException;
+import com.rooxteam.sso.aal.utils.DummyRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 
 import java.io.IOException;
@@ -27,7 +28,8 @@ public class SsoAuthorizationClientByConfig extends CommonSsoAuthorizationClient
 
     private JsonNode localPolicies = NullNode.getInstance();
 
-    public SsoAuthorizationClientByConfig(Configuration rooxConfig, CloseableHttpClient httpClient) {
+    public SsoAuthorizationClientByConfig(Configuration rooxConfig,
+                                          CloseableHttpClient httpClient) {
         super(rooxConfig, httpClient);
         initPolicies();
     }
@@ -44,7 +46,10 @@ public class SsoAuthorizationClientByConfig extends CommonSsoAuthorizationClient
     }
 
     @Override
-    public EvaluationResponse isActionOnResourceAllowedByPolicy(Principal subject, String resource, String method, Map<String, ?> env) {
+    public EvaluationResponse isActionOnResourceAllowedByPolicy(Principal subject,
+                                                                String resource,
+                                                                String method,
+                                                                Map<String, ?> env) {
 
         Integer requiredLevel = getRequiredLevel(resource, method);
 
@@ -58,7 +63,8 @@ public class SsoAuthorizationClientByConfig extends CommonSsoAuthorizationClient
         if (subject.isAnonymous()) {
             userAuthLevel = 0;
         } else {
-            List<String> authLevels = (List<String>) subject.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "authLevel");
+            List<String> authLevels = (List<String>) subject.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS,
+                    "authLevel");
             if (authLevels == null || authLevels.isEmpty()) {
                 userAuthLevel = 0;
             } else {
@@ -68,7 +74,8 @@ public class SsoAuthorizationClientByConfig extends CommonSsoAuthorizationClient
 
         boolean result;
         if (requiredLevel == null) {
-            result = config.getBoolean(ConfigKeys.ALLOW_ACCESS_WITHOUT_POLICY, ConfigKeys.ALLOW_ACCESS_WITHOUT_POLICY_DEFAULT);
+            result = config.getBoolean(ConfigKeys.ALLOW_ACCESS_WITHOUT_POLICY,
+                    ConfigKeys.ALLOW_ACCESS_WITHOUT_POLICY_DEFAULT);
         } else {
             result = userAuthLevel >= requiredLevel;
         }
@@ -76,8 +83,9 @@ public class SsoAuthorizationClientByConfig extends CommonSsoAuthorizationClient
     }
 
     @Override
-    public Map<EvaluationRequest, EvaluationResponse> whichActionAreAllowed(Principal subject, List<EvaluationRequest> policies) {
-        Map<EvaluationRequest, EvaluationResponse> result = new LinkedHashMap<>();
+    public Map<EvaluationRequest, EvaluationResponse> whichActionAreAllowed(Principal subject,
+                                                                            List<EvaluationRequest> policies) {
+        Map<EvaluationRequest, EvaluationResponse> result = new LinkedHashMap<EvaluationRequest, EvaluationResponse>();
 
         for (EvaluationRequest decisionKey : policies) {
             result.put(decisionKey, isActionOnResourceAllowedByPolicy(subject, decisionKey.getResourceName(),
@@ -87,7 +95,13 @@ public class SsoAuthorizationClientByConfig extends CommonSsoAuthorizationClient
         return result;
     }
 
-    private Integer getRequiredLevel(String resourceName, String actionName) {
+    @Override
+    public Principal validate(final String token) {
+        return validate(DummyRequest.getInstance(), token);
+    }
+
+    private Integer getRequiredLevel(String resourceName,
+                                     String actionName) {
         JsonNode policyAuthLevelNode = getAuthLevelFromLocalPolicies(resourceName, actionName);
         if (policyAuthLevelNode != null && policyAuthLevelNode.isInt()) {
             return policyAuthLevelNode.asInt();
@@ -96,7 +110,8 @@ public class SsoAuthorizationClientByConfig extends CommonSsoAuthorizationClient
         }
     }
 
-    private JsonNode getAuthLevelFromLocalPolicies(String resourceName, String actionName) {
+    private JsonNode getAuthLevelFromLocalPolicies(String resourceName,
+                                                   String actionName) {
         JsonNode resourcePolicies = localPolicies.get(resourceName);
         JsonNode policyAuthLevelNode = null;
         if (resourcePolicies != null) {

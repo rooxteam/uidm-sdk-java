@@ -4,6 +4,7 @@ import com.google.common.cache.Cache;
 import com.rooxteam.sso.aal.client.SsoAuthenticationClient;
 import com.rooxteam.sso.aal.client.SsoAuthorizationClient;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
+import com.rooxteam.sso.aal.metrics.NoOpMetricsIntegration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,7 +36,7 @@ public class AALEventsTest {
         reset(mockSsoAuthenticationClient, mockSsoAuthorizationClient, mockPrincipalCache, mockPolicyDecisionsCache, mockListener);
         aal = new RooxAuthenticationAuthorizationLibrary(
                 null,null, mockSsoAuthorizationClient, mockSsoAuthenticationClient, null, null,
-                mockPolicyDecisionsCache, mockPrincipalCache, null, AuthorizationType.JWT);
+                mockPolicyDecisionsCache, mockPrincipalCache, null, AuthorizationType.JWT, new NoOpMetricsIntegration());
         aal.addPrincipalListener(mockListener);
     }
 
@@ -47,7 +48,7 @@ public class AALEventsTest {
     @Test
     public void invalidate_principal_should_fire_onInvalidate_event() {
         Principal mockPrincipal = mock(Principal.class);
-        ConcurrentHashMap<PrincipalKey, Principal> PrincipalCacheMap = new ConcurrentHashMap<>();
+        ConcurrentHashMap<PrincipalKey, Principal> PrincipalCacheMap = new ConcurrentHashMap<PrincipalKey, Principal>();
         PrincipalKey PrincipalKey = new PrincipalKey(AuthParamType.IP, IP_229_213_38_0);
         PrincipalCacheMap.put(PrincipalKey, mockPrincipal);
         when(mockPrincipalCache.asMap())
@@ -67,7 +68,7 @@ public class AALEventsTest {
         final String jwtToken = "jwt token";
         Principal mockPrincipal = mock(Principal.class);
         when(mockPrincipal.getJwtToken()).thenReturn(jwtToken);
-        Map<String, Object> params = new HashMap<>();
+        Map<String, Object> params = new HashMap<String, Object>();
         params.put(SsoAuthenticationClient.JWT_PARAM_NAME, jwtToken);
         params.put(SsoAuthenticationClient.UPDATE_LIFE_TIME_PARAM, true);
         when(mockSsoAuthenticationClient.authenticate(params))

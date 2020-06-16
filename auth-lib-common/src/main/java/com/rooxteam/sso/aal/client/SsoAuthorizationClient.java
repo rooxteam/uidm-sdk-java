@@ -23,9 +23,7 @@ public interface SsoAuthorizationClient {
      * @deprecated use {@link #validate(HttpServletRequest, String)}
      */
     @Deprecated
-    default Principal validate(final String token) {
-        return validate(DummyRequest.getInstance(), token);
-    }
+    Principal validate(final String token);
 
     /**
      * Token validation

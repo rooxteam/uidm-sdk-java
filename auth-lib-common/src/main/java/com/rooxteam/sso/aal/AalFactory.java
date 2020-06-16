@@ -2,13 +2,21 @@ package com.rooxteam.sso.aal;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.rooxteam.compat.Objects;
 import com.rooxteam.jwt.IatClaimChecker;
 import com.rooxteam.jwt.NbfClaimChecker;
 import com.rooxteam.jwt.StringClaimChecker;
-import com.rooxteam.sso.aal.client.*;
+import com.rooxteam.sso.aal.client.MonitoringHttpClientRequestInterceptor;
+import com.rooxteam.sso.aal.client.OtpClient;
+import com.rooxteam.sso.aal.client.SsoAuthenticationClient;
+import com.rooxteam.sso.aal.client.SsoAuthorizationClient;
+import com.rooxteam.sso.aal.client.SsoTokenClient;
 import com.rooxteam.sso.aal.client.cookies.RequestCookieStore;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.configuration.Configuration;
+import com.rooxteam.sso.aal.metrics.MetricsIntegration;
+import com.rooxteam.sso.aal.metrics.MicrometerMetricsIntegration;
+import com.rooxteam.sso.aal.metrics.NoOpMetricsIntegration;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
@@ -19,12 +27,35 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Objects;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 
-import static com.rooxteam.sso.aal.ConfigKeys.*;
-import static java.text.MessageFormat.format;
+import static com.rooxteam.sso.aal.ConfigKeys.AUTHORIZATION_TYPE;
+import static com.rooxteam.sso.aal.ConfigKeys.AUTHORIZATION_TYPE_DEFAULT;
+import static com.rooxteam.sso.aal.ConfigKeys.CONNECTION_REUSE_STRATEGY;
+import static com.rooxteam.sso.aal.ConfigKeys.CONNECTION_REUSE_STRATEGY_DEFAULT;
+import static com.rooxteam.sso.aal.ConfigKeys.HTTP_CONNECTION_POOL_SIZE;
+import static com.rooxteam.sso.aal.ConfigKeys.HTTP_CONNECTION_POOL_SIZE_DEFAULT;
+import static com.rooxteam.sso.aal.ConfigKeys.HTTP_CONNECTION_POOL_SIZE_PER_ROUTE;
+import static com.rooxteam.sso.aal.ConfigKeys.HTTP_CONNECTION_POOL_SIZE_PER_ROUTE_DEFAULT;
+import static com.rooxteam.sso.aal.ConfigKeys.HTTP_CONNECTION_TIMEOUT;
+import static com.rooxteam.sso.aal.ConfigKeys.HTTP_CONNECTION_TIMEOUT_DEFAULT;
+import static com.rooxteam.sso.aal.ConfigKeys.HTTP_SOCKET_TIMEOUT;
+import static com.rooxteam.sso.aal.ConfigKeys.HTTP_SOCKET_TIMEOUT_DEFAULT;
+import static com.rooxteam.sso.aal.ConfigKeys.JWT_ISSUER;
+import static com.rooxteam.sso.aal.ConfigKeys.POLICY_CACHE_EXPIRE_AFTER_WRITE;
+import static com.rooxteam.sso.aal.ConfigKeys.POLICY_CACHE_EXPIRE_AFTER_WRITE_DEFAULT;
+import static com.rooxteam.sso.aal.ConfigKeys.POLICY_CACHE_LIMIT;
+import static com.rooxteam.sso.aal.ConfigKeys.POLICY_CACHE_LIMIT_DEFAULT;
+import static com.rooxteam.sso.aal.ConfigKeys.POLLING_ENABLED;
+import static com.rooxteam.sso.aal.ConfigKeys.POLLING_ENABLED_DEFAULT;
+import static com.rooxteam.sso.aal.ConfigKeys.POLLING_PERIOD;
+import static com.rooxteam.sso.aal.ConfigKeys.POLLING_PERIOD_DEFAULT;
+import static com.rooxteam.sso.aal.ConfigKeys.PRINCIPAL_CACHE_EXPIRE_AFTER_WRITE;
+import static com.rooxteam.sso.aal.ConfigKeys.PRINCIPAL_CACHE_EXPIRE_AFTER_WRITE_DEFAULT;
+import static com.rooxteam.sso.aal.ConfigKeys.PRINCIPAL_CACHE_LIMIT;
+import static com.rooxteam.sso.aal.ConfigKeys.PRINCIPAL_CACHE_LIMIT_DEFAULT;
+import static com.rooxteam.sso.aal.ConfigKeys.SHARED_KEY;
 
 @SuppressWarnings({"WeakerAccess", "UnstableApiUsage"})
 public class AalFactory {
@@ -36,7 +67,7 @@ public class AalFactory {
 
     /**
      * @param config конфигурация.
-     *                     Описание ключей конфигурации в {@link ConfigKeys}.
+     *               Описание ключей конфигурации в {@link ConfigKeys}.
      * @return AuthenticationAuthorizationLibrary
      */
     public static AuthenticationAuthorizationLibrary create(Configuration config) {
@@ -58,7 +89,8 @@ public class AalFactory {
 
         CloseableHttpClient httpClient = createHttpClient(reuseStrategy, config, requestConfig, connectionManager);
 
-        SsoAuthorizationClient authorizationClient = createSsoAuthorizationClient(authorizationType, config, httpClient);
+        SsoAuthorizationClient authorizationClient = createSsoAuthorizationClient(authorizationType, config,
+                httpClient);
         SsoAuthenticationClient authenticationClient = new SsoAuthenticationClient(config, httpClient);
         SsoTokenClient tokenClient = new SsoTokenClient(config, httpClient);
         OtpClient otpClient = new OtpClient(config, httpClient);
@@ -76,8 +108,9 @@ public class AalFactory {
                 isAllowedPolicyDecisionsCache,
                 principalCache,
                 jwtValidator,
-                authorizationType);
-
+                authorizationType,
+                createMetricsIntegration());
+        // TODO: implement intantiation of metrics
         if (config.getBoolean(POLLING_ENABLED, POLLING_ENABLED_DEFAULT)) {
             int pollingDefaultTimeoutSeconds = config.getInt(POLLING_PERIOD, POLLING_PERIOD_DEFAULT);
             aal.enablePolling(pollingDefaultTimeoutSeconds, TimeUnit.SECONDS);
@@ -86,11 +119,21 @@ public class AalFactory {
         return aal;
     }
 
+    private static MetricsIntegration createMetricsIntegration() {
+        try {
+            Class.forName("io.micrometer.core.instrument.MeterRegistry");
+            return new MicrometerMetricsIntegration();
+        } catch (ClassNotFoundException e) {
+            return new NoOpMetricsIntegration();
+        }
+    }
+
 
     private static PoolingHttpClientConnectionManager createConnectionManager(Configuration config) {
         PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
         connectionManager.setMaxTotal(config.getInt(HTTP_CONNECTION_POOL_SIZE, HTTP_CONNECTION_POOL_SIZE_DEFAULT));
-        connectionManager.setDefaultMaxPerRoute(config.getInt(HTTP_CONNECTION_POOL_SIZE_PER_ROUTE, HTTP_CONNECTION_POOL_SIZE_PER_ROUTE_DEFAULT));
+        connectionManager.setDefaultMaxPerRoute(config.getInt(HTTP_CONNECTION_POOL_SIZE_PER_ROUTE,
+                HTTP_CONNECTION_POOL_SIZE_PER_ROUTE_DEFAULT));
 
         return connectionManager;
     }
@@ -164,8 +207,18 @@ public class AalFactory {
                     (SsoAuthorizationClient) aClass
                             .getConstructor(Configuration.class, CloseableHttpClient.class)
                             .newInstance(config, httpClient);
-        } catch (NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
-            throw new IllegalArgumentException("Fail while creating policy provider. Check authorization_client_class_name property.");
+        } catch (NoSuchMethodException e) {
+            throw new IllegalArgumentException("Fail while creating policy provider. Check " +
+                    "authorization_client_class_name property.");
+        } catch (IllegalAccessException e) {
+            throw new IllegalArgumentException("Fail while creating policy provider. Check " +
+                    "authorization_client_class_name property.");
+        } catch (InstantiationException e) {
+            throw new IllegalArgumentException("Fail while creating policy provider. Check " +
+                    "authorization_client_class_name property.");
+        } catch (InvocationTargetException e) {
+            throw new IllegalArgumentException("Fail while creating policy provider. Check " +
+                    "authorization_client_class_name property.");
         }
 
         return ssoAuthorizationClient;
@@ -185,7 +238,8 @@ public class AalFactory {
 
     private static Cache<PrincipalKey, Principal> initPrincipalsCache(Configuration config) {
         int principalCacheSize = config.getInt(PRINCIPAL_CACHE_LIMIT, PRINCIPAL_CACHE_LIMIT_DEFAULT);
-        int principalExpireAfterWrite = config.getInt(PRINCIPAL_CACHE_EXPIRE_AFTER_WRITE, PRINCIPAL_CACHE_EXPIRE_AFTER_WRITE_DEFAULT);
+        int principalExpireAfterWrite = config.getInt(PRINCIPAL_CACHE_EXPIRE_AFTER_WRITE,
+                PRINCIPAL_CACHE_EXPIRE_AFTER_WRITE_DEFAULT);
         Cache<PrincipalKey, Principal> principalCache =
                 CacheBuilder.newBuilder()
                         .maximumSize(principalCacheSize)
@@ -197,7 +251,8 @@ public class AalFactory {
 
     private static Cache<PolicyDecisionKey, EvaluationResponse> initPoliciesCache(Configuration config) {
         int policyCacheSize = config.getInt(POLICY_CACHE_LIMIT, POLICY_CACHE_LIMIT_DEFAULT);
-        int policyExpireAfterWrite = config.getInt(POLICY_CACHE_EXPIRE_AFTER_WRITE, POLICY_CACHE_EXPIRE_AFTER_WRITE_DEFAULT);
+        int policyExpireAfterWrite = config.getInt(POLICY_CACHE_EXPIRE_AFTER_WRITE,
+                POLICY_CACHE_EXPIRE_AFTER_WRITE_DEFAULT);
         Cache<PolicyDecisionKey, EvaluationResponse> isAllowedPolicyDecisionsCache =
                 CacheBuilder.newBuilder()
                         .maximumSize(policyCacheSize)

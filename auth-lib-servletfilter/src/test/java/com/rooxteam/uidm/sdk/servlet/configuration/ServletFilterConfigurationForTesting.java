@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 public class ServletFilterConfigurationForTesting implements FilterConfig {
-    private Map<String, String> map = new TreeMap<>();
+    private Map<String, String> map = new TreeMap<String, String>();
     {
         map.put(ConfigKeys.LOCAL_POLICIES, "{}");
         map.put(FilterConfigKeys.REDIRECT_LOCATION_KEY, "localhost");

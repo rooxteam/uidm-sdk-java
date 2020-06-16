@@ -1,5 +1,6 @@
 package com.rooxteam.sso.aal;
 
+import com.rooxteam.compat.AutoCloseable;
 import com.rooxteam.sso.aal.client.EvaluationContext;
 import com.rooxteam.sso.aal.client.model.EvaluationRequest;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
@@ -9,7 +10,6 @@ import com.rooxteam.sso.aal.otp.OtpResponse;
 import com.rooxteam.sso.aal.otp.ResendOtpParameter;
 import com.rooxteam.sso.aal.otp.SendOtpParameter;
 import com.rooxteam.sso.aal.otp.ValidateOtpParameter;
-import com.rooxteam.sso.aal.utils.DummyRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -173,9 +173,7 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
 
     /**
      */
-    default Principal validate(String jwt) {
-        return validate(DummyRequest.getInstance(), jwt);
-    }
+    Principal validate(String jwt);
 
     /**
      * Проверить валидность токена

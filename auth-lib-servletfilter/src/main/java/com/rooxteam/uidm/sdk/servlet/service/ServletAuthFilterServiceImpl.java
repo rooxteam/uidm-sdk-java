@@ -5,6 +5,7 @@ import com.rooxteam.sso.aal.AuthParamType;
 import com.rooxteam.sso.aal.AuthenticationAuthorizationLibrary;
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.exception.AuthorizationException;
+import com.rooxteam.sso.aal.utils.StringUtils;
 import com.rooxteam.uidm.sdk.servlet.AuthFilterLogger;
 import com.rooxteam.uidm.sdk.servlet.configuration.AalConfigurationAdapter;
 import com.rooxteam.uidm.sdk.servlet.configuration.FilterConfigKeys;
@@ -14,10 +15,7 @@ import com.rooxteam.uidm.sdk.servlet.util.ParseStringUtils;
 import javax.servlet.FilterConfig;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
 
 public class ServletAuthFilterServiceImpl implements ServletAuthFilterService {
@@ -37,28 +35,28 @@ public class ServletAuthFilterServiceImpl implements ServletAuthFilterService {
         this.cookieNames = getCookieNames(filterConfig);
     }
 
-    public Optional<Principal> authenticate(String accessToken) {
+    public Principal authenticate(String accessToken) {
         try {
-            return Optional.ofNullable(aal.validate(accessToken));
+            return aal.validate(accessToken);
         } catch (AuthorizationException e) {
             AuthFilterLogger.LOG.errorAuthentication(LoggerUtils.trimAccessTokenForLogging(accessToken), e);
-            return Optional.empty();
+            return null;
         }
     }
 
-    public Optional<String> extractAccessToken(HttpServletRequest request) {
+    public String extractAccessToken(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         String headerValue = request.getHeader("Authorization");
-        Optional<String> token = Optional.empty();
+        String token = null;
         if (cookies != null) {
             for (Cookie cookie : cookies) {
                 if (cookieNames.contains(cookie.getName())) {
-                    token = Optional.ofNullable(cookie.getValue());
+                    token = cookie.getValue();
                     break;
                 }
             }
         }
-        if ((!token.isPresent() || "".equals(token.get())) && headerValue != null) {
+        if (StringUtils.isEmpty(token) && !StringUtils.isEmpty(headerValue)) {
             token = ParseStringUtils.parseAuthorizationHeader(headerValue);
         }
         return token;
@@ -67,9 +65,9 @@ public class ServletAuthFilterServiceImpl implements ServletAuthFilterService {
     private Set<String> getCookieNames(FilterConfig filterConfig) {
         String str = filterConfig.getInitParameter(FilterConfigKeys.AUTHORIZATION_COOKIE_NAMES_KEY);
         if (str != null && !str.isEmpty()) {
-            return new TreeSet<>(ParseStringUtils.parseConfigValueAsList(str));
+            return new TreeSet<String>(ParseStringUtils.parseConfigValueAsList(str));
         } else {
-            return new TreeSet<>();
+            return new TreeSet<String>();
         }
     }
 }

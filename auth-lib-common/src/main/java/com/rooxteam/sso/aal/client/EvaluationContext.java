@@ -10,7 +10,6 @@ import lombok.ToString;
 import java.io.Serializable;
 import java.util.Map;
 
-import static java.util.Optional.ofNullable;
 
 /**
  * hold all context for policy evaluation
@@ -31,20 +30,38 @@ public class EvaluationContext implements Serializable {
     private Map extraParams;
     private String realm;
 
-    public EvaluationContext(String realm, String resourceName, String actionName, Map envParams) {
+    public EvaluationContext(String realm,
+                             String resourceName,
+                             String actionName,
+                             Map envParams) {
         this(null, actionName, resourceName, envParams, null, realm);
     }
 
-    public EvaluationContext(String realm, String resourceName, String actionName, Map envParams, Map extraParams) {
+    public EvaluationContext(String realm,
+                             String resourceName,
+                             String actionName,
+                             Map envParams,
+                             Map extraParams) {
         this(null, actionName, resourceName, envParams, extraParams, realm);
     }
 
-    public EvaluationContext(String serviceName, String actionName, String resourceName, Map envParams, Map extraParams, String realm) {
-        this.serviceName = ofNullable(serviceName).orElse(WEB_AGENT_SERVICE_NAME);
+    public EvaluationContext(String serviceName,
+                             String actionName,
+                             String resourceName,
+                             Map envParams,
+                             Map extraParams,
+                             String realm) {
+        if (serviceName == null) {
+            this.serviceName = serviceName;
+        }
         this.actionName = actionName;
         this.resourceName = resourceName;
         this.envParams = envParams;
-        this.extraParams = ofNullable(extraParams).orElse(envParams);
+        if (extraParams == null) {
+            this.extraParams = extraParams;
+        } else {
+            this.extraParams = envParams;
+        }
         this.realm = realm;
     }
 }

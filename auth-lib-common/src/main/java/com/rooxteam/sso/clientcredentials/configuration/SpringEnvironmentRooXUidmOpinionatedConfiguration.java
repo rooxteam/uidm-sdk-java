@@ -1,12 +1,12 @@
 package com.rooxteam.sso.clientcredentials.configuration;
 
+import com.rooxteam.compat.Objects;
 import org.springframework.core.env.Environment;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import static com.rooxteam.sso.aal.ConfigKeys.CLIENT_ID;
 import static com.rooxteam.sso.aal.ConfigKeys.CLIENT_SECRET;
@@ -74,7 +74,7 @@ public final class SpringEnvironmentRooXUidmOpinionatedConfiguration implements 
 
     @Override
     public Map<String, String> getAdditionalRequestParameters() {
-        return new HashMap<>();
+        return new HashMap<String, String>();
     }
 
     @Override

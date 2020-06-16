@@ -24,30 +24,26 @@ apply plugin: 'roox-doc'
 apply plugin: 'roox-jar'
 apply from: 'gradle/jcenter.gradle'
 
-// give test dependencies access to compileOnly dependencies to emulate providedCompile
-configurations {
-    testImplementation.extendsFrom compileOnly
-}
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = JavaVersion.VERSION_1_6
+targetCompatibility = JavaVersion.VERSION_1_6
 
 dependencies {
 
     // TODO: for HttpStatus, needs fixing
     compileOnly(group: 'org.springframework', name: 'spring-web', version: springVersion)
-
-    // for com.rooxteam.sso.aal.client.cookie.store.enablePerRequest, ok until UIDM needs sticky session
-    compile("com.rooxteam.sso:request-cookie-store:$requestCookieStoreVersion")
+    testCompile(group: 'org.springframework', name: 'spring-web', version: springVersion)
 
     // for backward compat, ok to have it provided
     compileOnly("commons-configuration:commons-configuration:$apacheConfigurationVersion")
+    testCompile("commons-configuration:commons-configuration:$apacheConfigurationVersion")
 
     // for RooxconfigConfiguration, ok to have it provided
     compileOnly("com.rooxteam.commons:rooxconfig:$rooxconfigVersion")
 
     // for HttpClient, ok for now
     compile("org.apache.httpcomponents:httpclient:$apacheHttpClientVersion")
+    testCompile("org.apache.httpcomponents:httpclient:$apacheHttpClientVersion")
 
     compileOnly("ch.qos.logback:logback-classic:$logbackVersion")
 
@@ -59,6 +55,7 @@ dependencies {
     // for cache, ok for now
     compile("com.google.guava:guava:$guavaVersion")
 
+    // for micrometer metrics, optional
     compileOnly("io.micrometer:micrometer-core:$micrometerVersion")
 
     // for json processing, ok for now
@@ -72,7 +69,7 @@ dependencies {
     compileOnly("javax.servlet:servlet-api:${servletVersion}")
 
     // for lombok magic
-	compileOnly("org.projectlombok:lombok:${lombokVersion}")
+    compileOnly("org.projectlombok:lombok:${lombokVersion}")
 
     // for testing
     testCompile("junit:junit:$junitVersion")
@@ -86,4 +83,13 @@ javadoc {
 
 tasks.withType(Javadoc) {
     options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+tasks.withType(Test) {
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStackTraces = true
+        showCauses = true
+        exceptionFormat = 'FULL'
+    }
 }

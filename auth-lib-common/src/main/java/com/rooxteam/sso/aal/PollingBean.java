@@ -54,7 +54,7 @@ public class PollingBean extends TimerTask {
     }
 
     private Map<Principal, List<AalCacheKey>> getCachedPrincipals() {
-        Map<Principal, List<AalCacheKey>> cachedPrincipals = new HashMap<>();
+        Map<Principal, List<AalCacheKey>> cachedPrincipals = new HashMap<Principal, List<AalCacheKey>>();
         for (Map.Entry<PrincipalKey, Principal> entry : principalCache.asMap().entrySet()) {
             addCacheKey(cachedPrincipals, entry.getValue(), entry.getKey());
         }
@@ -68,7 +68,7 @@ public class PollingBean extends TimerTask {
                              Principal principal, AalCacheKey cacheKey) {
         List<AalCacheKey> cacheKeys = cachedPrincipals.get(principal);
         if (cacheKeys == null) {
-            cacheKeys = new ArrayList<>();
+            cacheKeys = new ArrayList<AalCacheKey>();
             cachedPrincipals.put(principal, cacheKeys);
         }
         cacheKeys.add(cacheKey);

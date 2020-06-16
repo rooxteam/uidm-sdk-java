@@ -41,7 +41,7 @@ public class AuthenticationState extends AbstractAuthenticationToken {
     /**
      * Дополнительные атрибуты токена
      */
-    private Map<String, Object> attributes = new HashMap<>();
+    private Map<String, Object> attributes = new HashMap<String, Object>();
 
     /**
      * Авторизовавшаяся система
@@ -77,7 +77,7 @@ public class AuthenticationState extends AbstractAuthenticationToken {
 
     public AuthenticationState(Collection<? extends GrantedAuthority> authority) {
         super(authority);
-        this.authorities = new ArrayList<>(authority);
+        this.authorities = new ArrayList<GrantedAuthority>(authority);
     }
 
     public AuthenticationState(GrantedAuthority... authority) {
@@ -152,7 +152,7 @@ public class AuthenticationState extends AbstractAuthenticationToken {
 
     public void setAuthorities(Collection<? extends GrantedAuthority> authorities) {
         if (this.authorities == AuthorityUtils.NO_AUTHORITIES) {
-            this.authorities = new ArrayList<>();
+            this.authorities = new ArrayList<GrantedAuthority>();
         }
         this.authorities.addAll(authorities);
     }

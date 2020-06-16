@@ -18,7 +18,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * This filter attempts to authenticate the user by Cookie or, if absent, by Authorization header.
@@ -55,15 +54,15 @@ public class ServletAuthFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
 
-        Optional<String> accToken = servletAuthFilterHelper.extractAccessToken(request);
-        if (accToken.isPresent()) {
-            Optional<Principal> principal = servletAuthFilterHelper.authenticate(accToken.get());
-            if (principal.isPresent()) {
-                request = new ServletAuthFilterHttpRequestWrapper(request, principal.get(), headerNameOfTokenClaim, attributeNameOfTokenClaim);
-                AuthFilterLogger.LOG.infoSuccessAuthentication(LoggerUtils.trimAccessTokenForLogging(accToken.get()));
+        String accToken = servletAuthFilterHelper.extractAccessToken(request);
+        if (accToken!=null) {
+            Principal principal = servletAuthFilterHelper.authenticate(accToken);
+            if (principal!=null) {
+                request = new ServletAuthFilterHttpRequestWrapper(request, principal, headerNameOfTokenClaim, attributeNameOfTokenClaim);
+                AuthFilterLogger.LOG.infoSuccessAuthentication(LoggerUtils.trimAccessTokenForLogging(accToken));
                 filterChain.doFilter(request, response);
             } else {
-                AuthFilterLogger.LOG.infoRedirectDueToBadToken(LoggerUtils.trimAccessTokenForLogging(accToken.get()));
+                AuthFilterLogger.LOG.infoRedirectDueToBadToken(LoggerUtils.trimAccessTokenForLogging(accToken));
                 response.sendRedirect(redirectLocation);
             }
         } else {

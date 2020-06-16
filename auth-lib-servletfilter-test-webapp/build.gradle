@@ -29,15 +29,14 @@ configurations {
     testImplementation.extendsFrom compileOnly
 }
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = JavaVersion.VERSION_1_6
+targetCompatibility = JavaVersion.VERSION_1_6
 
 dependencies {
 
     compile(project(':auth-lib-servletfilter'))
 
     //auth-lib-common dependency
-    compile("io.micrometer:micrometer-core:$micrometerVersion")
     compile("commons-configuration:commons-configuration:$apacheConfigurationVersion")
 
     // for compiling upon servlet api

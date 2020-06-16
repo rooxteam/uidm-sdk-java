@@ -12,8 +12,6 @@ import com.rooxteam.sso.aal.otp.SendOtpParameter;
 import com.rooxteam.sso.aal.otp.ValidateOtpParameter;
 import com.rooxteam.uidm.sdk.spring.UidmSdkSpringLogger;
 
-import java.util.Optional;
-
 public class M2MOtpService {
 
     private AuthenticationAuthorizationLibrary aal;
@@ -22,7 +20,8 @@ public class M2MOtpService {
         this.aal = aal;
     }
 
-    public Response send(Principal caller, EvaluationContext ctx) {
+    public Response send(Principal caller,
+                         EvaluationContext ctx) {
         OtpResponse result = aal.sendOtpForOperation(caller, ctx);
         return convert(result);
     }
@@ -44,7 +43,8 @@ public class M2MOtpService {
         return convert(result);
     }
 
-    public Response validate(OtpFlowState state, String otp) {
+    public Response validate(OtpFlowState state,
+                             String otp) {
         ValidateOtpParameter validateOtpParameter = ValidateOtpParameter.builder()
                 .otpFlowState(state)
                 .otpCode(otp)
@@ -62,10 +62,13 @@ public class M2MOtpService {
             Exception e = ((OtpResponseImpl) result).getException();
             UidmSdkSpringLogger.LOG.warnExceptionOnAalOtpRequest(e);
         }
-        String jwt = Optional.of(result)
-                .map(OtpResponse::getPrincipal)
-                .map(Principal::getJwtToken)
-                .orElse(null);
+        String jwt = null;
+        if (result.getPrincipal() != null) {
+            final Principal principal = result.getPrincipal();
+            if (principal != null) {
+                jwt = principal.getJwtToken();
+            }
+        }
         return new Response(result.getStatus(), result.getOtpFlowState(), result.getRequiredFieldNames(),
                 result.getAvailableAttempts(), jwt, result.getBlockedFor(), result.getNextOtpCodeOperationPeriod(),
                 result.getOtpCodeNumber(), result.getMethod());
