@@ -3,6 +3,7 @@ package com.rooxteam.sso.clientcredentials;
 import com.rooxteam.compat.Objects;
 import com.rooxteam.sso.aal.utils.StringUtils;
 import com.rooxteam.sso.clientcredentials.configuration.Configuration;
+import org.springframework.web.client.DefaultResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
 
@@ -35,8 +36,8 @@ public final class ClientCredentialsClientFactory {
                                                  final RestTemplate restTemplate) {
         Objects.requireNonNull(config, "config");
         Objects.requireNonNull(config, "restTemplate");
-        if (restTemplate.getErrorHandler() != null) {
-            throw new IllegalArgumentException("restTemplate can't have error handler because this will fail " +
+        if (restTemplate.getErrorHandler() != null && !(restTemplate.getErrorHandler() instanceof DefaultResponseErrorHandler)) {
+            throw new IllegalArgumentException("restTemplate can't have non-default error handler because this will fail " +
                     "client credentials token refresh");
         }
 

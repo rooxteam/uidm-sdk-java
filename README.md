@@ -55,6 +55,10 @@ Maven
 
 # История изменений
 
+## 3.12.2
+
+- ClientCredentialsClientFactory не выбрасывает исключение если в RestTemplate установлен дефолтный ErrorHandler
+
 ## 3.12.1
 
 - ClientCredentialsClientFactory теперь выбрасывает исключение, если в него передается RestTemplate с настроенным обработчиком ошибок,
