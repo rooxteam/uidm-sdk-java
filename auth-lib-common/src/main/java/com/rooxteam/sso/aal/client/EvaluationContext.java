@@ -51,13 +51,13 @@ public class EvaluationContext implements Serializable {
                              Map envParams,
                              Map extraParams,
                              String realm) {
-        if (serviceName == null) {
+        if (serviceName != null) {
             this.serviceName = serviceName;
         }
         this.actionName = actionName;
         this.resourceName = resourceName;
         this.envParams = envParams;
-        if (extraParams == null) {
+        if (extraParams != null) {
             this.extraParams = extraParams;
         } else {
             this.extraParams = envParams;

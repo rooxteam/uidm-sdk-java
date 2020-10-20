@@ -55,6 +55,10 @@ Maven
 
 # История изменений
 
+## 3.13.0
+
+- Запрос на Evaluate Policy поддерживает передачу контекста исходного запроса.
+
 ## 3.12.2
 
 - ClientCredentialsClientFactory не выбрасывает исключение если в RestTemplate установлен дефолтный ErrorHandler

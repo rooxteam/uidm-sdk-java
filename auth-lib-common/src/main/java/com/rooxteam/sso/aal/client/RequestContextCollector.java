@@ -20,12 +20,16 @@ import java.util.Map;
 public class RequestContextCollector {
 
     public Map<String, Object> collect(HttpServletRequest request) {
-        return ImmutableMap.of(
-                "headers", getRequestHeaders(request),
-                "url", request.getRequestURI(),
-                "httpMethod", request.getMethod(),
-                "ip", request.getRemoteAddr()
-        );
+        if (request != null) {
+            return ImmutableMap.of(
+                    "headers", getRequestHeaders(request),
+                    "url", request.getRequestURI(),
+                    "httpMethod", request.getMethod(),
+                    "ip", request.getRemoteAddr()
+            );
+        } else {
+            return Collections.emptyMap();
+        }
     }
 
     @SneakyThrows
