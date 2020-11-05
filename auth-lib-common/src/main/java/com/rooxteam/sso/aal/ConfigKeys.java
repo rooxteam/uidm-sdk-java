@@ -253,4 +253,25 @@ public interface ConfigKeys {
      */
     String TOKEN_COOKIE_LEGACY_ROOX_PRODUCTS_KEY = "com.rooxteam.webapi.filters.cookieFilter.cookies.sso";
 
+    /**
+     * Источник IP-адреса пользователя для запросов в tokeninfo и policy evaluation.
+     * Возможные значения: `request` (из запроса) , `header` (из заголовка запроса).
+     * По-умолчанию IP-адрес не пишется.
+     */
+    String USER_CONTEXT_IP_SOURCE = "com.rooxteam.aal.user-context.ip-source";
+
+    /**
+     * Источник IP-адреса пользователя для запросов в tokeninfo и policy evaluation.
+     * Возможные значения: request (из запроса) , header (из заголовка запроса).
+     * По-умолчанию IP-адрес не пишется.
+     */
+    String USER_CONTEXT_IP_HEADER = "com.rooxteam.aal.user-context.ip-header";
+
+    /**
+     * Источник IP-адреса пользователя для запросов в tokeninfo и policy evaluation.
+     * Возможные значения: request (из запроса) , header (из заголовка запроса).
+     * По-умолчанию IP-адрес не пишется.
+     */
+    String USER_CONTEXT_IP_HEADER_DEFAULT = "X-Forwarded-For";
+
 }

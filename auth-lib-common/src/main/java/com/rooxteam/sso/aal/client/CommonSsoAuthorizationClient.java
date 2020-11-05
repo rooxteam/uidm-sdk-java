@@ -44,7 +44,7 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
     protected final RequestContextCollector requestContextCollector;
 
     protected CommonSsoAuthorizationClient(Configuration config, CloseableHttpClient httpClient) {
-        this(config, httpClient, new RequestContextCollector());
+        this(config, httpClient, new RequestContextCollector(config));
     }
 
     protected CommonSsoAuthorizationClient(Configuration config, CloseableHttpClient httpClient, RequestContextCollector requestContextCollector) {
