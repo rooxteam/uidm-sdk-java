@@ -1,6 +1,6 @@
 package com.rooxteam.sso.aal.client;
 
-import com.google.common.collect.ImmutableMap;
+import com.rooxteam.sso.aal.userIp.UserIpProvider;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Component;
 
@@ -19,13 +19,26 @@ import java.util.Map;
 @Component
 public class RequestContextCollector {
 
+    private final UserIpProvider userIpProvider;
+
+    public RequestContextCollector(UserIpProvider userIpProvider) {
+        this.userIpProvider = userIpProvider;
+    }
+
     public Map<String, Object> collect(HttpServletRequest request) {
-        return ImmutableMap.of(
-                "headers", getRequestHeaders(request),
-                "url", request.getRequestURI(),
-                "httpMethod", request.getMethod(),
-                "ip", request.getRemoteAddr()
-        );
+        if (request != null) {
+            Map<String, Object> contextMap = new HashMap<String, Object>();
+            contextMap.put("headers", getRequestHeaders(request));
+            contextMap.put("url", request.getRequestURI());
+            contextMap.put("httpMethod", request.getMethod());
+            String ip = userIpProvider.getIpFromRequest(request);
+            if (ip != null) {
+                contextMap.put("ip", ip);
+            }
+            return Collections.unmodifiableMap(contextMap);
+        } else {
+            return Collections.emptyMap();
+        }
     }
 
     @SneakyThrows

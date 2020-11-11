@@ -21,6 +21,8 @@ import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -74,7 +76,10 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
             realm = config.getString(ConfigKeys.REALM, ConfigKeys.REALM_DEFAULT);
         }
 
-        EvaluationContext evaluationContext = new EvaluationContext(realm, resource, method, env);
+        ServletRequestAttributes requestAttributes = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes());
+        EvaluationContext evaluationContext = requestAttributes != null
+                ? new EvaluationContext(realm, resource, method, env, requestContextCollector.collect(requestAttributes.getRequest()))
+                : new EvaluationContext(realm, resource, method, env);
 
         try {
             String url = config.getString(ConfigKeys.SSO_URL) + IS_ALLOWED_PATH;
