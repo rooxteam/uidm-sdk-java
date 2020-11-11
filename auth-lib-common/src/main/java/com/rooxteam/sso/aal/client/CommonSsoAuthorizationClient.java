@@ -8,6 +8,7 @@ import com.rooxteam.sso.aal.PrincipalImpl;
 import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.exception.NetworkErrorException;
 import com.rooxteam.sso.aal.exception.ValidateException;
+import com.rooxteam.sso.aal.userIp.UserIpProviderFactory;
 import lombok.SneakyThrows;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -44,7 +45,7 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
     protected final RequestContextCollector requestContextCollector;
 
     protected CommonSsoAuthorizationClient(Configuration config, CloseableHttpClient httpClient) {
-        this(config, httpClient, new RequestContextCollector(config));
+        this(config, httpClient, new RequestContextCollector(new UserIpProviderFactory(config).create()));
     }
 
     protected CommonSsoAuthorizationClient(Configuration config, CloseableHttpClient httpClient, RequestContextCollector requestContextCollector) {
