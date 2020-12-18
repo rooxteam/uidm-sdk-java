@@ -1,6 +1,5 @@
 package com.rooxteam.uidm.sdk.spring.authorization;
 
-import com.google.common.base.MoreObjects;
 import com.rooxteam.errors.exception.BadRequestException;
 import com.rooxteam.errors.exception.ErrorTranlator;
 import com.rooxteam.sso.aal.Principal;
@@ -24,7 +23,9 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 @RequestMapping("/otp")
 public class M2MOtpController {
 
-    private M2MOtpService otpService;
+    private final M2MOtpService otpService;
+
+    private final ErrorTranlator errorTranlator;
 
     private ErrorTranlator errorTranlator;
 
@@ -43,12 +44,8 @@ public class M2MOtpController {
         if (principal == null && SecurityContextHolder.getContext() != null) { // What for? For back compatibility. TODO: to be removed
             principal = SecurityContextHolder.getContext().getAuthentication();
         }
-        AuthenticationState authentication;
-        if (principal instanceof AuthenticationState) {
-            authentication = (AuthenticationState) principal;
-        } else {
-            authentication = null;
-        }
+        final AuthenticationState authentication = principal instanceof AuthenticationState
+            ? (AuthenticationState) principal : null;
         Principal caller = authentication != null ? (Principal) authentication.getAttributes().get("aalPrincipal") : null;
         String jwtToken = caller != null ? caller.getJwtToken() : null;
         SendOtpParameter sendOtpParameter = SendOtpParameter.builder()
@@ -71,16 +68,16 @@ public class M2MOtpController {
     }
 
     @RequestMapping(method = POST, value = "/validate")
-    public ResponseEntity validateOtp(@RequestBody OtpFlowStateImpl state, @RequestParam(required = false) String otp,
-                                      @RequestParam(required = false) String otpCode,
-                                      @RequestParam(required = false) String service) {
+    public ResponseEntity validateOtp(@RequestBody final OtpFlowStateImpl state,
+                                      @RequestParam(required = false) final String otp,
+                                      @RequestParam(required = false) final String otpCode,
+                                      @RequestParam(required = false) final String service) {
         if (otp == null && otpCode == null) {
             return errorTranlator.translate(new BadRequestException("Parameter is missing: otpCode"));
         }
-        otpCode = MoreObjects.firstNonNull(otpCode, otp);
         ValidateOtpParameter validateOtpParameter = ValidateOtpParameter.builder()
                 .otpFlowState(state)
-                .otpCode(otpCode)
+                .otpCode(otpCode != null ? otpCode : otp)
                 .service(service)
                 .build();
         return new ResponseEntity<Response>(otpService.validate(validateOtpParameter), HttpStatus.OK);

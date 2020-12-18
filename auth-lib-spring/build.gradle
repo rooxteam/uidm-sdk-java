@@ -60,5 +60,5 @@ dependencies {
 
 javadoc {
     options.charSet = 'UTF-8'
+    options.addStringOption('Xdoclint:none', '-quiet')
 }
-
