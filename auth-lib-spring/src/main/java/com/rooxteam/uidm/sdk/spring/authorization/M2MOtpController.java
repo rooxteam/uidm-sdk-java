@@ -1,7 +1,7 @@
 package com.rooxteam.uidm.sdk.spring.authorization;
 
 import com.rooxteam.errors.exception.BadRequestException;
-import com.rooxteam.errors.exception.ErrorTranlator;
+import com.rooxteam.errors.exception.ErrorTranslator;
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.client.EvaluationContext;
 import com.rooxteam.sso.aal.otp.OtpFlowStateImpl;
@@ -24,15 +24,11 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 public class M2MOtpController {
 
     private final M2MOtpService otpService;
+    private final ErrorTranslator errorTranslator;
 
-    private final ErrorTranlator errorTranlator;
-
-    private ErrorTranlator errorTranlator;
-
-
-    public M2MOtpController(M2MOtpService otpService, ErrorTranlator errorTranlator) {
+    public M2MOtpController(M2MOtpService otpService, ErrorTranslator errorTranslator) {
         this.otpService = otpService;
-        this.errorTranlator = errorTranlator;
+        this.errorTranslator = errorTranslator;
     }
 
     @RequestMapping(method = POST, value = "/send")
@@ -73,7 +69,7 @@ public class M2MOtpController {
                                       @RequestParam(required = false) final String otpCode,
                                       @RequestParam(required = false) final String service) {
         if (otp == null && otpCode == null) {
-            return errorTranlator.translate(new BadRequestException("Parameter is missing: otpCode"));
+            return errorTranslator.translate(new BadRequestException("Parameter is missing: otpCode"));
         }
         ValidateOtpParameter validateOtpParameter = ValidateOtpParameter.builder()
                 .otpFlowState(state)

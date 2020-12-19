@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 /**
  * Создает ResponseEntity, где телом является ApiException, а код выставляется из e.getHttpStatus()
  */
-public class ToResponseEntityTranslator implements ErrorTranlator {
+public class ToResponseEntityTranslator implements ErrorTranslator {
 
 
     public ToResponseEntityTranslator() {

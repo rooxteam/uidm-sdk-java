@@ -9,7 +9,15 @@ import com.rooxteam.sso.aal.client.exception.UnknownResponseException;
 import com.rooxteam.sso.aal.client.model.*;
 import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.context.TokenContextFactory;
-import com.rooxteam.sso.aal.otp.*;
+import com.rooxteam.sso.aal.otp.OtpFlowState;
+import com.rooxteam.sso.aal.otp.OtpFlowStateImpl;
+import com.rooxteam.sso.aal.otp.OtpResponse;
+import com.rooxteam.sso.aal.otp.OtpResponseImpl;
+import com.rooxteam.sso.aal.otp.OtpStatus;
+import com.rooxteam.sso.aal.otp.ResendOtpParameter;
+import com.rooxteam.sso.aal.otp.SendOtpParameter;
+import com.rooxteam.sso.aal.otp.ValidateOtpParameter;
+import com.rooxteam.sso.aal.userIp.UserIpProvider;
 import com.rooxteam.sso.aal.utils.StringUtils;
 import lombok.SneakyThrows;
 import org.apache.http.HttpEntity;
@@ -29,6 +37,8 @@ import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -48,6 +58,7 @@ public class OtpClient {
     public static final String MSISDN_PARAM_NAME = "msisdn";
     private static final String CATEGORY_PARAM_NAME = "category";
     private static final String EVENT_ID_PARAM_NAME = "_eventId";
+    private static final String USERIP_PARAM_NAME = "userIpAddress";
     private static final String EVENT_ID_VALIDATE = "validate";
     private static final String EVENT_ID_SEND = "send";
     private static final String SESSION_ID_COOKIE_NAME = "RX_SID";
@@ -55,11 +66,10 @@ public class OtpClient {
     private static final int NEXT_OTP_OPERATION_PERIOD_DEFAULT_VALUE = 10;
     private final Map<String, Class<? extends AuthenticationResponse>> responseTypes;
 
-    private Configuration config;
-
-    private CloseableHttpClient httpClient;
-
-    private ObjectMapper jsonMapper;
+    private final Configuration config;
+    private final CloseableHttpClient httpClient;
+    private final ObjectMapper jsonMapper;
+    private final UserIpProvider userIpProvider;
 
     private Map<String, OtpStatus> otpStatusMapping = new HashMap<String, OtpStatus>() {{
         put("too_many_sms", OtpStatus.TOO_MANY_OTP);
@@ -68,8 +78,9 @@ public class OtpClient {
         put("too_many_wrong_code", OtpStatus.TOO_MANY_WRONG_CODE);
     }};
 
-    public OtpClient(Configuration config, CloseableHttpClient httpClient) {
+    public OtpClient(Configuration config, CloseableHttpClient httpClient, UserIpProvider userIpProvider) {
         this.config = config;
+        this.userIpProvider = userIpProvider;
         this.jsonMapper = new ObjectMapper();
         this.httpClient = httpClient;
         responseTypes = new HashMap<String, Class<? extends AuthenticationResponse>>();
@@ -206,6 +217,15 @@ public class OtpClient {
         params.add(new BasicNameValuePair(CLIENT_SECRET, config.getString(ConfigKeys.CLIENT_SECRET)));
         params.add(new BasicNameValuePair(GRANT_TYPE, GRANT_TYPE_M2M));
         params.add(new BasicNameValuePair(SERVICE_PARAM_NAME, service));
+
+        // sso allows to send user`s IP address via parameters for CONFIDENTIAL OAuth2 agents
+        ServletRequestAttributes requestAttributes = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes());
+        if (requestAttributes != null) {
+            String ip = userIpProvider.getIpFromRequest(requestAttributes.getRequest());
+            if (ip != null && !ip.isEmpty()) {
+                params.add(new BasicNameValuePair(USERIP_PARAM_NAME, ip));
+            }
+        }
         return params;
     }
 

@@ -17,6 +17,8 @@ import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.metrics.MetricsIntegration;
 import com.rooxteam.sso.aal.metrics.MicrometerMetricsIntegration;
 import com.rooxteam.sso.aal.metrics.NoOpMetricsIntegration;
+import com.rooxteam.sso.aal.userIp.UserIpProvider;
+import com.rooxteam.sso.aal.userIp.UserIpProviderFactory;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
@@ -93,7 +95,8 @@ public class AalFactory {
                 httpClient);
         SsoAuthenticationClient authenticationClient = new SsoAuthenticationClient(config, httpClient);
         SsoTokenClient tokenClient = new SsoTokenClient(config, httpClient);
-        OtpClient otpClient = new OtpClient(config, httpClient);
+        UserIpProvider userIpProvider = new UserIpProviderFactory(config).create();
+        OtpClient otpClient = new OtpClient(config, httpClient, userIpProvider);
 
         Cache<PrincipalKey, Principal> principalCache = initPrincipalsCache(config);
         Cache<PolicyDecisionKey, EvaluationResponse> isAllowedPolicyDecisionsCache = initPoliciesCache(config);
