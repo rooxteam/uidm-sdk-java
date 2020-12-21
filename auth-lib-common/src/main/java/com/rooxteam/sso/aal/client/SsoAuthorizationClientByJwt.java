@@ -1,5 +1,6 @@
 package com.rooxteam.sso.aal.client;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -37,7 +38,7 @@ import static com.rooxteam.sso.aal.AalLogger.LOG;
  */
 public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
 
-    private final ObjectMapper jsonMapper = new ObjectMapper();
+    private final ObjectMapper jsonMapper;
 
     private static final String IS_ALLOWED_PATH = "/api/policyEvaluation/isAllowed";
     private static final String WHICH_ALLOWED_PATH = "/api/policyEvaluation/whichAllowed";
@@ -46,6 +47,8 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
     public SsoAuthorizationClientByJwt(Configuration rooxConfig,
                                        CloseableHttpClient httpClient) {
         super(rooxConfig, httpClient);
+        this.jsonMapper = new ObjectMapper();
+        this.jsonMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     @Override
