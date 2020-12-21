@@ -4,7 +4,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 
 @Getter
@@ -16,11 +16,11 @@ public class EvaluationResponse {
     private Map<String, Object> claims;
 
     public EvaluationResponse(Decision decision) {
-        this(decision, new HashMap<String, String>(), null);
+        this(decision, Collections.<String, String>emptyMap(), Collections.<String, Object>emptyMap());
     }
 
     public EvaluationResponse(Decision decision, Map<String, String> advices) {
-        this(decision, advices, null);
+        this(decision, advices, Collections.<String, Object>emptyMap());
     }
 
     public EvaluationResponse(Decision decision, Map<String, String> advices, Map<String, Object> claims) {
