@@ -142,6 +142,11 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
   
   см. конфигурационный параметр `com.rooxteam.sso.policy-evaluation.response.claims`
 
+- Поддержка передачи IP-адреса пользователя в запросы на получение/верификацию OTP под операцию.
+  
+  Источник IP-адреса пользователя определяется конфигурационными параметрами: 
+  `com.rooxteam.aal.user-context.ip-source` и `com.rooxteam.aal.user-context.ip-header`
+
 ## 3.13.0
 
 - Запрос на Evaluate Policy поддерживает передачу контекста исходного запроса.
