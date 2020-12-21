@@ -51,8 +51,5 @@ dependencies {
 
 javadoc {
     options.charSet = 'UTF-8'
-}
-
-tasks.withType(Javadoc) {
     options.addStringOption('Xdoclint:none', '-quiet')
 }

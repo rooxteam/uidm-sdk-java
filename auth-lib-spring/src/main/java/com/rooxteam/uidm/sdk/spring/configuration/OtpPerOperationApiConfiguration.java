@@ -1,6 +1,6 @@
 package com.rooxteam.uidm.sdk.spring.configuration;
 
-import com.rooxteam.errors.exception.ErrorTranlator;
+import com.rooxteam.errors.exception.ErrorTranslator;
 import com.rooxteam.errors.exception.RethrowingEntityTranslator;
 import com.rooxteam.errors.exception.ToResponseEntityTranslator;
 import com.rooxteam.sso.aal.AuthenticationAuthorizationLibrary;
@@ -32,7 +32,7 @@ public class OtpPerOperationApiConfiguration {
     }
 
     @Bean
-    public M2MOtpController aalOtpController(M2MOtpService aalOtpService, ErrorTranlator errorTranslator) {
+    public M2MOtpController aalOtpController(M2MOtpService aalOtpService, ErrorTranslator errorTranslator) {
         return new M2MOtpController(aalOtpService, errorTranslator);
     }
 
@@ -47,7 +47,7 @@ public class OtpPerOperationApiConfiguration {
     }
 
     @Bean
-    public ErrorTranlator errorTranlator(AuthenticationAuthorizationLibrary aal) {
+    public ErrorTranslator errorTranslator(AuthenticationAuthorizationLibrary aal) {
         // use the same configuration provider as core SDK
         com.rooxteam.sso.aal.configuration.Configuration configuration = aal.getConfiguration();
         // respond or rethrow

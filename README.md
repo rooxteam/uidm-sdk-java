@@ -1,7 +1,7 @@
 
 # Как начать использовать
 
-1. Подключить репозиторий RooX Solutions
+## 1. Подключить репозиторий RooX Solutions
 
 Gradle
 ```
@@ -48,12 +48,104 @@ Maven
 </settings>
 ```
 
-2. Подключить библиотеку
+## 2. Подключить библиотеку
 
-Смотреть пример https://bitbucket.org/rooxteam/uidm-sdk-java-samples/src/master/spring/
+1. Добавить импорт класса конфигурации
 
+```java
+@SpringBootApplication
+@Import(UidmSpringSecurityFilterConfiguration.class)
+public class DemoApplication {
+	public static void main(String[] args) {
+		SpringApplication.run(DemoApplication.class, args);
+	}
+}
+```
+2. Добавить фильтр в конфигурацию SpringSecurity
+
+```java
+@Configuration
+@EnableGlobalMethodSecurity(
+        prePostEnabled = true,
+        securedEnabled = true,
+        jsr250Enabled = true)
+public class CustomWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
+
+    @Autowired
+    UidmUserPreAuthenticationFilter uidmUserPreAuthenticationFilter;
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.addFilterAfter(uidmUserPreAuthenticationFilter, BasicAuthenticationFilter.class);
+    }
+}
+```
+
+Смотреть полный пример https://bitbucket.org/rooxteam/uidm-sdk-java-samples/src/master/spring/
+
+## Известные проблемы
+
+Для Spring Boot версии ниже 2.0 выявлена проблема инициализации Spring Security.
+
+Версии Spring Boot для которых подтвердилась проблема:
+* 1.5.10.RELEASE
+* 1.3.5.RELEASE
+
+#### Как проявляется:
+
+Приложение не стартует, в логах присутствуют следующие записи:
+
+```
+Initialization of bean failed; nested exception is org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'methodSecurityInterceptor' defined in class path resource [org/springframework/security/config/annotation/method/configuration/GlobalMethodSecurityConfiguration.class]: Invocation of init method failed; nested exception is java.lang.IllegalArgumentException: An AuthenticationManager is required
+```
+
+#### Решение
+
+Добавить в конфигурацию Spring Security следующие методы:
+
+```java
+public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Override
+
+  ...
+  
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(new AuthenticationProvider() {
+            @Override
+            public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+                return authentication;
+            }
+    
+            @Override
+            public boolean supports(Class<?> authentication) {
+                return true;
+            }
+        });
+    }
+    
+    @Bean
+    @Override
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
+    }
+  
+  ...
+
+}
+```
 
 # История изменений
+
+## 3.14.0
+
+- Успешный ответ на запрос Evaluate Policy поддерживает передачу клеймов токена. 
+  Sso-server должен быть сконфигурирован на формирование списка клеймов для передачи в ответе.
+  
+  см. конфигурационный параметр `com.rooxteam.sso.policy-evaluation.response.claims`
+
+- Поддержка передачи IP-адреса пользователя в запросы на получение/верификацию OTP под операцию.
+  
+  Источник IP-адреса пользователя определяется конфигурационными параметрами: 
+  `com.rooxteam.aal.user-context.ip-source` и `com.rooxteam.aal.user-context.ip-header`
 
 ## 3.13.0
 

@@ -3,6 +3,7 @@ package com.rooxteam.sso.aal.client;
 import com.rooxteam.sso.aal.configuration.ConfigurationBuilder;
 import com.rooxteam.sso.aal.otp.OtpResponse;
 import com.rooxteam.sso.aal.otp.OtpStatus;
+import com.rooxteam.sso.aal.userIp.UserIpProvider;
 import org.apache.commons.configuration.BaseConfiguration;
 import org.apache.http.HttpEntity;
 import org.apache.http.ProtocolVersion;
@@ -94,7 +95,8 @@ public class OtpClientTest {
 
         BaseConfiguration configuration = new BaseConfiguration();
         configuration.addProperty("com.rooxteam.sso.endpoint", "http://example.com");
-        otpClient = new OtpClient(ConfigurationBuilder.fromApacheCommonsConfiguration(configuration), mockHttpClient);
+        otpClient = new OtpClient(ConfigurationBuilder.fromApacheCommonsConfiguration(configuration),
+                mockHttpClient, mock(UserIpProvider.class));
     }
 
     @Test
