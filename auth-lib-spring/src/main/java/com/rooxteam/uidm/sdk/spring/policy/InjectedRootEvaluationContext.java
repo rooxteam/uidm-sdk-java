@@ -10,15 +10,15 @@ import java.util.Map;
  * @author sergey.syroezhkin
  * @since 14.01.2021
  */
-final class DummyEvaluationContext extends StandardEvaluationContext {
+final class InjectedRootEvaluationContext extends StandardEvaluationContext {
 
-    public DummyEvaluationContext(final ApplicationContext applicationContext, final DummyRootObject dummyRootObject) {
+    InjectedRootEvaluationContext(final ApplicationContext applicationContext, final InvocationRootObject invocationRootObject) {
         Map<String, Object> replacedBeans = new HashMap<String, Object>();
-        replacedBeans.put("uidmAuthz", dummyRootObject);
+        replacedBeans.put("uidmAuthz", invocationRootObject);
 
         ReplacedBeanFactoryResolver beanResolver = new ReplacedBeanFactoryResolver(applicationContext, replacedBeans);
         setBeanResolver(beanResolver);
-        setRootObject(dummyRootObject);
+        setRootObject(invocationRootObject);
     }
 
 }

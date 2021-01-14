@@ -70,7 +70,7 @@ final class PermissionsEvaluationServiceImpl implements PermissionsEvaluationSer
             }
             AtomicBoolean isAllowed = new AtomicBoolean(false);
             try {
-                DummyRootObject dummyRootObject = new DummyRootObject(authentication, principal) {
+                InvocationRootObject invocationRootObject = new InvocationRootObject(authentication, principal) {
                     @Override
                     public boolean isAllowed(String resource, String operation, Map<String, ?> envParameters) {
                         if (!isAuthenticated()) {
@@ -81,7 +81,7 @@ final class PermissionsEvaluationServiceImpl implements PermissionsEvaluationSer
                         return evaluationResponse != null && evaluationResponse.getDecision() == Decision.Permit;
                     }
                 };
-                DummyEvaluationContext dummyContext = new DummyEvaluationContext(applicationContext, dummyRootObject);
+                InjectedRootEvaluationContext dummyContext = new InjectedRootEvaluationContext(applicationContext, invocationRootObject);
                 isAllowed.set(new SpelExpressionParser().parseExpression(preAuthorize.value()).getValue(dummyContext, Boolean.class));
 
             } catch (Throwable e) {
@@ -108,7 +108,7 @@ final class PermissionsEvaluationServiceImpl implements PermissionsEvaluationSer
 
     private Set<EvaluationRequest> collectPoliciesForHandledMethods(final Authentication authentication, final Principal principal) {
         final Set<EvaluationRequest> policies = new HashSet<EvaluationRequest>();
-        DummyRootObject dummyRootObject = new DummyRootObject(authentication, principal) {
+        InvocationRootObject invocationRootObject = new InvocationRootObject(authentication, principal) {
             @Override
             public boolean isAllowed(String resource, String operation, Map<String, ?> envParameters) {
                 if (!isAuthenticated()) {
@@ -119,7 +119,7 @@ final class PermissionsEvaluationServiceImpl implements PermissionsEvaluationSer
             }
         };
 
-        DummyEvaluationContext dummyContext = new DummyEvaluationContext(applicationContext, dummyRootObject);
+        InjectedRootEvaluationContext dummyContext = new InjectedRootEvaluationContext(applicationContext, invocationRootObject);
         for (Map.Entry<RequestMappingInfo, HandlerMethod> entry : handlerMapping.getHandlerMethods().entrySet()) {
             HandlerMethod handlerMethod = entry.getValue();
             PreAuthorize preAuthorize = handlerMethod.getMethodAnnotation(PreAuthorize.class);

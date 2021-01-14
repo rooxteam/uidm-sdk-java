@@ -13,11 +13,11 @@ import java.util.Map;
  * @author sergey.syroezhkin
  * @since 14.01.2021
  */
-abstract class DummyRootObject implements SecurityExpressionOperations, AalResourceValidation {
+abstract class InvocationRootObject implements SecurityExpressionOperations, AalResourceValidation {
     private final Authentication authentication;
     private final Principal principal;
 
-    DummyRootObject(Authentication authentication, Principal principal) {
+    InvocationRootObject(Authentication authentication, Principal principal) {
         this.authentication = authentication;
         this.principal = principal;
     }
@@ -97,15 +97,13 @@ abstract class DummyRootObject implements SecurityExpressionOperations, AalResou
         throw new IllegalStateException("not implemented");
     }
 
-    public final boolean isResourceAllowed(String resourceName, String actionName) {
+    public boolean isResourceAllowed(String resourceName, String actionName) {
         return isResourceAllowed(resourceName, actionName, null);
     }
 
     public boolean isResourceAllowed(String resourceName, String actionName, Map<String, ?> envParams) {
         return isAllowed(resourceName, actionName, envParams);
     }
-
-    ;
 
     @Override
     public boolean isAllowed(String resource, String operation) {

@@ -32,14 +32,12 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -82,7 +80,7 @@ public class PermissionsEvaluationServiceImplTest {
         assertNotNull(result);
         assertEquals(1, result.entrySet().size());
         assertTrue(result.containsKey("/api/demo"));
-        assertArrayEquals(Collections.singleton(RequestMethod.GET).toArray(), result.get("/api/demo").toArray());
+        assertCollectionContains(result.get("/api/demo"), RequestMethod.GET);
     }
 
     @Test
@@ -116,7 +114,7 @@ public class PermissionsEvaluationServiceImplTest {
         assertNotNull(result);
         assertEquals(1, result.entrySet().size());
         assertTrue(result.containsKey("/api/demo"));
-        assertArrayEquals(Collections.singleton(RequestMethod.GET).toArray(), result.get("/api/demo").toArray());
+        assertCollectionContains(result.get("/api/demo"), RequestMethod.GET);
     }
 
     @Test
@@ -136,7 +134,7 @@ public class PermissionsEvaluationServiceImplTest {
         assertNotNull(result);
         assertEquals(1, result.entrySet().size());
         assertTrue(result.containsKey("/api/demo"));
-        assertArrayEquals(Collections.singleton(RequestMethod.GET).toArray(), result.get("/api/demo").toArray());
+        assertCollectionContains(result.get("/api/demo"), RequestMethod.GET);
     }
 
     @Test
@@ -156,7 +154,7 @@ public class PermissionsEvaluationServiceImplTest {
         assertNotNull(result);
         assertEquals(1, result.entrySet().size());
         assertTrue(result.containsKey("/api/demo"));
-        assertArrayEquals(Collections.singleton(RequestMethod.GET).toArray(), result.get("/api/demo").toArray());
+        assertCollectionContains(result.get("/api/demo"), RequestMethod.GET);
     }
 
     @Test
@@ -177,7 +175,7 @@ public class PermissionsEvaluationServiceImplTest {
         assertNotNull(result);
         assertEquals(1, result.entrySet().size());
         assertTrue(result.containsKey("/api/demo"));
-        assertArrayEquals(Collections.singleton(RequestMethod.GET).toArray(), result.get("/api/demo").toArray());
+        assertCollectionContains(result.get("/api/demo"), RequestMethod.GET);
     }
 
     @Test
@@ -216,7 +214,7 @@ public class PermissionsEvaluationServiceImplTest {
         assertNotNull(result);
         assertEquals(1, result.entrySet().size());
         assertTrue(result.containsKey("/api/demo"));
-        assertArrayEquals(Collections.singleton(RequestMethod.GET).toArray(), result.get("/api/demo").toArray());
+        assertCollectionContains(result.get("/api/demo"), RequestMethod.GET);
     }
 
     @Test
@@ -260,9 +258,17 @@ public class PermissionsEvaluationServiceImplTest {
         assertNotNull(result);
         assertEquals(2, result.entrySet().size());
         assertTrue(result.containsKey("/api/demo1"));
-        assertArrayEquals(Arrays.asList(RequestMethod.GET, RequestMethod.POST).toArray(), result.get("/api/demo1").toArray());
+        assertCollectionContains(result.get("/api/demo1"), RequestMethod.GET, RequestMethod.POST);
         assertTrue(result.containsKey("/api/demo2"));
-        assertArrayEquals(Collections.singleton(RequestMethod.GET).toArray(), result.get("/api/demo2").toArray());
+        assertCollectionContains(result.get("/api/demo2"), RequestMethod.GET);
+    }
+
+    private <T> void assertCollectionContains(Collection<T> collection, T... values) {
+        assertNotNull(collection);
+        assertEquals(collection.size(), values.length);
+        for (T value: values) {
+            assertTrue(collection.contains(value));
+        }
     }
 
     private void mockPolicies(final List<MethodData> allowedMethods) {
