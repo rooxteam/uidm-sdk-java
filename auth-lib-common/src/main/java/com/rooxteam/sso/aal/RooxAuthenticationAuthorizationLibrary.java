@@ -22,7 +22,6 @@ import com.rooxteam.sso.aal.otp.ResendOtpParameter;
 import com.rooxteam.sso.aal.otp.SendOtpParameter;
 import com.rooxteam.sso.aal.otp.ValidateOtpParameter;
 import com.rooxteam.sso.aal.utils.DummyRequest;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 
 import javax.servlet.http.HttpServletRequest;
@@ -366,7 +365,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
             LOG.errorIllegalSubjectParameter();
             throw new IllegalArgumentException(SUBJECT_SHOULD_BE_SPECIFIED);
         }
-        if (CollectionUtils.isEmpty(policiesToCheck)) {
+        if (policiesToCheck == null || policiesToCheck.isEmpty()) {
             return Collections.emptyMap();
         }
 
