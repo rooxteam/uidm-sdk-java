@@ -135,6 +135,11 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
 
 # История изменений
 
+## 3.15.0
+
+- Добавлен сервис PermissionsEvaluationService.
+  Метод `evaluate` сервиса возвращает список разрешенных операций для заданного пользователя.
+  
 ## 3.14.0
 
 - Успешный ответ на запрос Evaluate Policy поддерживает передачу клеймов токена. 
