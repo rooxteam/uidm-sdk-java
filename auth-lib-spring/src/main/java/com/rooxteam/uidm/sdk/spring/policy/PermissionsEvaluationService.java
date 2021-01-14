@@ -21,7 +21,7 @@ public interface PermissionsEvaluationService {
     Map<String, Set<RequestMethod>> evaluate(Authentication authentication);
 
     /**
-     * Returns all available methods for the current user.
+     * Returns all available methods for the given user.
      *
      * @param authentication user's authentication
      * @param principal user's principal
