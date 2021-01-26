@@ -7,6 +7,7 @@ import com.rooxteam.sso.aal.AuthorizationType;
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.PrincipalImpl;
 import com.rooxteam.sso.aal.PropertyScope;
+import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.uidm.sdk.spring.authorization.AalResourceValidation;
 import lombok.Setter;
 import org.springframework.context.EnvironmentAware;
@@ -38,6 +39,7 @@ import static com.rooxteam.sso.aal.ConfigKeys.POLICIES_FOR_SYSTEM_DEFAULT;
 public class AalAuthorizationClient implements SsoAuthorizationClient, AalResourceValidation, EnvironmentAware {
 
     public static final String AAL_PRINCIPAL_ATTRIBUTE_NAME = "aalPrincipal";
+    public static final String EVALUATION_CLAIMS_ATTRIBUTE_NAME = "evaluationClaims";
 
     @Setter
     private Environment environment;
@@ -141,7 +143,15 @@ public class AalAuthorizationClient implements SsoAuthorizationClient, AalResour
                 }
             }
         }
-        return aal.evaluatePolicy(aalPrincipal, resource, operation, envParameters).getDecision().isPositive();
+        EvaluationResponse result = aal.evaluatePolicy(aalPrincipal, resource, operation, envParameters);
+        if (seco != null && result.getClaims() != null && !result.getClaims().isEmpty()) {
+            Authentication authentication = seco.getAuthentication();
+            if (authentication != null && !(authentication instanceof AnonymousAuthenticationToken)) {
+                AuthenticationState authState = (AuthenticationState) authentication;
+                authState.getAttributes().put(EVALUATION_CLAIMS_ATTRIBUTE_NAME, result.getClaims());
+            }
+        }
+        return result.getDecision().isPositive();
     }
 
     private Principal reconstructPrincipalFromAuthState(AuthenticationState authenticationState) {
