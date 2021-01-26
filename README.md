@@ -135,6 +135,26 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
 
 # История изменений
 
+## 3.15.1
+
+- Результат последнего вызова Evaluate Policy содержащий клеймы автоматически добавляется в атрибуты аутентификации. 
+  
+  Чтобы получить информацию, которая возвращается в клеймах Policy Evaluation, нужно инжектировать AuthenticationState 
+  в метод контроллера и получить значение атрибута `evaluationClaims`.
+  
+```java
+@RequestMapping(method = RequestMethod.POST, value = "/payment")
+@PreAuthorize("@uidmAuthz.isAllowed('/payment', 'POST')")
+public PaymentResponseDto makePayment(@RequestBody PaymentRequestDto requestDto, 
+        AuthenticationState authenticationState) {
+
+    Map<String, Object> evaluationClaims = (Map<String, Object>) authenticationState.getAttributes()
+        .get("evaluationClaims");
+
+    // your code here
+}
+```
+
 ## 3.15.0
 
 - Добавлен сервис PermissionsEvaluationService.
