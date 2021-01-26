@@ -145,22 +145,18 @@ public class AalAuthorizationClient implements SsoAuthorizationClient, AalResour
             }
         }
         EvaluationResponse result = aal.evaluatePolicy(aalPrincipal, resource, operation, envParameters);
-        if (seco != null && result.getClaims() != null && !result.getClaims().isEmpty()) {
+        if (seco != null) {
             Authentication authentication = seco.getAuthentication();
             if (authentication != null && !(authentication instanceof AnonymousAuthenticationToken)) {
                 AuthenticationState authState = (AuthenticationState) authentication;
-                authState.getAttributes().put(EVALUATION_CLAIMS_ATTRIBUTE_NAME, result.getClaims());
+                if (result.getClaims() != null && !result.getClaims().isEmpty()) {
+                    authState.getAttributes().put(EVALUATION_CLAIMS_ATTRIBUTE_NAME, result.getClaims());
+                }
+                if (result.getAdvices() != null && !result.getAdvices().isEmpty()) {
+                    authState.getAttributes().put(EVALUATION_ADVICES_ATTRIBUTE_NAME, result.getAdvices());
+                }
             }
         }
-
-        if (seco != null && result.getAdvices() != null && !result.getAdvices().isEmpty()) {
-            Authentication authentication = seco.getAuthentication();
-            if (authentication != null && !(authentication instanceof AnonymousAuthenticationToken)) {
-                AuthenticationState authState = (AuthenticationState) authentication;
-                authState.getAttributes().put(EVALUATION_ADVICES_ATTRIBUTE_NAME, result.getAdvices());
-            }
-        }
-
         return result.getDecision().isPositive();
     }
 
