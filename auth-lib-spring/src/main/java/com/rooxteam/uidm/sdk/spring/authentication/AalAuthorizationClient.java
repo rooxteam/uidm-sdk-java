@@ -40,6 +40,7 @@ public class AalAuthorizationClient implements SsoAuthorizationClient, AalResour
 
     public static final String AAL_PRINCIPAL_ATTRIBUTE_NAME = "aalPrincipal";
     public static final String EVALUATION_CLAIMS_ATTRIBUTE_NAME = "evaluationClaims";
+    public static final String EVALUATION_ADVICES_ATTRIBUTE_NAME = "evaluateAdvices";
 
     @Setter
     private Environment environment;
@@ -149,6 +150,7 @@ public class AalAuthorizationClient implements SsoAuthorizationClient, AalResour
             if (authentication != null && !(authentication instanceof AnonymousAuthenticationToken)) {
                 AuthenticationState authState = (AuthenticationState) authentication;
                 authState.getAttributes().put(EVALUATION_CLAIMS_ATTRIBUTE_NAME, result.getClaims());
+                authState.getAttributes().put(EVALUATION_ADVICES_ATTRIBUTE_NAME, result.getAdvices());
             }
         }
         return result.getDecision().isPositive();
