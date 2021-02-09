@@ -135,6 +135,26 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
 
 # История изменений
 
+## 3.15.2
+
+- Результат последнего вызова Evaluate Policy содержащий эдвайсы политики автоматически добавляется в атрибуты аутентификации. 
+  
+  Чтобы получить информацию, которая возвращается в эдвайсах, нужно инжектировать AuthenticationState 
+  в метод контроллера и получить значение атрибута `evaluationAdvices`.
+  
+```java
+@RequestMapping(method = RequestMethod.POST, value = "/payment")
+@PreAuthorize("@uidmAuthz.isAllowed('/payment', 'POST')")
+public PaymentResponseDto makePayment(@RequestBody PaymentRequestDto requestDto, 
+        AuthenticationState authenticationState) {
+
+    Map<String, Object> evaluationAdvices = (Map<String, Object>) authenticationState.getAttributes()
+        .get("evaluationAdvices");
+
+    // your code here
+}
+```
+
 ## 3.15.1
 
 - Результат последнего вызова Evaluate Policy содержащий клеймы автоматически добавляется в атрибуты аутентификации. 
