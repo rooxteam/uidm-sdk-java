@@ -135,6 +135,11 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
 
 # История изменений
 
+## 3.15.3
+
+SDK поддерживает токены с и без легаси-префикса `sso_1.0_`.
+
+
 ## 3.15.2
 
 - Результат последнего вызова Evaluate Policy содержащий эдвайсы политики автоматически добавляется в атрибуты аутентификации. 
