@@ -81,7 +81,7 @@ public class UidmUserPreAuthenticationFilter extends AbstractUserPreAuthenticate
                 if (cookies != null) {
                     for (Cookie ck : cookies) {
                         if (tokenCookieName.equals(ck.getName())) {
-                            authenticationToken = String.format("%s %s_%s_%s", TOKEN_PATTERN_PREFIX, SSO, TOKEN_VERSION_1_0, ck.getValue());
+                            authenticationToken = String.format("%s %s", TOKEN_PATTERN_PREFIX, ck.getValue());
                         }
                     }
                 } else {
@@ -95,22 +95,17 @@ public class UidmUserPreAuthenticationFilter extends AbstractUserPreAuthenticate
         }
 
         Matcher matcher = TOKEN_VALIDATION_PATTERN.matcher(authenticationToken);
-        if (!matcher.matches() || matcher.groupCount() != 3) {
-            return null;
+        if (matcher.matches() && matcher.groupCount() == 3) {
+            String authMethod = matcher.group(1);
+            String version = matcher.group(2);
+            String token = matcher.group(3);
+            if (authMethod.equalsIgnoreCase(SSO) && version.equalsIgnoreCase(TOKEN_VERSION_1_0)) {
+                return token;
+            }
+        } else if (authenticationToken.startsWith(TOKEN_PATTERN_PREFIX)) {
+            return authenticationToken.substring(TOKEN_PATTERN_PREFIX.length()).trim();
         }
-
-        String authMethod = matcher.group(1);
-        String version = matcher.group(2);
-        String token = matcher.group(3);
-
-        if (!authMethod.equalsIgnoreCase(SSO)) {
-            return null;
-        }
-        if (!version.equalsIgnoreCase(TOKEN_VERSION_1_0)) {
-            return null;
-        }
-
-        return token;
+        return null;
     }
 
     @Override
