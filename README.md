@@ -7,6 +7,17 @@
 
 ## 2. Подключить библиотеку
 
+```
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation "com.rooxteam.uidm.sdk:auth-lib-spring:$uidmSdkVersion"
+}
+
+```
+
 1. Добавить импорт класса конфигурации
 
 ```java
