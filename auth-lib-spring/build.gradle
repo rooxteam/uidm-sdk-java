@@ -11,6 +11,7 @@ buildscript {
     }
     dependencies {
         classpath("com.rooxteam.corporate:gradle-plugins:$rooxGradlePlugins")
+        classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
     }
 }
 
@@ -23,6 +24,7 @@ plugins {
 apply plugin: 'roox-doc'
 apply plugin: 'roox-jar'
 apply from: 'gradle/jcenter.gradle'
+apply plugin: 'com.bmuschko.nexus'
 
 // give test dependencies access to compileOnly dependencies to emulate providedCompile
 configurations {
@@ -63,4 +65,49 @@ dependencies {
 javadoc {
     options.charSet = 'UTF-8'
     options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+modifyPom {
+    project {
+        name 'auth-lib-spring'
+        description 'uidm-sdk-java'
+        groupId 'com.rooxteam.uidm.sdk'
+        artifactId 'auth-lib-spring'
+        url 'https://bitbucket.org/rooxteam/uidm-sdk-java'
+        packaging 'jar'
+
+        scm {
+            url 'https://bitbucket.org/rooxteam/uidm-sdk-java'
+            connection 'scm:https://bitbucket.org/rooxteam/uidm-sdk-java.git'
+            developerConnection 'scm:git://bitbucket.org/rooxteam/uidm-sdk-java.git'
+        }
+
+        licenses {
+            license {
+                name 'CDDL-1.1'
+                url 'https://javaee.github.io/glassfish/LICENSE'
+                distribution 'repo'
+            }
+        }
+
+        developers {
+            developer {
+                id 'roox'
+                name 'RooX Solutions'
+                email 'support@roox.ru'
+            }
+        }
+    }
+}
+
+extraArchive {
+    sources = true
+    tests = false
+    javadoc = false
+}
+
+nexus {
+    sign = true
+    repositoryUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+    snapshotRepositoryUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
 }
