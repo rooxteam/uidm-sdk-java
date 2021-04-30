@@ -22,8 +22,8 @@ plugins {
 
 apply plugin: 'roox-doc'
 apply plugin: 'roox-jar'
-apply plugin: 'com.bmuschko.nexus'
 apply from: 'gradle/jcenter.gradle'
+apply plugin: 'com.bmuschko.nexus'
 
 // give test dependencies access to compileOnly dependencies to emulate providedCompile
 configurations {
@@ -90,13 +90,13 @@ modifyPom {
 }
 
 extraArchive {
-    sources = false
+    sources = true
     tests = false
     javadoc = false
 }
 
 nexus {
     sign = true
-    repositoryUrl = 'https://s01.oss.sonatype.org/content/repositories/snapshots/'
-    snapshotRepositoryUrl = 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
+    repositoryUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
+    snapshotRepositoryUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
 }
