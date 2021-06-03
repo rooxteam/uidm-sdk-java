@@ -4,11 +4,7 @@ import com.rooxteam.errors.exception.ErrorTranslator;
 import com.rooxteam.errors.exception.RethrowingEntityTranslator;
 import com.rooxteam.errors.exception.ToResponseEntityTranslator;
 import com.rooxteam.sso.aal.AuthenticationAuthorizationLibrary;
-import com.rooxteam.uidm.sdk.spring.authorization.M2MOtpController;
-import com.rooxteam.uidm.sdk.spring.authorization.M2MOtpService;
-import com.rooxteam.uidm.sdk.spring.authorization.PolicyEvaluationController;
-import com.rooxteam.uidm.sdk.spring.authorization.PolicyEvaluationService;
-import com.rooxteam.uidm.sdk.spring.authorization.PolicyEvaluationServiceImpl;
+import com.rooxteam.uidm.sdk.spring.authorization.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -34,6 +30,11 @@ public class OtpPerOperationApiConfiguration {
     @Bean
     public M2MOtpController aalOtpController(M2MOtpService aalOtpService, ErrorTranslator errorTranslator) {
         return new M2MOtpController(aalOtpService, errorTranslator);
+    }
+
+    @Bean
+    public M2MSignController aalSignController(M2MOtpService aalOtpService, ErrorTranslator errorTranslator) {
+        return new M2MSignController(aalOtpService, errorTranslator);
     }
 
     @Bean

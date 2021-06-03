@@ -32,10 +32,11 @@ public class PrincipalImpl extends AbstractPrincipal {
 
     public PrincipalImpl(String policyContextJwtToken, String publicJwtToken) {
         if (policyContextJwtToken == null || policyContextJwtToken.trim().isEmpty()) {
-            throw new IllegalArgumentException("policyContextJwtToken");
+            this.policyContextJwtToken = publicJwtToken;
+        }else {
+            this.policyContextJwtToken = policyContextJwtToken;
         }
-        this.policyContextJwtToken = policyContextJwtToken;
-        initContextFromJwt();
+        // legacy code, remove
         if (publicJwtToken != null) {
             this.publicJwtToken = publicJwtToken;
         } else {

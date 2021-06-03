@@ -103,6 +103,11 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
 
 # История изменений
 
+## 3.16.0
+
+Поддерживается улучшенный сценарий подписания операций через контроллер /sign-operation
+
+
 ## 3.15.3
 
 SDK поддерживает токены с и без легаси-префикса `sso_1.0_`.
