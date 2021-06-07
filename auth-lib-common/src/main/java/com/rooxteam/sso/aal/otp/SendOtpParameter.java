@@ -30,4 +30,9 @@ public class SendOtpParameter {
      * Контекст операции, для которой требуется выдать токен по результатам OTP
      */
     private EvaluationContext evaluationContext;
+
+    /**
+     * Для новых флоу подписания - идентификатор пакета на подписание
+     */
+    private String signingRequestId;
 }

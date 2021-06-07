@@ -56,6 +56,7 @@ public class OtpClient {
 
     private static final String EXECUTION_PARAM_NAME = "execution";
     public static final String MSISDN_PARAM_NAME = "msisdn";
+    private static final String SIGNING_REQUEST_ID_PARAM_NAME = "signingRequestId";
     private static final String CATEGORY_PARAM_NAME = "category";
     private static final String EVENT_ID_PARAM_NAME = "_eventId";
     private static final String USERIP_PARAM_NAME = "userIpAddress";
@@ -105,13 +106,7 @@ public class OtpClient {
     }
 
     public OtpResponse sendOtpForOperation(SendOtpParameter sendOtpParameter) {
-        String contextJson;
-        try {
-            contextJson = jsonMapper.writeValueAsString(sendOtpParameter.getEvaluationContext());
-        } catch (IOException e) {
-            LOG.warnInvalidContextJson(sendOtpParameter.getEvaluationContext(), e);
-            return OtpResponseImpl.exception(e);
-        }
+
         List<NameValuePair> params = commonOtpParams(sendOtpParameter.getService());
         if (!StringUtils.isEmpty(sendOtpParameter.getJwt())) {
             params.add(new BasicNameValuePair(currentTokenParamName(), sendOtpParameter.getJwt()));
@@ -122,7 +117,19 @@ public class OtpClient {
         if (!StringUtils.isEmpty(sendOtpParameter.getCategory())) {
             params.add(new BasicNameValuePair(CATEGORY_PARAM_NAME, sendOtpParameter.getCategory()));
         }
-        params.add(new BasicNameValuePair("operation", contextJson));
+        if (sendOtpParameter.getEvaluationContext() != null) {
+            String contextJson;
+            try {
+                contextJson = jsonMapper.writeValueAsString(sendOtpParameter.getEvaluationContext());
+            } catch (IOException e) {
+                LOG.warnInvalidContextJson(sendOtpParameter.getEvaluationContext(), e);
+                return OtpResponseImpl.exception(e);
+            }
+            params.add(new BasicNameValuePair("operation", contextJson));
+        }
+        if (!StringUtils.isEmpty(sendOtpParameter.getSigningRequestId())) {
+            params.add(new BasicNameValuePair(SIGNING_REQUEST_ID_PARAM_NAME, sendOtpParameter.getSigningRequestId()));
+        }
         return makeOtpRequest(params, null);
     }
 
@@ -136,10 +143,8 @@ public class OtpClient {
     }
 
     private OtpResponse sendOtpEvent(OtpFlowState otpState, String otpCode, String eventId, String service) {
-        if (StringUtils.isEmpty(otpState.getSessionId()) ||
-                StringUtils.isEmpty(otpState.getExecution()) ||
-                StringUtils.isEmpty(otpState.getServerUrl())) {
-            throw new IllegalStateException("OtpFlowState should contain all fields");
+        if (StringUtils.isEmpty(otpState.getExecution())) {
+            throw new IllegalStateException("OtpFlowState should contain execution");
         }
 
         List<NameValuePair> params = commonOtpParams(service);

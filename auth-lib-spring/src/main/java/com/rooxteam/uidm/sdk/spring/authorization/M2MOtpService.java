@@ -2,6 +2,7 @@ package com.rooxteam.uidm.sdk.spring.authorization;
 
 import com.rooxteam.sso.aal.AuthenticationAuthorizationLibrary;
 import com.rooxteam.sso.aal.Principal;
+import com.rooxteam.sso.aal.PrincipalImpl;
 import com.rooxteam.sso.aal.client.EvaluationContext;
 import com.rooxteam.sso.aal.otp.OtpFlowState;
 import com.rooxteam.sso.aal.otp.OtpResponse;
@@ -63,11 +64,9 @@ public class M2MOtpService {
             UidmSdkSpringLogger.LOG.warnExceptionOnAalOtpRequest(e);
         }
         String jwt = null;
-        if (result.getPrincipal() != null) {
-            final Principal principal = result.getPrincipal();
-            if (principal != null) {
-                jwt = principal.getJwtToken();
-            }
+        if (result.getPrincipal() != null && result.getPrincipal() instanceof PrincipalImpl) {
+            final PrincipalImpl principal = (PrincipalImpl) result.getPrincipal();
+            jwt = principal.getPrivateJwtToken();
         }
         return new Response(result.getStatus(), result.getOtpFlowState(), result.getRequiredFieldNames(),
                 result.getAvailableAttempts(), jwt, result.getBlockedFor(), result.getNextOtpCodeOperationPeriod(),
