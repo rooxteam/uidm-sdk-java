@@ -33,18 +33,8 @@ public class PrincipalTest {
             "CAiYXVkIjogWyAid2ViYXBpIiBdLCAicmVuIjogMTQzODcwMzMzMywgImp0aSI6ICIzZTI2MjEzOC1lNjc4LTQ0MDYtODBjNy04M2I0NzJm" +
             "YmJlNzkiLCAiaW1zaSI6ICIyNTAxMTAxMDAwMTQ0OCIsICJhdGgiOiAxNDM4NzAzMjczIH0.pMqdpoGQisd2EPmF3duzftWG0v6U_LtM5qXV186-5xM";
 
-    @Test(expected = IllegalArgumentException.class)
-    public void should_throw_illegalArgumentException_when_jwt_is_null_for_principal() {
-        new PrincipalImpl(null, null);
-    }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void should_throw_illegalArgumentException_when_jwt_is_empty_for_principal() {
-        new PrincipalImpl("", "");
-    }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void should_throw_illegalArgumentException_when_jwt_is_empty_with_spaces_for_principal() {
-        new PrincipalImpl("   ", "   ");
-    }
+
+
 }
