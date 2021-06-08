@@ -14,15 +14,8 @@ buildscript {
     }
 }
 
-plugins {
-    // for configuration see gradle/jcenter.gradle
-    id "com.jfrog.bintray" version "1.8.4"
-}
-
-
 apply plugin: 'roox-doc'
 apply plugin: 'roox-jar'
-apply from: 'gradle/jcenter.gradle'
 apply plugin: 'com.bmuschko.nexus'
 
 // give test dependencies access to compileOnly dependencies to emulate providedCompile
