@@ -5,6 +5,7 @@ import com.rooxteam.sso.aal.otp.OtpStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.util.Map;
 import java.util.Set;
 
 @Data
@@ -20,9 +21,10 @@ public class Response {
     private Long nextOtpCodeOperationPeriod;
     private Long otpCodeNumber;
     private final String method;
+    private Map<String, Object> extendedAttributes;
 
     /**
-     * @deprecated use {@link Response#Response(OtpStatus, OtpFlowState, Set, Integer, String, Long, Long, Long, String)} instead
+     * @deprecated use {@link Response#Response(OtpStatus, OtpFlowState, Set, Integer, String, Long, Long, Long, String, Map)} instead
      */
     @Deprecated
     public Response(OtpStatus status, OtpFlowState otpFlowState, Set<String> requiredFieldNames, Integer availableAttempts, String token, Long blockedFor, Long nextOtpCodeOperationPeriod, Long otpCodeNumber) {

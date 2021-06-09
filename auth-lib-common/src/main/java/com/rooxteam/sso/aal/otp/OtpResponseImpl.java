@@ -4,6 +4,7 @@ import com.rooxteam.sso.aal.Principal;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Map;
 import java.util.Set;
 
 @Getter
@@ -19,6 +20,7 @@ public class OtpResponseImpl implements OtpResponse {
     private Long nextOtpCodeOperationPeriod;
     private Long otpCodeNumber;
     private String method;
+    private Map<String, Object> extendedAttributes;
 
     public OtpResponseImpl() {
     }

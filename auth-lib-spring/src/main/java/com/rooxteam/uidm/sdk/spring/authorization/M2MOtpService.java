@@ -70,6 +70,6 @@ public class M2MOtpService {
         }
         return new Response(result.getStatus(), result.getOtpFlowState(), result.getRequiredFieldNames(),
                 result.getAvailableAttempts(), jwt, result.getBlockedFor(), result.getNextOtpCodeOperationPeriod(),
-                result.getOtpCodeNumber(), result.getMethod());
+                result.getOtpCodeNumber(), result.getMethod(), result.getExtendedAttributes());
     }
 }

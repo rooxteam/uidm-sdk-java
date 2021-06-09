@@ -2,6 +2,7 @@ package com.rooxteam.sso.aal.otp;
 
 import com.rooxteam.sso.aal.Principal;
 
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -56,4 +57,10 @@ public interface OtpResponse {
      * @return OTP method (SMS, IQDS, ...)
      */
     String getMethod();
+
+    /**
+     * @return Расширенные атрибуты при использовании кастомных реализаций функций OTP в UIDM
+     */
+    Map<String, Object> getExtendedAttributes();
+
 }
