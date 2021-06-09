@@ -103,6 +103,10 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
 
 # История изменений
 
+## 3.16.1
+
+Поддерживаются дополнительные атрибуты в результатах сценария подписания операций через контроллер /sign-operation
+
 ## 3.16.0
 
 Поддерживается улучшенный сценарий подписания операций через контроллер /sign-operation
