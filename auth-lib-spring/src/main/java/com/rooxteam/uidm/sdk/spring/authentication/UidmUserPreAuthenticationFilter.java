@@ -1,7 +1,6 @@
 package com.rooxteam.uidm.sdk.spring.authentication;
 
 import com.rooxteam.sso.aal.AalLogger;
-import lombok.RequiredArgsConstructor;
 import org.jboss.logging.MDC;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.core.Ordered;
@@ -19,7 +18,6 @@ import java.util.regex.Pattern;
 /**
  * UidmUserPreAuthenticationFilter - фильтр, обеспечивает sso аутентификацию по токену используя сервер UIDM.
  */
-@RequiredArgsConstructor
 public class UidmUserPreAuthenticationFilter extends AbstractUserPreAuthenticatedProcessingFilter implements Ordered, EnvironmentAware {
 
     private static final String TOKEN_PATTERN_PREFIX = "Bearer";
@@ -29,21 +27,12 @@ public class UidmUserPreAuthenticationFilter extends AbstractUserPreAuthenticate
     public static final String SSO = "sso";
     public static final String TOKEN_VERSION_1_0 = "1.0";
 
+    private final SsoAuthorizationClient authorizationClient;
     private final UserPreAuthFilterSettings setting;
-    private SsoAuthorizationClient authorizationClient;
 
-    @Override
-    public void afterPropertiesSet() {
-        super.afterPropertiesSet();
-
-        if (setting != null) {
-            authorizationClient = setting.getAuthorizationClient();
-            if (authorizationClient != null) {
-                return;
-            }
-        }
-
-        throw new IllegalStateException("Missing or improperly configured required 'settings' property");
+    public UidmUserPreAuthenticationFilter(SsoAuthorizationClient authorizationClient, UserPreAuthFilterSettings setting) {
+        this.authorizationClient = authorizationClient;
+        this.setting = setting;
     }
 
     @Override

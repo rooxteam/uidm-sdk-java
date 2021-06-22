@@ -13,9 +13,7 @@ import static com.rooxteam.sso.aal.ConfigKeys.TOKEN_COOKIE_LEGACY_ROOX_PRODUCTS_
 import static com.rooxteam.sso.aal.ConfigKeys.TOKEN_COOKIE_NAME_KEY;
 import static com.rooxteam.sso.aal.ConfigKeys.USER_ATTRIBUTES_EXPOSE_TO_MDC;
 
-public class DefaultUserPreAuthFilterSettingsImpl implements UserPreAuthFilterSettings, EnvironmentAware {
-
-    private final SsoAuthorizationClient authorizationClient;
+public class ConfigBasedUserPreAuthFilterSettingsImpl implements UserPreAuthFilterSettings, EnvironmentAware {
 
     @Getter(AccessLevel.PROTECTED)
     private final Configuration config;
@@ -23,14 +21,8 @@ public class DefaultUserPreAuthFilterSettingsImpl implements UserPreAuthFilterSe
     @Setter
     private Environment environment;
 
-    public DefaultUserPreAuthFilterSettingsImpl(SsoAuthorizationClient authorizationClient, Configuration config) {
-        this.authorizationClient = authorizationClient;
+    public ConfigBasedUserPreAuthFilterSettingsImpl(Configuration config) {
         this.config = config;
-    }
-
-    @Override
-    public SsoAuthorizationClient getAuthorizationClient() {
-        return authorizationClient;
     }
 
     @Override

@@ -3,7 +3,7 @@ package com.rooxteam.uidm.sdk.spring.configuration;
 import com.rooxteam.sso.aal.AuthenticationAuthorizationLibrary;
 import com.rooxteam.sso.aal.client.cookies.CookieStoreFactory;
 import com.rooxteam.sso.aal.client.cookies.RequestCookieStoreFilter;
-import com.rooxteam.uidm.sdk.spring.authentication.DefaultUserPreAuthFilterSettingsImpl;
+import com.rooxteam.uidm.sdk.spring.authentication.ConfigBasedUserPreAuthFilterSettingsImpl;
 import com.rooxteam.uidm.sdk.spring.authentication.LegacySharedSecretSystemPreAuthenticationFilter;
 import com.rooxteam.uidm.sdk.spring.authentication.SsoAuthorizationClient;
 import com.rooxteam.uidm.sdk.spring.authentication.UidmUserPreAuthenticationFilter;
@@ -21,14 +21,14 @@ import javax.servlet.Filter;
 public class UidmSpringSecurityFilterConfiguration {
 
     @Bean
-    public UserPreAuthFilterSettings defaultUserPreAuthFilterSettings(SsoAuthorizationClient ssoAuthorizationClient,
-                                                                      AuthenticationAuthorizationLibrary aal) {
-        return new DefaultUserPreAuthFilterSettingsImpl(ssoAuthorizationClient, aal.getConfiguration());
+    public UserPreAuthFilterSettings springEnvironmentUserPreAuthFilterSettings(AuthenticationAuthorizationLibrary aal) {
+        return new ConfigBasedUserPreAuthFilterSettingsImpl(aal.getConfiguration());
     }
 
     @Bean
-    public GenericFilterBean uidmUserPreAuthenticationFilter(UserPreAuthFilterSettings userPreAuthFilterSettings) {
-        return new UidmUserPreAuthenticationFilter(userPreAuthFilterSettings);
+    public GenericFilterBean uidmUserPreAuthenticationFilter(SsoAuthorizationClient ssoAuthorizationClient,
+                                                             UserPreAuthFilterSettings userPreAuthFilterSettings) {
+        return new UidmUserPreAuthenticationFilter(ssoAuthorizationClient, userPreAuthFilterSettings);
     }
 
 

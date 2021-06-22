@@ -6,17 +6,7 @@ import javax.servlet.ServletRequest;
  * Настройки для фильтра {@link com.rooxteam.uidm.sdk.spring.authentication.UidmUserPreAuthenticationFilter}.
  */
 public interface UserPreAuthFilterSettings {
-
-    /**
-     * Получить экземпляр {@link com.rooxteam.uidm.sdk.spring.authentication.SsoAuthorizationClient}.
-     *
-     * <br><br>
-     * Свойство кешируется при инициализации сервиса ({@code UidmUserPreAuthenticationFilter} или его наследника)
-     *
-     * @return сервис для работы с токеном
-     */
-    SsoAuthorizationClient getAuthorizationClient();
-
+    
     /**
      * Получить имя куки, в которой может находиться искомый токен для валидации.
      *
