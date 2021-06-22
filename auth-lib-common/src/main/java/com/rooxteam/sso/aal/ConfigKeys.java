@@ -274,4 +274,9 @@ public interface ConfigKeys {
      */
     String USER_CONTEXT_IP_HEADER_DEFAULT = "X-Forwarded-For";
 
+    /**
+     * Список атрибутов из Principal.sharedIdentityProperties которые надо сложить в MDC
+     */
+    String USER_ATTRIBUTES_EXPOSE_TO_MDC = "com.rooxteam.aal.mdc.principal_attributes_to_expose";
+
 }

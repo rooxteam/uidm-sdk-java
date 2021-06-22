@@ -3,9 +3,11 @@ package com.rooxteam.uidm.sdk.spring.configuration;
 import com.rooxteam.sso.aal.AuthenticationAuthorizationLibrary;
 import com.rooxteam.sso.aal.client.cookies.CookieStoreFactory;
 import com.rooxteam.sso.aal.client.cookies.RequestCookieStoreFilter;
+import com.rooxteam.uidm.sdk.spring.authentication.DefaultUserPreAuthFilterSettingsImpl;
 import com.rooxteam.uidm.sdk.spring.authentication.LegacySharedSecretSystemPreAuthenticationFilter;
 import com.rooxteam.uidm.sdk.spring.authentication.SsoAuthorizationClient;
 import com.rooxteam.uidm.sdk.spring.authentication.UidmUserPreAuthenticationFilter;
+import com.rooxteam.uidm.sdk.spring.authentication.UserPreAuthFilterSettings;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -18,15 +20,20 @@ import javax.servlet.Filter;
 @Import(UidmSdkConfiguration.class)
 public class UidmSpringSecurityFilterConfiguration {
 
+    @Bean
+    public UserPreAuthFilterSettings defaultUserPreAuthFilterSettings(SsoAuthorizationClient ssoAuthorizationClient,
+                                                                      AuthenticationAuthorizationLibrary aal) {
+        return new DefaultUserPreAuthFilterSettingsImpl(ssoAuthorizationClient, aal.getConfiguration());
+    }
 
     @Bean
-    public GenericFilterBean uidmUserPreAuthenticationFilter(SsoAuthorizationClient ssoAuthorizationClient, AuthenticationAuthorizationLibrary aal) {
-        return new UidmUserPreAuthenticationFilter(ssoAuthorizationClient, aal.getConfiguration());
+    public GenericFilterBean uidmUserPreAuthenticationFilter(UserPreAuthFilterSettings userPreAuthFilterSettings) {
+        return new UidmUserPreAuthenticationFilter(userPreAuthFilterSettings);
     }
 
 
     @Bean
-    public GenericFilterBean legacySharedSecretSystemPreAuthenticationFilter(SsoAuthorizationClient ssoAuthorizationClient, AuthenticationAuthorizationLibrary aal) {
+    public GenericFilterBean legacySharedSecretSystemPreAuthenticationFilter(AuthenticationAuthorizationLibrary aal) {
         return new LegacySharedSecretSystemPreAuthenticationFilter(aal.getConfiguration());
     }
 
