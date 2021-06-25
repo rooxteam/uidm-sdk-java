@@ -3,8 +3,8 @@ package com.rooxteam.uidm.sdk.spring.configuration;
 import com.rooxteam.sso.aal.AuthenticationAuthorizationLibrary;
 import com.rooxteam.sso.aal.client.cookies.CookieStoreFactory;
 import com.rooxteam.sso.aal.client.cookies.RequestCookieStoreFilter;
-import com.rooxteam.uidm.sdk.spring.authentication.ConfigBasedUserPreAuthFilterSettingsImpl;
 import com.rooxteam.uidm.sdk.spring.authentication.LegacySharedSecretSystemPreAuthenticationFilter;
+import com.rooxteam.uidm.sdk.spring.authentication.RooxConfigBasedUserPreAuthFilterSettingsImpl;
 import com.rooxteam.uidm.sdk.spring.authentication.SsoAuthorizationClient;
 import com.rooxteam.uidm.sdk.spring.authentication.UidmUserPreAuthenticationFilter;
 import com.rooxteam.uidm.sdk.spring.authentication.UserPreAuthFilterSettings;
@@ -22,7 +22,7 @@ public class UidmSpringSecurityFilterConfiguration {
 
     @Bean
     public UserPreAuthFilterSettings springEnvironmentUserPreAuthFilterSettings(AuthenticationAuthorizationLibrary aal) {
-        return new ConfigBasedUserPreAuthFilterSettingsImpl(aal.getConfiguration());
+        return new RooxConfigBasedUserPreAuthFilterSettingsImpl(aal.getConfiguration());
     }
 
     @Bean
