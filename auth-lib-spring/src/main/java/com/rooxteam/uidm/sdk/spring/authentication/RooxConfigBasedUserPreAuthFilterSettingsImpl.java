@@ -26,13 +26,13 @@ public class RooxConfigBasedUserPreAuthFilterSettingsImpl implements UserPreAuth
     }
 
     @Override
-    public String factoryGetCookieName(ServletRequest request) {
+    public String getCookieName() {
         return config.getString(TOKEN_COOKIE_NAME_KEY,
                 config.getString(TOKEN_COOKIE_LEGACY_ROOX_PRODUCTS_KEY));
     }
 
     @Override
-    public String[] factoryGetPrincipalAttributesExposedToMDC(ServletRequest request) {
+    public String[] getPrincipalAttributesExposedToMDC() {
         return environment.getProperty(USER_ATTRIBUTES_EXPOSE_TO_MDC,
                 String[].class,
                 new String[0]);

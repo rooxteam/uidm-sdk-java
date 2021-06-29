@@ -59,7 +59,7 @@ public class UidmUserPreAuthenticationFilter extends AbstractUserPreAuthenticate
         String authenticationToken = request.getHeader("Authorization");
 
         if (authenticationToken == null) {
-            final String tokenCookieName = setting.factoryGetCookieName(request);
+            final String tokenCookieName = setting.getCookieName();
 
             if (tokenCookieName != null) {
                 final Cookie[] cookies = request.getCookies();
@@ -107,14 +107,14 @@ public class UidmUserPreAuthenticationFilter extends AbstractUserPreAuthenticate
             return;
         }
 
-        final String[] exposeAttributeNames = setting.factoryGetPrincipalAttributesExposedToMDC(request);
+        final String[] exposeAttributeNames = setting.getPrincipalAttributesExposedToMDC();
         for (String exposeAttributeName : exposeAttributeNames) {
             MDC.put("pa-" + exposeAttributeName, authenticationState.getAttributes().get(exposeAttributeName));
         }
     }
 
     private void clearMDC(ServletRequest request) {
-        final String[] exposeAttributeNames = setting.factoryGetPrincipalAttributesExposedToMDC(request);
+        final String[] exposeAttributeNames = setting.getPrincipalAttributesExposedToMDC();
         for (String exposeAttributeName : exposeAttributeNames) {
             MDC.remove("pa-" + exposeAttributeName);
         }
