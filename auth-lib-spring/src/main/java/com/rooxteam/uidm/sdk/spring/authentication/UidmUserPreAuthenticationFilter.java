@@ -108,15 +108,19 @@ public class UidmUserPreAuthenticationFilter extends AbstractUserPreAuthenticate
         }
 
         final String[] exposeAttributeNames = setting.getPrincipalAttributesExposedToMDC();
-        for (String exposeAttributeName : exposeAttributeNames) {
-            MDC.put("pa-" + exposeAttributeName, authenticationState.getAttributes().get(exposeAttributeName));
+        if (exposeAttributeNames != null) {
+            for (String exposeAttributeName : exposeAttributeNames) {
+                MDC.put("pa-" + exposeAttributeName, authenticationState.getAttributes().get(exposeAttributeName));
+            }
         }
     }
 
     private void clearMDC(ServletRequest request) {
         final String[] exposeAttributeNames = setting.getPrincipalAttributesExposedToMDC();
-        for (String exposeAttributeName : exposeAttributeNames) {
-            MDC.remove("pa-" + exposeAttributeName);
+        if (exposeAttributeNames != null) {
+            for (String exposeAttributeName : exposeAttributeNames) {
+                MDC.remove("pa-" + exposeAttributeName);
+            }
         }
     }
 
