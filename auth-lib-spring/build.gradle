@@ -52,7 +52,7 @@ dependencies {
     // for testing
     testCompile("junit:junit:$junitVersion")
     testCompile("org.mockito:mockito-all:$mockitoVersion")
-    testCompile('javax.servlet:servlet-api:2.5')
+    testCompile('javax.servlet:javax.servlet-api:4.0.1')
     testCompile("org.springframework:spring-test:${springVersion}")
 }
 
