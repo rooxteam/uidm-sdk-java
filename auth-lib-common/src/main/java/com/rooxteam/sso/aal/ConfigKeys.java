@@ -137,7 +137,7 @@ public interface ConfigKeys {
     /**
      * Значение по умолчанию для максимального времени жизни элементов в кеше авторизаций в секундах
      */
-    int POLICY_CACHE_EXPIRE_AFTER_WRITE_DEFAULT = 60;
+    int POLICY_CACHE_EXPIRE_AFTER_WRITE_DEFAULT = 3;
 
     /**
      * {@value} - Должны ли применяться политики для систем.

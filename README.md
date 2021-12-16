@@ -103,6 +103,11 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
 
 # История изменений
 
+## 3.17.1
+
+По соображениям безопасности изменено значение по-умолчанию для конфигурационного параметра 
+`com.rooxteam.aal.policy.cache.expire_after_write`. Новое значение: 3 (секунды). 
+
 ## 3.17.0
 
 Фильтр аутентификации по токену:
