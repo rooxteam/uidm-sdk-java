@@ -36,6 +36,7 @@ import static com.rooxteam.sso.aal.AalLogger.LOG;
 /**
  * @author Dmitry Tikhonov
  */
+@SuppressWarnings("unused")
 public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
 
     private final ObjectMapper jsonMapper;
@@ -61,7 +62,6 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
 
         if (token == null) {
             LOG.warnNullSsoToken();
-            throw new IllegalArgumentException("Authorization token is not supplied");
         }
 
         if (StringUtils.isEmpty(resource)) {
@@ -87,7 +87,7 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
         try {
             String url = config.getString(ConfigKeys.SSO_URL) + IS_ALLOWED_PATH;
             HttpPost post = HttpHelper.getHttpPostWithJsonBody(url, jsonMapper.writeValueAsString(evaluationContext));
-            post.addHeader("Authorization", "Bearer " + token);
+            post.addHeader("Authorization", "Bearer " + (token != null ? token : ""));
             return doIsAllowedPost(post);
         } catch (IOException e) {
             LOG.errorAuthentication(e);
@@ -106,7 +106,6 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
 
         if (token == null) {
             LOG.warnNullSsoToken();
-            throw new IllegalArgumentException("Authorization token is not supplied");
         }
 
         try {
@@ -121,7 +120,7 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
 
             String url = config.getString(ConfigKeys.SSO_URL) + WHICH_ALLOWED_PATH;
             HttpPost post = HttpHelper.getHttpPostWithJsonBody(url, jsonMapper.writeValueAsString(contexts));
-            post.addHeader("Authorization", "Bearer " + token);
+            post.addHeader("Authorization", "Bearer " + (token != null ? token : ""));
             EvaluationResponse[] responses = doWhichAllowedPost(post);
 
             if (policies.size() != responses.length) {
