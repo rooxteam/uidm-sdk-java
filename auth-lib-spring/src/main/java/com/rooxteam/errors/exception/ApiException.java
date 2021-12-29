@@ -44,6 +44,7 @@ public class ApiException extends RuntimeException implements Serializable {
      * <p>
      * <em>По-умолчанию Bad request (400)</em>
      */
+    @Builder.Default
     private HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
 
     public ApiException() {
