@@ -87,7 +87,7 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
         try {
             String url = config.getString(ConfigKeys.SSO_URL) + IS_ALLOWED_PATH;
             HttpPost post = HttpHelper.getHttpPostWithJsonBody(url, jsonMapper.writeValueAsString(evaluationContext));
-            post.addHeader("Authorization", "Bearer " + (token != null ? token : ""));
+            setupAuthorization(post, token);
             return doIsAllowedPost(post);
         } catch (IOException e) {
             LOG.errorAuthentication(e);
@@ -120,7 +120,7 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
 
             String url = config.getString(ConfigKeys.SSO_URL) + WHICH_ALLOWED_PATH;
             HttpPost post = HttpHelper.getHttpPostWithJsonBody(url, jsonMapper.writeValueAsString(contexts));
-            post.addHeader("Authorization", "Bearer " + (token != null ? token : ""));
+            setupAuthorization(post, token);
             EvaluationResponse[] responses = doWhichAllowedPost(post);
 
             if (policies.size() != responses.length) {
@@ -156,6 +156,12 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
             jwt = subject.getJwtToken();
         }
         return jwt;
+    }
+
+    private void setupAuthorization(HttpPost post, String token) {
+        if (token != null) {
+            post.addHeader("Authorization", "Bearer " + token);
+        }
     }
 
     private EvaluationResponse doIsAllowedPost(HttpPost post) throws IOException {

@@ -103,7 +103,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
 
 # История изменений
 
-## 3.17.2
+## 3.18.0
 
 Вызов Evaluate Policy возможен теперь и из неавторизованной зоны тоже.
 
