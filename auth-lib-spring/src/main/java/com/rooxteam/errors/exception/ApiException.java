@@ -10,7 +10,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import java.io.Serializable;
 
@@ -45,6 +44,7 @@ public class ApiException extends RuntimeException implements Serializable {
      * <p>
      * <em>По-умолчанию Bad request (400)</em>
      */
+    @Builder.Default
     private HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
 
     public ApiException() {
