@@ -152,6 +152,18 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
     Map<EvaluationRequest, EvaluationResponse> evaluatePolicies(Principal subject, List<EvaluationRequest> policiesToCheck);
 
     /**
+     * Обработать ответ политикой. Параметры те же самые, что и у вычисления политики (actionName) над ресурсом (actionName) в контексте (envParameters).
+     *
+     * @param subject       Principal для которого запрашивается доступ
+     * @param resourceName  имя запрашиваемого ресурса
+     * @param actionName    имя действия
+     * @param envParameters контекст
+     * @return отфильтрованнный политикой ответ.
+     * @throws IllegalArgumentException Если параметры {@code subject}, {@code resourceName} или {@code actionName} равны null
+     */
+    String postprocessPolicy(Principal subject, String resourceName, String actionName, Map<String, ?> envParameters, String response);
+
+    /**
      * Сбросить все авторизационные решения в кеше.
      */
     void resetPolicies();

@@ -112,4 +112,8 @@ abstract class InvocationRootObject implements SecurityExpressionOperations, Aal
 
     public abstract boolean isAllowed(String resource, String operation, Map<String, ?> envParameters);
 
+    @Override
+    public String postprocess(String resource, String operation, Map<String, ?> envParameters, String response) {
+        throw new IllegalStateException("not implemented");
+    }
 }

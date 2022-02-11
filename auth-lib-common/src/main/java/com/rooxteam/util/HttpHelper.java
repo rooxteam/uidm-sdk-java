@@ -1,4 +1,4 @@
-package com.rooxteam.sso.aal.client;
+package com.rooxteam.util;
 
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpRequest;
@@ -13,14 +13,17 @@ import org.apache.http.message.BasicHeader;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 
-class HttpHelper {
+public final class HttpHelper {
 
     private static final String REQUEST_BODY_CHARSET = "UTF-8";
     private static final String REQUEST_PARAMS_CHARSET = "UTF-8";
     private static final String JSON_CONTENT_TYPE = "application/json";
     private static final String X_WWW_FORM_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
-    static HttpPost getHttpPostWithEntity(String url, List<NameValuePair> params) throws UnsupportedEncodingException {
+    private HttpHelper() {
+    }
+
+    public static HttpPost getHttpPostWithEntity(String url, List<NameValuePair> params) throws UnsupportedEncodingException {
         HttpPost post = new HttpPost(url);
         restPrepare(post);
         post.addHeader(new BasicHeader(HttpHeaders.CONTENT_TYPE, X_WWW_FORM_CONTENT_TYPE));
@@ -28,7 +31,7 @@ class HttpHelper {
         return post;
     }
 
-    static HttpPost getHttpPostWithJsonBody(String url, String body) {
+    public static HttpPost getHttpPostWithJsonBody(String url, String body) {
         HttpPost post = new HttpPost(url);
         restPrepare(post);
         post.addHeader(new BasicHeader(HttpHeaders.CONTENT_TYPE, JSON_CONTENT_TYPE));
@@ -36,13 +39,13 @@ class HttpHelper {
         return post;
     }
 
-    static HttpPost getHttpPost(String url, List<NameValuePair> params) {
+    public static HttpPost getHttpPost(String url, List<NameValuePair> params) {
         HttpPost post = new HttpPost(url + uniformURLParams(params));
         restPrepare(post);
         return post;
     }
 
-    static HttpGet getHttpGet(String url, List<NameValuePair> params) {
+    public static HttpGet getHttpGet(String url, List<NameValuePair> params) {
         HttpGet get = new HttpGet(url + uniformURLParams(params));
         restPrepare(get);
         return get;

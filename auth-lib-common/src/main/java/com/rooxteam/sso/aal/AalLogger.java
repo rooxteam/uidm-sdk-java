@@ -297,6 +297,11 @@ public interface AalLogger extends BasicLogger {
     void traceNoSSOTokenInPrincipal();
 
     @LogMessage(level = TRACE)
+    @Message(id = 9015, format = MESSAGE_FORMAT,
+            value = "Attempt to postprocess policy by key: {0}.")
+    void tracePostprocessPolicy(PolicyDecisionKey key);
+
+    @LogMessage(level = TRACE)
     @Message(id = 9020, format = MESSAGE_FORMAT,
             value = "Failed to invalidate cached authorization session.")
     void traceFailedToInvalidateSSOToken(@Cause Exception e);
