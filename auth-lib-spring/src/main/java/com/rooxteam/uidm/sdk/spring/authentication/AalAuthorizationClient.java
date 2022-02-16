@@ -8,6 +8,7 @@ import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.PrincipalImpl;
 import com.rooxteam.sso.aal.PropertyScope;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
+import com.rooxteam.sso.aal.exception.AalException;
 import com.rooxteam.uidm.sdk.spring.authorization.AalResourceValidation;
 import lombok.Setter;
 import org.springframework.context.EnvironmentAware;
@@ -158,6 +159,30 @@ public class AalAuthorizationClient implements SsoAuthorizationClient, AalResour
             }
         }
         return result.getDecision().isPositive();
+    }
+
+    @Override
+    public String postprocess(String resource, String operation, Map<String, ?> envParameters, String response) {
+        if (aal == null) {
+            throw new AalException("AAL is not configured");
+        }
+        Principal aalPrincipal;
+        SecurityContext seco = SecurityContextHolder.getContext();
+        if (seco == null) {
+            aalPrincipal = new AnonymousPrincipalImpl();
+        } else {
+            Authentication authentication = seco.getAuthentication();
+            if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
+                aalPrincipal = new AnonymousPrincipalImpl();
+            } else {
+                AuthenticationState authState = (AuthenticationState) authentication;
+                aalPrincipal = (Principal) authState.getAttributes().get(AAL_PRINCIPAL_ATTRIBUTE_NAME);
+                if (aalPrincipal == null) {
+                    aalPrincipal = reconstructPrincipalFromAuthState(authState);
+                }
+            }
+        }
+        return aal.postprocessPolicy(aalPrincipal, resource, operation, envParameters, response);
     }
 
     private Principal reconstructPrincipalFromAuthState(AuthenticationState authenticationState) {

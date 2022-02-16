@@ -229,12 +229,14 @@ public class AalFactory {
 
     private static String getSsoAuthorizationClientName(AuthorizationType authorizationType) {
         switch (authorizationType) {
+            case OPA:
+                return "com.rooxteam.sso.aal.opa.OpaAuthorizationClient";
+            case CONFIG: {
+                return "com.rooxteam.sso.aal.client.SsoAuthorizationClientByConfig";
+            }
             default:
             case JWT: {
                 return "com.rooxteam.sso.aal.client.SsoAuthorizationClientByJwt";
-            }
-            case CONFIG: {
-                return "com.rooxteam.sso.aal.client.SsoAuthorizationClientByConfig";
             }
         }
     }

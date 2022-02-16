@@ -10,4 +10,6 @@ public interface AalResourceValidation {
     boolean isAllowed(String resource, String operation);
 
     boolean isAllowed(String resource, String operation, Map<String, ?> envParameters);
+
+    String postprocess(String resource, String operation, Map<String, ?> envParameters, String response);
 }

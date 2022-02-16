@@ -9,6 +9,8 @@ import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.exception.NetworkErrorException;
 import com.rooxteam.sso.aal.exception.ValidateException;
 import com.rooxteam.sso.aal.userIp.UserIpProviderFactory;
+import com.rooxteam.sso.aal.utils.DummyRequest;
+import com.rooxteam.util.HttpHelper;
 import lombok.SneakyThrows;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
@@ -126,6 +128,11 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
                     e);
             throw e;
         }
+    }
+
+    @Override
+    public Principal validate(final String token) {
+        return validate(DummyRequest.getInstance(), token);
     }
 
     private static Map<String, Object> parseJson(String json) {

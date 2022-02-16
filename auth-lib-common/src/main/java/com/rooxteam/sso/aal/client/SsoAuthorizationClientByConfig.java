@@ -10,6 +10,7 @@ import com.rooxteam.sso.aal.client.model.Decision;
 import com.rooxteam.sso.aal.client.model.EvaluationRequest;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.configuration.Configuration;
+import com.rooxteam.sso.aal.exception.AalException;
 import com.rooxteam.sso.aal.exception.AuthorizationException;
 import com.rooxteam.sso.aal.utils.DummyRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -98,6 +99,11 @@ public class SsoAuthorizationClientByConfig extends CommonSsoAuthorizationClient
     @Override
     public Principal validate(final String token) {
         return validate(DummyRequest.getInstance(), token);
+    }
+
+    @Override
+    public String postprocess(Principal subject, String resourceName, String actionName, Map<String, ?> envParameters, String response) {
+        throw new AalException("postprocess is implemented in OPA mode only");
     }
 
     private Integer getRequiredLevel(String resourceName,

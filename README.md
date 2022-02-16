@@ -103,6 +103,22 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
 
 # История изменений
 
+## 3.19.0
+
+Поддержана авторизация через OPA. Для включения надо настроить
+
+```properties
+# Эндпойнт вычислителя
+com.rooxteam.aal.opa.data_api.endpoint=http://localhost:8181/v1/data
+
+# Переключаем вызовы isAllowed на OPA с Legacy OpenAM
+com.rooxteam.aal.authorization_type=OPA
+
+# Опционально указать OPA-пакет с политиками
+com.rooxteam.aal.opa.package=authz
+
+```
+
 ## 3.18.0
 
 Вызов Evaluate Policy возможен теперь и из неавторизованной зоны тоже.

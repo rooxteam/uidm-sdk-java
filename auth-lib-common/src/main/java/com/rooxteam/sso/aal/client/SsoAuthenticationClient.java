@@ -9,6 +9,7 @@ import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
 import com.rooxteam.sso.aal.exception.ErrorSubtypes;
 import com.rooxteam.sso.aal.exception.NetworkErrorException;
+import com.rooxteam.util.HttpHelper;
 import lombok.SneakyThrows;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.CloseableHttpResponse;

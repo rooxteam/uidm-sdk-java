@@ -216,9 +216,9 @@ public interface ConfigKeys {
     /**
      * Authentication type can be:
      * <li>
-     * <ul>SSO_TOKEN - aal will use policy SDK for policy evaluation </ul>
      * <ul>JWT  - aal will use RooX Solutions REST policy service </ul>
      * <ul>CONFIG - aal will use config-based, local policy evaluation by {@code com.rooxteam.aal.policies} property</ul>
+     * <ul>OPA - aal will use OPA</ul>
      * </li>
      */
     String AUTHORIZATION_TYPE = "com.rooxteam.aal.authorization_type";
@@ -279,4 +279,13 @@ public interface ConfigKeys {
      */
     String USER_ATTRIBUTES_EXPOSE_TO_MDC = "com.rooxteam.aal.mdc.principal_attributes_to_expose";
 
+
+    /**
+     * OPA data API URL, like "http://opa.example.com/v1/data".
+     */
+    String OPA_DATA_API_URL = "com.rooxteam.aal.opa.data_api.endpoint";
+
+    String OPA_PACKAGE = "com.rooxteam.aal.opa.package";
+
+    String OPA_PACKAGE_DEFAULT = "authz";
 }

@@ -1,4 +1,4 @@
-package com.rooxteam.sso.aal.client;
+package com.rooxteam.sso.aal.opa;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -8,6 +8,9 @@ import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.PrincipalImpl;
 import com.rooxteam.sso.aal.PropertyScope;
+import com.rooxteam.sso.aal.client.CommonSsoAuthorizationClient;
+import com.rooxteam.sso.aal.client.EvaluationContext;
+import com.rooxteam.sso.aal.client.model.Decision;
 import com.rooxteam.sso.aal.client.model.EvaluationRequest;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.configuration.Configuration;
@@ -27,27 +30,31 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.Map;
 
 import static com.rooxteam.sso.aal.AalLogger.LOG;
 
 /**
- * @author Dmitry Tikhonov
+ * Authorize operations using Open Policy Agent
+ *
+ * @author RooX
  */
 @SuppressWarnings("unused")
-public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
+public class OpaAuthorizationClient extends CommonSsoAuthorizationClient {
 
     private final ObjectMapper jsonMapper;
 
-    private static final String IS_ALLOWED_PATH = "/api/policyEvaluation/isAllowed";
-    private static final String WHICH_ALLOWED_PATH = "/api/policyEvaluation/whichAllowed";
-    private static final String TOKEN_INFO_PATH = "/oauth2/tokeninfo";
+    /**
+     * This fits into Repo package (until last slash) and a policy name (after last slash)
+     */
+    private static final String IS_ALLOWED_POLICY = "/{0}/isAllowed";
 
-    public SsoAuthorizationClientByJwt(Configuration rooxConfig,
-                                       CloseableHttpClient httpClient) {
+    private static final String POSTPROCESS_POLICY = "/{0}/postprocess";
+
+    public OpaAuthorizationClient(Configuration rooxConfig,
+                                  CloseableHttpClient httpClient) {
         super(rooxConfig, httpClient);
         this.jsonMapper = new ObjectMapper();
         this.jsonMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -59,9 +66,9 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
                                                                 String resource,
                                                                 String method,
                                                                 Map<String, ?> env) {
-        String token = getJwtToken(subject);
+        final String accessToken = getAccessToken(subject);
 
-        if (token == null) {
+        if (accessToken == null) {
             LOG.warnNullSsoToken();
         }
 
@@ -85,11 +92,25 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
                 ? new EvaluationContext(realm, resource, method, env, requestContextCollector.collect(requestAttributes.getRequest()))
                 : new EvaluationContext(realm, resource, method, env);
 
+        OpaPolicyRequest opaPolicyRequest = new OpaPolicyRequest(
+                new OpaInput(
+                        evaluationContext,
+                        new OpaAuthorization(accessToken),
+                        null
+                )
+        );
+
+        String opaPackage = config.getString(ConfigKeys.OPA_PACKAGE, ConfigKeys.OPA_PACKAGE_DEFAULT);
+
         try {
-            String url = config.getString(ConfigKeys.SSO_URL) + IS_ALLOWED_PATH;
-            HttpPost post = HttpHelper.getHttpPostWithJsonBody(url, jsonMapper.writeValueAsString(evaluationContext));
-            setupAuthorization(post, token);
-            return doIsAllowedPost(post);
+            final String url = config.getString(ConfigKeys.OPA_DATA_API_URL) + new MessageFormat(IS_ALLOWED_POLICY).format(new String[]{opaPackage});
+            final HttpPost post = HttpHelper.getHttpPostWithJsonBody(url, jsonMapper.writeValueAsString(opaPolicyRequest));
+            String result = executeRequest(post);
+            final OpaPolicyResponse opaPolicyResponse = jsonMapper.readValue(result, OpaPolicyResponse.class);
+            if (opaPolicyResponse.getResult() == null) {
+                return new EvaluationResponse(Decision.Deny);
+            }
+            return opaPolicyResponse.getResult();
         } catch (IOException e) {
             LOG.errorAuthentication(e);
             throw new NetworkErrorException("Failed to authorize because of communication or protocol error", e);
@@ -100,56 +121,64 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
     }
 
     @Override
-    @SneakyThrows
-    public Map<EvaluationRequest, EvaluationResponse> whichActionAreAllowed(Principal subject,
-                                                                            List<EvaluationRequest> policies) {
-        String token = getJwtToken(subject);
+    public Map<EvaluationRequest, EvaluationResponse> whichActionAreAllowed(Principal subject, List<EvaluationRequest> policies) {
+        throw new AalException("OPA implements isAllowed only");
+    }
 
-        if (token == null) {
+    @Override
+    public String postprocess(Principal subject, String resource, String method, Map<String, ?> env, String response) {
+        final String accessToken = getAccessToken(subject);
+
+        if (accessToken == null) {
             LOG.warnNullSsoToken();
         }
 
+        if (StringUtils.isEmpty(resource)) {
+            LOG.warnNullResource();
+            throw new IllegalArgumentException("Resource name is not supplied");
+        }
+
+        if (StringUtils.isEmpty(method)) {
+            LOG.warnNullMethod();
+            throw new IllegalArgumentException("Method name is not supplied");
+        }
+
+        String realm = (String) subject.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "realm");
+        if (realm == null) {
+            realm = config.getString(ConfigKeys.REALM, ConfigKeys.REALM_DEFAULT);
+        }
+
+
+        ServletRequestAttributes requestAttributes = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes());
+        EvaluationContext evaluationContext = requestAttributes != null
+                ? new EvaluationContext(realm, resource, method, env, requestContextCollector.collect(requestAttributes.getRequest()))
+                : new EvaluationContext(realm, resource, method, env);
+
+        OpaPolicyRequest opaPolicyRequest = new OpaPolicyRequest(
+                new OpaInput(
+                        evaluationContext,
+                        new OpaAuthorization(accessToken),
+                        response
+                )
+        );
+
+        String opaPackage = config.getString(ConfigKeys.OPA_PACKAGE, ConfigKeys.OPA_PACKAGE_DEFAULT);
+
         try {
-            String realm = (String) subject.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "realm");
-            List<EvaluationContext> contexts = new ArrayList<EvaluationContext>();
-            for (EvaluationRequest policy : policies) {
-                String method = policy.getActionName();
-                String resource = policy.getResourceName();
-                Map<String, ?> env = policy.getEnvParameters();
-                contexts.add(new EvaluationContext(realm, resource, method, env));
-            }
-
-            String url = config.getString(ConfigKeys.SSO_URL) + WHICH_ALLOWED_PATH;
-            HttpPost post = HttpHelper.getHttpPostWithJsonBody(url, jsonMapper.writeValueAsString(contexts));
-            setupAuthorization(post, token);
-            EvaluationResponse[] responses = doWhichAllowedPost(post);
-
-            if (policies.size() != responses.length) {
-                throw new IllegalStateException("Wrong number of results");
-            }
-
-            Map<EvaluationRequest, EvaluationResponse> result = new HashMap<EvaluationRequest, EvaluationResponse>();
-
-            for (int i = 0; i < responses.length; i++) {
-                result.put(policies.get(i), responses[i]);
-            }
-
-            return result;
+            final String url = config.getString(ConfigKeys.OPA_DATA_API_URL) + new MessageFormat(POSTPROCESS_POLICY).format(new String[]{opaPackage});
+            final HttpPost post = HttpHelper.getHttpPostWithJsonBody(url, jsonMapper.writeValueAsString(opaPolicyRequest));
+            String result = executeRequest(post);
+            return jsonMapper.readValue(result, OpaPostprocessResponse.class).getResult();
         } catch (IOException e) {
             LOG.errorAuthentication(e);
             throw new NetworkErrorException("Failed to authorize because of communication or protocol error", e);
         } catch (Exception e) {
             LOG.errorAuthentication(e);
-            throw e;
+            throw new AuthorizationException(e);
         }
     }
 
-    @Override
-    public String postprocess(Principal subject, String resourceName, String actionName, Map<String, ?> envParameters, String response) {
-        throw new AalException("postprocess is implemented in OPA mode only");
-    }
-
-    private String getJwtToken(Principal subject) {
+    private String getAccessToken(Principal subject) {
         String jwt;
         if (subject instanceof PrincipalImpl) {
             jwt = ((PrincipalImpl) subject).getPrivateJwtToken();
@@ -157,23 +186,6 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
             jwt = subject.getJwtToken();
         }
         return jwt;
-    }
-
-    private void setupAuthorization(HttpPost post, String token) {
-        if (token != null) {
-            post.addHeader("Authorization", "Bearer " + token);
-        }
-    }
-
-    private EvaluationResponse doIsAllowedPost(HttpPost post) throws IOException {
-        String result = executeRequest(post);
-
-        return jsonMapper.readValue(result, EvaluationResponse.class);
-    }
-
-    private EvaluationResponse[] doWhichAllowedPost(HttpPost post) throws IOException {
-        String result = executeRequest(post);
-        return jsonMapper.readValue(result, EvaluationResponse[].class);
     }
 
     private String executeRequest(HttpPost post) throws IOException {

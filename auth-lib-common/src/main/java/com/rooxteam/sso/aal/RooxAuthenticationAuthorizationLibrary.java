@@ -358,7 +358,6 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         return result;
     }
 
-    @Override
     public Map<EvaluationRequest, EvaluationResponse> evaluatePolicies(Principal subject,
                                                                        List<EvaluationRequest> policiesToCheck) {
         if (subject == null) {
@@ -370,6 +369,31 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         }
 
         return ssoAuthorizationClient.whichActionAreAllowed(subject, policiesToCheck);
+    }
+
+    @Override
+    public String postprocessPolicy(Principal subject,
+                                             String resourceName,
+                                             String actionName,
+                                             Map<String, ?> envParameters, String response) {
+        if (subject == null) {
+            LOG.errorIllegalSubjectParameter();
+            throw new IllegalArgumentException(SUBJECT_SHOULD_BE_SPECIFIED);
+        }
+
+        if (resourceName == null) {
+            LOG.errorIllegalResourceParameter();
+            throw new IllegalArgumentException(RESOURCE_SHOULD_BE_SPECIFIED);
+        }
+
+        if (actionName == null) {
+            LOG.errorIllegalActionParameter();
+            throw new IllegalArgumentException(ACTION_SHOULD_BE_SPECIFIED);
+        }
+
+        PolicyDecisionKey key = new PolicyDecisionKey(subject, resourceName, actionName, envParameters);
+        LOG.tracePostprocessPolicy(key);
+        return ssoAuthorizationClient.postprocess(subject, key.getResourceName(), key.getActionName(), key.getEnvParameters(), response);
     }
 
     /**

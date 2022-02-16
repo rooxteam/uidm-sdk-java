@@ -2,6 +2,7 @@ package com.rooxteam.sso.aal.client;
 
 import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.configuration.Configuration;
+import com.rooxteam.util.HttpHelper;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
