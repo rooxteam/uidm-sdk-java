@@ -168,7 +168,7 @@ public class OpaAuthorizationClient extends CommonSsoAuthorizationClient {
             final String url = config.getString(ConfigKeys.OPA_DATA_API_URL) + new MessageFormat(POSTPROCESS_POLICY).format(new String[]{opaPackage});
             final HttpPost post = HttpHelper.getHttpPostWithJsonBody(url, jsonMapper.writeValueAsString(opaPolicyRequest));
             String result = executeRequest(post);
-            return jsonMapper.readValue(result, OpaPostprocessResponse.class).getResult();
+            return jsonMapper.writeValueAsString(jsonMapper.readValue(result, OpaPostprocessResponse.class).getResult());
         } catch (IOException e) {
             LOG.errorAuthentication(e);
             throw new NetworkErrorException("Failed to authorize because of communication or protocol error", e);
