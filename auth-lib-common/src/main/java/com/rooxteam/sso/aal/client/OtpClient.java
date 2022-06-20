@@ -281,6 +281,7 @@ public class OtpClient {
         otpResponse.setOtpCodeNumber(otpFlowStateJson.getView().getOtpCodeNumber());
         otpResponse.setMethod(otpFlowStateJson.getView().getMethod());
         otpResponse.setExtendedAttributes(otpFlowStateJson.getView().getExtendedAttributes());
+        otpResponse.setErrors(otpFlowStateJson.getForm().getErrors());
 
         return otpResponse;
     }
