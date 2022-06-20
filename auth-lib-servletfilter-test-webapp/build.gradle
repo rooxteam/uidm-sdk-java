@@ -4,8 +4,8 @@ buildscript {
             mavenLocal()
             mavenCentral()
         } else {
-            maven { url 'http://nexus.rooxintra.net/content/repositories/releases' }
-            maven { url 'http://nexus.rooxintra.net/content/repositories/public' }
+            maven { url 'https://nexus.rooxintra.net/content/repositories/releases' }
+            maven { url 'https://nexus.rooxintra.net/content/repositories/public' }
         }
     }
     dependencies {
