@@ -1,10 +1,12 @@
 package com.rooxteam.uidm.sdk.spring.authorization;
 
+import com.rooxteam.sso.aal.client.model.ResponseError;
 import com.rooxteam.sso.aal.otp.OtpFlowState;
 import com.rooxteam.sso.aal.otp.OtpStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -22,6 +24,7 @@ public class Response {
     private Long otpCodeNumber;
     private final String method;
     private Map<String, Object> extendedAttributes;
+    private List<ResponseError> errors;
 
     /**
      * @deprecated use {@link Response#Response(OtpStatus, OtpFlowState, Set, Integer, String, Long, Long, Long, String, Map)} instead
