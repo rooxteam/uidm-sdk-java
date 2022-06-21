@@ -22,7 +22,6 @@ import com.rooxteam.sso.aal.otp.ResendOtpParameter;
 import com.rooxteam.sso.aal.otp.SendOtpParameter;
 import com.rooxteam.sso.aal.otp.ValidateOtpParameter;
 import com.rooxteam.sso.aal.utils.DummyRequest;
-import org.apache.commons.collections.MapUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
@@ -119,7 +118,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
 
     @Override
     public Principal authenticate(Map<String, ?> params) {
-        if (MapUtils.isEmpty(params)) {
+        if (params == null || params.isEmpty()) {
             throw new IllegalArgumentException(AUTHENTICATE_PARAMS_SHOULDNT_BE_EMPTY);
         }
 

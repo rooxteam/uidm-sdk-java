@@ -6,7 +6,12 @@ import com.rooxteam.compat.StandardCharsets;
 import com.rooxteam.errors.exception.ApiException;
 import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.client.exception.UnknownResponseException;
-import com.rooxteam.sso.aal.client.model.*;
+import com.rooxteam.sso.aal.client.model.AuthenticationResponse;
+import com.rooxteam.sso.aal.client.model.BearerAuthenticationResponse;
+import com.rooxteam.sso.aal.client.model.Form;
+import com.rooxteam.sso.aal.client.model.JWTAuthenticationResponse;
+import com.rooxteam.sso.aal.client.model.OtpFlowStateJson;
+import com.rooxteam.sso.aal.client.model.ResponseError;
 import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.context.TokenContextFactory;
 import com.rooxteam.sso.aal.otp.OtpFlowState;
@@ -37,17 +42,25 @@ import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static com.rooxteam.sso.aal.AalLogger.LOG;
-import static com.rooxteam.sso.aal.client.SsoAuthenticationClient.*;
+import static com.rooxteam.sso.aal.client.SsoAuthenticationClient.CLIENT_ID_PARAM_NAME;
+import static com.rooxteam.sso.aal.client.SsoAuthenticationClient.CLIENT_SECRET;
+import static com.rooxteam.sso.aal.client.SsoAuthenticationClient.GRANT_TYPE;
+import static com.rooxteam.sso.aal.client.SsoAuthenticationClient.GRANT_TYPE_M2M;
+import static com.rooxteam.sso.aal.client.SsoAuthenticationClient.REALM_PARAM_NAME;
+import static com.rooxteam.sso.aal.client.SsoAuthenticationClient.SERVICE_PARAM_NAME;
 
 public class OtpClient {
 
@@ -90,7 +103,7 @@ public class OtpClient {
     }
 
     public OtpResponse sendOtp(String jwt) {
-        List<NameValuePair> params = commonOtpParams();
+        List<NameValuePair> params = commonOtpParams(null);
         params.add(new BasicNameValuePair(currentTokenParamName(), jwt));
 
         return makeOtpRequest(params, null);
@@ -216,17 +229,19 @@ public class OtpClient {
             service = getDefaultService();
         }
 
+        String realm = trimRealm(determineRealm());
+
         List<NameValuePair> params = new ArrayList<NameValuePair>();
-        params.add(new BasicNameValuePair(REALM_PARAM_NAME, config.getString(ConfigKeys.REALM, ConfigKeys.REALM_DEFAULT)));
-        params.add(new BasicNameValuePair(CLIENT_ID_PARAM_NAME, config.getString(ConfigKeys.CLIENT_ID)));
-        params.add(new BasicNameValuePair(CLIENT_SECRET, config.getString(ConfigKeys.CLIENT_SECRET)));
+        params.add(new BasicNameValuePair(REALM_PARAM_NAME, realm.startsWith("/") ? realm : "/".concat(realm)));
+        params.add(new BasicNameValuePair(CLIENT_ID_PARAM_NAME, getClientId(realm)));
+        params.add(new BasicNameValuePair(CLIENT_SECRET, getClientSecret(realm)));
         params.add(new BasicNameValuePair(GRANT_TYPE, GRANT_TYPE_M2M));
         params.add(new BasicNameValuePair(SERVICE_PARAM_NAME, service));
 
         // sso allows to send user`s IP address via parameters for CONFIDENTIAL OAuth2 agents
-        ServletRequestAttributes requestAttributes = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes());
-        if (requestAttributes != null) {
-            String ip = userIpProvider.getIpFromRequest(requestAttributes.getRequest());
+        HttpServletRequest requesst = getCurrentRequest();
+        if (requesst != null) {
+            String ip = userIpProvider.getIpFromRequest(requesst);
             if (ip != null && !ip.isEmpty()) {
                 params.add(new BasicNameValuePair(USERIP_PARAM_NAME, ip));
             }
@@ -234,8 +249,51 @@ public class OtpClient {
         return params;
     }
 
-    private List<NameValuePair> commonOtpParams() {
-        return commonOtpParams(null);
+    private String determineRealm() {
+        HttpServletRequest request = getCurrentRequest();
+        if (request != null) {
+            String realm = request.getParameter("realm");
+            String[] allowedRealms = config.getStringArray(ConfigKeys.REALMS);
+            if (Arrays.asList(allowedRealms).contains(realm)) {
+                return realm;
+            }
+        }
+        return config.getString(ConfigKeys.REALM, ConfigKeys.REALM_DEFAULT);
+    }
+
+    private HttpServletRequest getCurrentRequest() {
+        RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
+        if (requestAttributes instanceof ServletRequestAttributes) {
+            return ((ServletRequestAttributes) requestAttributes).getRequest();
+        } else {
+            return null;
+        }
+    }
+
+    private String trimRealm(String realm) {
+        return realm.startsWith("/") ? realm.substring(1) : realm;
+    }
+
+    private String getClientId(String realm) {
+        if (realm != null && !realm.isEmpty()) {
+            String configKey = ConfigKeys.CLIENT_ID_FOR_REALM.replace("{realm}", realm);
+            String result = config.getString(configKey);
+            if (result != null && !result.isEmpty()) {
+                return result;
+            }
+        }
+        return config.getString(ConfigKeys.CLIENT_ID);
+    }
+
+    private String getClientSecret(String realm) {
+        if (realm != null && !realm.isEmpty()) {
+            String configKey = ConfigKeys.CLIENT_SECRET_FOR_REALM.replace("{realm}", realm);
+            String result = config.getString(configKey);
+            if (result != null && !result.isEmpty()) {
+                return result;
+            }
+        }
+        return config.getString(ConfigKeys.CLIENT_SECRET);
     }
 
     private OtpResponse prepareOtpResponse(int status, String json, String sessionIdCookie) {

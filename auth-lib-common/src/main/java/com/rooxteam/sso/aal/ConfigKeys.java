@@ -47,6 +47,12 @@ public interface ConfigKeys {
     String REALM = "com.rooxteam.aal.auth.realm";
 
     /**
+     * {@value} - Допустимые реалмы для аутентификации в SSO из AAL.
+     * По умолчанию: пустой список (не допускается задавать реалм параметром запроса)
+     */
+    String REALMS = "com.rooxteam.aal.auth.realms";
+
+    /**
      * Значение realm для аутентификации в Customer SSO из AAL по умолчпнию
      */
     String REALM_DEFAULT = "/customer";
@@ -288,4 +294,20 @@ public interface ConfigKeys {
     String OPA_PACKAGE = "com.rooxteam.aal.opa.package";
 
     String OPA_PACKAGE_DEFAULT = "authz";
+
+
+    /**
+     * {@value} - Имя OAuth клиента для аутентификации в Customer SSO из AAL для заданного реалма
+     * Значение реалма может задаваться параметром запроса и должно быть разрешено
+     * ключом {@value #REALMS}.
+     */
+    String CLIENT_ID_FOR_REALM = "com.rooxteam.realms.{realm}.aal.auth.client";
+
+    /**
+     * {@value} - Пароль OAuth клиента для аутентификации в Customer SSO из AAL для заданного реалма
+     * Значение реалма может задаваться параметром запроса и должно быть разрешено
+     * ключом {@value #REALMS}.
+     */
+    String CLIENT_SECRET_FOR_REALM = "com.rooxteam.realms.{realm}.aal.auth.password";
+
 }
