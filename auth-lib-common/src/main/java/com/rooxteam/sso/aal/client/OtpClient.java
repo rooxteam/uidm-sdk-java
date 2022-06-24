@@ -42,14 +42,11 @@ import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -245,23 +242,14 @@ public class OtpClient {
         params.add(new BasicNameValuePair(SERVICE_PARAM_NAME, service));
 
         // sso allows to send user`s IP address via parameters for CONFIDENTIAL OAuth2 agents
-        HttpServletRequest request = getCurrentRequest();
-        if (request != null) {
-            String ip = userIpProvider.getIpFromRequest(request);
+        ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (requestAttributes != null && requestAttributes.getRequest() != null) {
+            String ip = userIpProvider.getIpFromRequest(requestAttributes.getRequest());
             if (ip != null && !ip.isEmpty()) {
                 params.add(new BasicNameValuePair(USERIP_PARAM_NAME, ip));
             }
         }
         return params;
-    }
-
-    private HttpServletRequest getCurrentRequest() {
-        RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
-        if (requestAttributes instanceof ServletRequestAttributes) {
-            return ((ServletRequestAttributes) requestAttributes).getRequest();
-        } else {
-            return null;
-        }
     }
 
     private String trimRealm(String realm) {
