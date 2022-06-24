@@ -26,5 +26,9 @@ public class ValidateOtpParameter {
      * Имя сценария в Customer SSO для AAL
      */
     private String service;
+    /**
+     * Реалм в котором зарегистрирован пользователь (из токена)
+     */
+    private String realm;
 
 }

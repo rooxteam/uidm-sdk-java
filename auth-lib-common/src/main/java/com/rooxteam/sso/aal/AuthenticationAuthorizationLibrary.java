@@ -289,12 +289,26 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
 
     /**
      * Повторный запрос OTP.
+     * Будет использоваться реалм заданный конфигом
      *
      * @param otpFlowState Объект представляющий текущее состояние сценария OTP.
      * @return OtpResponse POJO, содержащую текущий шаг, состояние, форму отправки OTP,
-     *         дополнительные параметры и результат аутентификации (Principal) в случае успеха
+     * дополнительные параметры и результат аутентификации (Principal) в случае успеха
+     * @deprecated в пользу метода с передачей реалма
+     * {@link AuthenticationAuthorizationLibrary#resendOtp(String realm, OtpFlowState otpFlowState)}
      */
+    @Deprecated
     OtpResponse resendOtp(OtpFlowState otpFlowState);
+
+    /**
+     * Повторный запрос OTP.
+     *
+     * @param realm Реалм в котором зарегистрирован пользователь (определяется из токена), если null - определяется из конфига
+     * @param otpFlowState Объект представляющий текущее состояние сценария OTP.
+     * @return OtpResponse POJO, содержащую текущий шаг, состояние, форму отправки OTP,
+     * дополнительные параметры и результат аутентификации (Principal) в случае успеха
+     */
+    OtpResponse resendOtp(String realm, OtpFlowState otpFlowState);
 
     /**
      * Повторный запрос OTP.
@@ -330,12 +344,26 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
 
     /**
      * Валидация OTP
+     * Будет использоваться реалм заданный конфигом
      *
      * @param otpState Состояние запроса
      * @param otpCode  Введенный пользователем код
      * @return Возвращает результат валидации: или форму для заполнения (не успешная валидация) или принципала (успешная валидация)
+     * @deprecated в пользу метода с передачей реалма
+     * {@link AuthenticationAuthorizationLibrary#validateOtp(String realm, OtpFlowState otpState, String otpCode)}
      */
+    @Deprecated
     OtpResponse validateOtp(OtpFlowState otpState, String otpCode);
+
+    /**
+     * Валидация OTP
+     *
+     * @param realm Реалм в котором зарегистрирован пользователь (определяется из токена), если null - определяется из конфига
+     * @param otpState Состояние запроса
+     * @param otpCode  Введенный пользователем код
+     * @return Возвращает результат валидации: или форму для заполнения (не успешная валидация) или принципала (успешная валидация)
+     */
+    OtpResponse validateOtp(String realm, OtpFlowState otpState, String otpCode);
 
     /**
      * Валидация OTP

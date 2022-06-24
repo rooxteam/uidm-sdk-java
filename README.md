@@ -107,13 +107,10 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
 
 Частичная поддержка нескольких реалмов для одного приложения.
 
-Реалм передается через параметр запроса `realm`. 
+Реалм запроса выделяется из токена для авторизованных запросов и используется для определения агента OAuth для 
+последующей передачи в запросы к SSO-server.
 
 ```properties
-# Доступные реалмы для передачи через параметр запроса,
-# список реалмов через запятую
-com.rooxteam.aal.auth.realms=customer,employee
-
 # Параметры аутентификации OAuth2 для приложения для заданного реалма
 # Вместо placeholder `{realm}` подставить значение реалма.
 com.rooxteam.realms.{realm}.aal.auth.client=test_client
