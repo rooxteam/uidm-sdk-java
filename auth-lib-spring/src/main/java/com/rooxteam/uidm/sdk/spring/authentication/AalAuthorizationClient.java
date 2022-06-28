@@ -68,6 +68,7 @@ public class AalAuthorizationClient implements SsoAuthorizationClient, AalResour
         AuthenticationState authenticationState = new AuthenticationState(getAuthorities(principal));
         authenticationState.setPrincipal((String) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "prn"));
         authenticationState.setClientSystem((String) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "client_id"));
+        authenticationState.setRealm((String) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "realm"));
         List<String> authLevelList = (List<String>) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "authLevel");
         if (!authLevelList.isEmpty()) {
             authenticationState.setAuthLevel(Integer.valueOf(authLevelList.get(0)));

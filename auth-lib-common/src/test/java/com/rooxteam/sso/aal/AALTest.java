@@ -120,7 +120,7 @@ public class AALTest {
         otpFlowState.setCsrf("csrf");
         otpFlowState.setSessionId("sessionId");
         mockResponse.setOtpFlowState(otpFlowState);
-        when(mockOtpClient.sendOtp(anyString()))
+        when(mockOtpClient.sendOtp(anyString(), anyString()))
                 .thenReturn(mockResponse);
         AuthenticationAuthorizationLibrary aal = new RooxAuthenticationAuthorizationLibrary(null,null, null, null, null,
                 mockOtpClient, null, null, null, AuthorizationType.JWT, new NoOpMetricsIntegration());

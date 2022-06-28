@@ -288,4 +288,18 @@ public interface ConfigKeys {
     String OPA_PACKAGE = "com.rooxteam.aal.opa.package";
 
     String OPA_PACKAGE_DEFAULT = "authz";
+
+
+    /**
+     * {@value} - Имя OAuth клиента для аутентификации в Customer SSO из AAL для заданного реалма
+     * Значение реалма может быть получено из токена.
+     */
+    String CLIENT_ID_FOR_REALM = "com.rooxteam.realms.{realm}.aal.auth.client";
+
+    /**
+     * {@value} - Пароль OAuth клиента для аутентификации в Customer SSO из AAL для заданного реалма
+     * Значение реалма может быть получено из токена.
+     */
+    String CLIENT_SECRET_FOR_REALM = "com.rooxteam.realms.{realm}.aal.auth.password";
+
 }

@@ -1,9 +1,12 @@
 package com.rooxteam.sso.aal.otp;
 
 import com.rooxteam.sso.aal.Principal;
+import com.rooxteam.sso.aal.client.model.ResponseError;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -21,6 +24,7 @@ public class OtpResponseImpl implements OtpResponse {
     private Long otpCodeNumber;
     private String method;
     private Map<String, Object> extendedAttributes;
+    private List<ResponseError> errors = new ArrayList<ResponseError>();
 
     public OtpResponseImpl() {
     }

@@ -22,7 +22,6 @@ import com.rooxteam.sso.aal.otp.ResendOtpParameter;
 import com.rooxteam.sso.aal.otp.SendOtpParameter;
 import com.rooxteam.sso.aal.otp.ValidateOtpParameter;
 import com.rooxteam.sso.aal.utils.DummyRequest;
-import org.apache.commons.collections.MapUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
@@ -119,7 +118,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
 
     @Override
     public Principal authenticate(Map<String, ?> params) {
-        if (MapUtils.isEmpty(params)) {
+        if (params == null || params.isEmpty()) {
             throw new IllegalArgumentException(AUTHENTICATE_PARAMS_SHOULDNT_BE_EMPTY);
         }
 
@@ -504,14 +503,26 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     @Override
     public OtpResponse sendOtp(Principal principal) {
         String jwtToken = principal != null ? principal.getJwtToken() : null;
-        return otpClient.sendOtp(jwtToken);
+        String realm = fetchRealm(principal);
+        return otpClient.sendOtp(realm, jwtToken);
     }
 
     @Override
     public OtpResponse sendOtpForOperation(Principal principal,
                                            EvaluationContext context) {
         String jwtToken = principal != null ? principal.getJwtToken() : null;
-        return otpClient.sendOtpForOperation(jwtToken, context);
+        String realm = fetchRealm(principal);
+        return otpClient.sendOtpForOperation(realm, jwtToken, context);
+    }
+
+    private String fetchRealm(Principal principal) {
+        if (principal != null) {
+            String realm = (String) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "realm");
+            if (realm != null && !realm.isEmpty()) {
+                return realm;
+            }
+        }
+        return configuration.getString(ConfigKeys.REALM, ConfigKeys.REALM_DEFAULT);
     }
 
     @Override
@@ -524,12 +535,19 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     public OtpResponse resendOtp(OtpFlowState otpFlowState,
                                  long timeOut,
                                  TimeUnit timeUnit) {
-        return resendOtp(otpFlowState);
+        return resendOtp(null, otpFlowState);
     }
 
     @Override
+    @Deprecated
     public OtpResponse resendOtp(OtpFlowState otpFlowState) {
-        return otpClient.resendOtp(otpFlowState);
+        return otpClient.resendOtp(null, otpFlowState);
+    }
+
+    @Override
+    public OtpResponse resendOtp(String realm,
+                                 OtpFlowState otpFlowState) {
+        return otpClient.resendOtp(realm, otpFlowState);
     }
 
     @Override
@@ -556,6 +574,13 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
 
     @Override
     public OtpResponse validateOtp(OtpFlowState otpState,
+                                   String otpCode) {
+        return validateOtp(null, otpState, otpCode);
+    }
+
+    @Override
+    public OtpResponse validateOtp(String realm,
+                                   OtpFlowState otpState,
                                    String otpCode) {
         return otpClient.validateOtp(otpState, otpCode);
     }

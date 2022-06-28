@@ -1,7 +1,9 @@
 package com.rooxteam.sso.aal.otp;
 
 import com.rooxteam.sso.aal.Principal;
+import com.rooxteam.sso.aal.client.model.ResponseError;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -62,5 +64,10 @@ public interface OtpResponse {
      * @return Расширенные атрибуты при использовании кастомных реализаций функций OTP в UIDM
      */
     Map<String, Object> getExtendedAttributes();
+
+    /**
+     * @return Ошибки выполнения операции
+     */
+    List<ResponseError> getErrors();
 
 }

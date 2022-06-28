@@ -6,7 +6,12 @@ import com.rooxteam.compat.StandardCharsets;
 import com.rooxteam.errors.exception.ApiException;
 import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.client.exception.UnknownResponseException;
-import com.rooxteam.sso.aal.client.model.*;
+import com.rooxteam.sso.aal.client.model.AuthenticationResponse;
+import com.rooxteam.sso.aal.client.model.BearerAuthenticationResponse;
+import com.rooxteam.sso.aal.client.model.Form;
+import com.rooxteam.sso.aal.client.model.JWTAuthenticationResponse;
+import com.rooxteam.sso.aal.client.model.OtpFlowStateJson;
+import com.rooxteam.sso.aal.client.model.ResponseError;
 import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.context.TokenContextFactory;
 import com.rooxteam.sso.aal.otp.OtpFlowState;
@@ -47,7 +52,12 @@ import java.util.List;
 import java.util.Map;
 
 import static com.rooxteam.sso.aal.AalLogger.LOG;
-import static com.rooxteam.sso.aal.client.SsoAuthenticationClient.*;
+import static com.rooxteam.sso.aal.client.SsoAuthenticationClient.CLIENT_ID_PARAM_NAME;
+import static com.rooxteam.sso.aal.client.SsoAuthenticationClient.CLIENT_SECRET;
+import static com.rooxteam.sso.aal.client.SsoAuthenticationClient.GRANT_TYPE;
+import static com.rooxteam.sso.aal.client.SsoAuthenticationClient.GRANT_TYPE_M2M;
+import static com.rooxteam.sso.aal.client.SsoAuthenticationClient.REALM_PARAM_NAME;
+import static com.rooxteam.sso.aal.client.SsoAuthenticationClient.SERVICE_PARAM_NAME;
 
 public class OtpClient {
 
@@ -89,17 +99,18 @@ public class OtpClient {
         responseTypes.put("JWTToken", BearerAuthenticationResponse.class);
     }
 
-    public OtpResponse sendOtp(String jwt) {
-        List<NameValuePair> params = commonOtpParams();
+    public OtpResponse sendOtp(String realm, String jwt) {
+        List<NameValuePair> params = commonOtpParams(realm, null);
         params.add(new BasicNameValuePair(currentTokenParamName(), jwt));
 
         return makeOtpRequest(params, null);
     }
 
-    public OtpResponse sendOtpForOperation(String jwt, EvaluationContext context) {
+    public OtpResponse sendOtpForOperation(String realm, String jwt, EvaluationContext context) {
         SendOtpParameter sendOtpParameter = SendOtpParameter.builder()
                 .jwt(jwt)
                 .service(getDefaultService())
+                .realm(realm)
                 .evaluationContext(context)
                 .build();
         return sendOtpForOperation(sendOtpParameter);
@@ -107,7 +118,7 @@ public class OtpClient {
 
     public OtpResponse sendOtpForOperation(SendOtpParameter sendOtpParameter) {
 
-        List<NameValuePair> params = commonOtpParams(sendOtpParameter.getService());
+        List<NameValuePair> params = commonOtpParams(sendOtpParameter.getRealm(), sendOtpParameter.getService());
         if (!StringUtils.isEmpty(sendOtpParameter.getJwt())) {
             params.add(new BasicNameValuePair(currentTokenParamName(), sendOtpParameter.getJwt()));
         }
@@ -133,21 +144,24 @@ public class OtpClient {
         return makeOtpRequest(params, null);
     }
 
-    public OtpResponse resendOtp(OtpFlowState otpFlowState) {
-        ResendOtpParameter resendOtpParameter = ResendOtpParameter.builder().otpFlowState(otpFlowState).build();
+    public OtpResponse resendOtp(String realm, OtpFlowState otpFlowState) {
+        ResendOtpParameter resendOtpParameter = ResendOtpParameter.builder()
+                .realm(realm)
+                .otpFlowState(otpFlowState).build();
         return resendOtp(resendOtpParameter);
     }
 
     public OtpResponse resendOtp(ResendOtpParameter resendOtpParameter) {
-        return sendOtpEvent(resendOtpParameter.getOtpFlowState(), null, EVENT_ID_SEND, resendOtpParameter.getService());
+        return sendOtpEvent(resendOtpParameter.getOtpFlowState(), resendOtpParameter.getRealm(), null,
+                EVENT_ID_SEND, resendOtpParameter.getService());
     }
 
-    private OtpResponse sendOtpEvent(OtpFlowState otpState, String otpCode, String eventId, String service) {
+    private OtpResponse sendOtpEvent(OtpFlowState otpState, String realm, String otpCode, String eventId, String service) {
         if (StringUtils.isEmpty(otpState.getExecution())) {
             throw new IllegalStateException("OtpFlowState should contain execution");
         }
 
-        List<NameValuePair> params = commonOtpParams(service);
+        List<NameValuePair> params = commonOtpParams(realm, service);
         params.add(new BasicNameValuePair(EXECUTION_PARAM_NAME, otpState.getExecution()));
         params.add(new BasicNameValuePair(EVENT_ID_PARAM_NAME, eventId));
         if (!StringUtils.isEmpty(otpCode)) {
@@ -163,8 +177,8 @@ public class OtpClient {
     }
 
     public OtpResponse validateOtp(ValidateOtpParameter validateOtpParameter) {
-        return sendOtpEvent(validateOtpParameter.getOtpFlowState(), validateOtpParameter.getOtpCode(), EVENT_ID_VALIDATE,
-                validateOtpParameter.getService());
+        return sendOtpEvent(validateOtpParameter.getOtpFlowState(), validateOtpParameter.getRealm(),
+                validateOtpParameter.getOtpCode(), EVENT_ID_VALIDATE, validateOtpParameter.getService());
     }
 
     protected String currentTokenParamName() {
@@ -210,22 +224,26 @@ public class OtpClient {
         }
     }
 
-    private List<NameValuePair> commonOtpParams(String service) {
+    private List<NameValuePair> commonOtpParams(String realm, String service) {
 
         if (StringUtils.isEmpty(service)) {
             service = getDefaultService();
         }
 
+        if (StringUtils.isEmpty(realm)) {
+            realm = config.getString(ConfigKeys.REALM, ConfigKeys.REALM_DEFAULT);
+        }
+
         List<NameValuePair> params = new ArrayList<NameValuePair>();
-        params.add(new BasicNameValuePair(REALM_PARAM_NAME, config.getString(ConfigKeys.REALM, ConfigKeys.REALM_DEFAULT)));
-        params.add(new BasicNameValuePair(CLIENT_ID_PARAM_NAME, config.getString(ConfigKeys.CLIENT_ID)));
-        params.add(new BasicNameValuePair(CLIENT_SECRET, config.getString(ConfigKeys.CLIENT_SECRET)));
+        params.add(new BasicNameValuePair(REALM_PARAM_NAME, realm));
+        params.add(new BasicNameValuePair(CLIENT_ID_PARAM_NAME, getClientId(realm)));
+        params.add(new BasicNameValuePair(CLIENT_SECRET, getClientSecret(realm)));
         params.add(new BasicNameValuePair(GRANT_TYPE, GRANT_TYPE_M2M));
         params.add(new BasicNameValuePair(SERVICE_PARAM_NAME, service));
 
         // sso allows to send user`s IP address via parameters for CONFIDENTIAL OAuth2 agents
-        ServletRequestAttributes requestAttributes = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes());
-        if (requestAttributes != null) {
+        ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (requestAttributes != null && requestAttributes.getRequest() != null) {
             String ip = userIpProvider.getIpFromRequest(requestAttributes.getRequest());
             if (ip != null && !ip.isEmpty()) {
                 params.add(new BasicNameValuePair(USERIP_PARAM_NAME, ip));
@@ -234,8 +252,30 @@ public class OtpClient {
         return params;
     }
 
-    private List<NameValuePair> commonOtpParams() {
-        return commonOtpParams(null);
+    private String trimRealm(String realm) {
+        return realm.startsWith("/") ? realm.substring(1) : realm;
+    }
+
+    private String getClientId(String realm) {
+        if (!StringUtils.isEmpty(realm)) {
+            String configKey = ConfigKeys.CLIENT_ID_FOR_REALM.replace("{realm}", trimRealm(realm));
+            String result = config.getString(configKey);
+            if (result != null && !result.isEmpty()) {
+                return result;
+            }
+        }
+        return config.getString(ConfigKeys.CLIENT_ID);
+    }
+
+    private String getClientSecret(String realm) {
+        if (!StringUtils.isEmpty(realm)) {
+            String configKey = ConfigKeys.CLIENT_SECRET_FOR_REALM.replace("{realm}", trimRealm(realm));
+            String result = config.getString(configKey);
+            if (result != null && !result.isEmpty()) {
+                return result;
+            }
+        }
+        return config.getString(ConfigKeys.CLIENT_SECRET);
     }
 
     private OtpResponse prepareOtpResponse(int status, String json, String sessionIdCookie) {
@@ -281,6 +321,7 @@ public class OtpClient {
         otpResponse.setOtpCodeNumber(otpFlowStateJson.getView().getOtpCodeNumber());
         otpResponse.setMethod(otpFlowStateJson.getView().getMethod());
         otpResponse.setExtendedAttributes(otpFlowStateJson.getView().getExtendedAttributes());
+        otpResponse.setErrors(otpFlowStateJson.getForm().getErrors());
 
         return otpResponse;
     }

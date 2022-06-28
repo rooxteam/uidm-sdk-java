@@ -103,6 +103,27 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
 
 # История изменений
 
+## 3.20.0
+
+Частичная поддержка нескольких реалмов для одного приложения.
+
+Реалм запроса выделяется из токена для авторизованных запросов и используется для определения агента OAuth для 
+последующей передачи в запросы к SSO-server.
+
+```properties
+# Параметры аутентификации OAuth2 для приложения для заданного реалма
+# Вместо placeholder `{realm}` подставить значение реалма.
+com.rooxteam.realms.{realm}.aal.auth.client=test_client
+com.rooxteam.realms.{realm}.aal.auth.password=secure_password
+
+
+```
+
+Доступно для следующего функционала:
+
+* OTP операции (отправка, валидация, повторная отправка). Методы `/otp/*`
+* Подписание через OTP. Методы `/sign-operation/*`
+
 ## 3.19.0
 
 Поддержана авторизация через OPA. Для включения надо настроить

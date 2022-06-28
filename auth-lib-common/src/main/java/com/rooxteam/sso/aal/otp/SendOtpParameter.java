@@ -27,6 +27,10 @@ public class SendOtpParameter {
      */
     private String service;
     /**
+     * Реалм в котором зарегистрирован пользователь (из токена)
+     */
+    private String realm;
+    /**
      * Контекст операции, для которой требуется выдать токен по результатам OTP
      */
     private EvaluationContext evaluationContext;

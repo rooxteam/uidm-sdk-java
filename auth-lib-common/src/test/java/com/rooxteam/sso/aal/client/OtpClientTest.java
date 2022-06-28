@@ -109,7 +109,7 @@ public class OtpClientTest {
         when(mockHttpEntity.getContent()).thenReturn(inputStream);
         when(mockHttpClient.execute(any(HttpPost.class), any(HttpContext.class))).thenReturn(mockHttpResponse);
 
-        OtpResponse otpResponse = otpClient.sendOtp(ENTER_OTP_FORM_JSON);
+        OtpResponse otpResponse = otpClient.sendOtp("/customer", ENTER_OTP_FORM_JSON);
         assertNotNull(otpResponse);
         assertEquals(OtpStatus.OTP_REQUIRED, otpResponse.getStatus());
 
@@ -127,7 +127,7 @@ public class OtpClientTest {
         when(mockHttpEntity.getContent()).thenReturn(inputStream);
         when(mockHttpClient.execute(any(HttpPost.class), any(HttpContext.class))).thenReturn(mockHttpResponse);
 
-        OtpResponse otpResponse = otpClient.sendOtp(JWT_TOKEN);
+        OtpResponse otpResponse = otpClient.sendOtp("/customer", JWT_TOKEN);
         assertNotNull(otpResponse);
         assertEquals(OtpStatus.OTP_REQUIRED, otpResponse.getStatus());
 
@@ -146,7 +146,7 @@ public class OtpClientTest {
         when(mockHttpEntity.getContent()).thenReturn(inputStream);
         when(mockHttpClient.execute(any(HttpPost.class), any(HttpContext.class))).thenReturn(mockHttpResponse);
 
-        OtpResponse otpResponse = otpClient.sendOtp(JWT_TOKEN);
+        OtpResponse otpResponse = otpClient.sendOtp("/customer", JWT_TOKEN);
         assertNotNull(otpResponse);
         assertEquals(OtpStatus.EXCEPTION, otpResponse.getStatus());
 
