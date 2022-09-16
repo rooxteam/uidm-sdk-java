@@ -17,13 +17,18 @@ public class AnonymousPrincipalImpl implements com.rooxteam.sso.aal.Principal {
     }
 
     @Override
-    public Map<String, Object> getProperties(PropertyScope propertyScope) {
-        return Collections.<String, Object>singletonMap("authLevel", Collections.singletonList("0"));
+    public Object getProperty(String name) {
+        return getProperties().get(name);
     }
 
     @Override
-    public void setProperty(PropertyScope propertyScope, String name, Object value) {
-        throw new RuntimeException("not implemented");
+    public Map<String, Object> getProperties(PropertyScope propertyScope) {
+        return getProperties();
+    }
+
+    @Override
+    public Map<String, Object> getProperties() {
+        return Collections.<String, Object>singletonMap("authLevel", Collections.singletonList("0"));
     }
 
     @Override

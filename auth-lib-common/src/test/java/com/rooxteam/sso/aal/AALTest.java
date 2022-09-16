@@ -31,49 +31,14 @@ public class AALTest {
     public static final TimeUnit DEFAULT_TIMEUNIT = TimeUnit.MILLISECONDS;
     public static final int DEFAULT_TIMEOUT = 10;
 
-    @Test
-    public void authenticate_EmptyParamMap_IllegalArgumentException() {
 
-        final SsoAuthorizationClient mockSsoAuthorizationClient = mock(SsoAuthorizationClient.class);
-        final SsoAuthenticationClient mockSsoAuthenticationClient = mock(SsoAuthenticationClient.class);
-        AuthenticationAuthorizationLibrary aal = new RooxAuthenticationAuthorizationLibrary(null,null, mockSsoAuthorizationClient, mockSsoAuthenticationClient,
-                null, null, null, null, null, AuthorizationType.JWT, new NoOpMetricsIntegration());
-
-        try {
-            aal.authenticate(Collections.<String, Object>emptyMap(), DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
-            fail();
-        } catch (IllegalArgumentException ignored) {
-            //expect this exception to be thrown
-        }
-
-        verify(mockSsoAuthenticationClient, times(0)).authenticate(anyMap());
-    }
-
-    @Test
-    public void authenticate_byIpReturnNull_YotaPrincipalWithNullJwt() {
-
-        final SsoAuthenticationClient mockSsoAuthenticationClient = mock(SsoAuthenticationClient.class);
-
-        HashMap<String, Object> params = new HashMap<String, Object>();
-        params.put("ip", "incorrect IP");
-        when(mockSsoAuthenticationClient.authenticate(params)).thenReturn(null);
-
-        params = new HashMap<String, Object>();
-        params.put("ip", "incorrect IP");
-        AuthenticationAuthorizationLibrary aal = new RooxAuthenticationAuthorizationLibrary(null,null, null, mockSsoAuthenticationClient,
-                null, null, null, null, null, AuthorizationType.JWT, new NoOpMetricsIntegration());
-
-        Principal yotaPrincipal = aal.authenticate(params, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
-
-        assertNull(yotaPrincipal);
-    }
 
     @Test
     public void sendOtp_nullPrincipal_illegalArgumentException() {
 
         final OtpClient mockOtpClient = mock(OtpClient.class);
         AuthenticationAuthorizationLibrary aal = new RooxAuthenticationAuthorizationLibrary(null,null, null, null, null,
-                mockOtpClient, null, null, null, AuthorizationType.JWT, new NoOpMetricsIntegration());
+                mockOtpClient, null, null, new NoOpMetricsIntegration());
 
         try {
             aal.sendOtp(null, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
@@ -94,7 +59,7 @@ public class AALTest {
 
         final OtpClient mockOtpClient = mock(OtpClient.class);
         AuthenticationAuthorizationLibrary aal = new RooxAuthenticationAuthorizationLibrary(null,null, null, null, null,
-                mockOtpClient, null, null, null, AuthorizationType.JWT, new NoOpMetricsIntegration());
+                mockOtpClient, null, null, new NoOpMetricsIntegration());
 
         try {
             aal.sendOtp(mockYotaPrincipal, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
@@ -123,7 +88,7 @@ public class AALTest {
         when(mockOtpClient.sendOtp(anyString(), anyString()))
                 .thenReturn(mockResponse);
         AuthenticationAuthorizationLibrary aal = new RooxAuthenticationAuthorizationLibrary(null,null, null, null, null,
-                mockOtpClient, null, null, null, AuthorizationType.JWT, new NoOpMetricsIntegration());
+                mockOtpClient, null,  null, new NoOpMetricsIntegration());
 
         OtpResponse response = aal.sendOtp(mockYotaPrincipal, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
 

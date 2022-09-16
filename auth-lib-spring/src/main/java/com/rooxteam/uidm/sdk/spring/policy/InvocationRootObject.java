@@ -1,7 +1,6 @@
 package com.rooxteam.uidm.sdk.spring.policy;
 
 import com.rooxteam.sso.aal.Principal;
-import com.rooxteam.sso.aal.PropertyScope;
 import com.rooxteam.uidm.sdk.spring.authorization.AalResourceValidation;
 import org.springframework.security.access.expression.SecurityExpressionOperations;
 import org.springframework.security.core.Authentication;
@@ -43,7 +42,7 @@ abstract class InvocationRootObject implements SecurityExpressionOperations, Aal
             return false;
         }
         //noinspection unchecked
-        List<String> roles = (List<String>) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "roles");
+        List<String> roles = (List<String>) principal.getProperty("roles");
         return roles != null && roles.contains(role);
     }
 

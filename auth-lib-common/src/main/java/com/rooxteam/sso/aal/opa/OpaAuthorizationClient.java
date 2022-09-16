@@ -82,7 +82,7 @@ public class OpaAuthorizationClient extends CommonSsoAuthorizationClient {
             throw new IllegalArgumentException("Method name is not supplied");
         }
 
-        String realm = (String) subject.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "realm");
+        String realm = (String) subject.getProperty("realm");
         if (realm == null) {
             realm = config.getString(ConfigKeys.REALM, ConfigKeys.REALM_DEFAULT);
         }
@@ -143,7 +143,7 @@ public class OpaAuthorizationClient extends CommonSsoAuthorizationClient {
             throw new IllegalArgumentException("Method name is not supplied");
         }
 
-        String realm = (String) subject.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "realm");
+        String realm = (String) subject.getProperty("realm");
         if (realm == null) {
             realm = config.getString(ConfigKeys.REALM, ConfigKeys.REALM_DEFAULT);
         }

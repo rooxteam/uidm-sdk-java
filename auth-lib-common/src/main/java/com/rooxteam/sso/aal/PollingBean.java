@@ -21,8 +21,6 @@ public class PollingBean extends TimerTask {
     @NonNull
     private Cache<PolicyDecisionKey, EvaluationResponse> isAllowedPolicyDecisionsCache;
     @NonNull
-    private Cache<PrincipalKey, Principal> principalCache;
-    @NonNull
     private List<PrincipalEventListener> principalEventListeners;
 
     @Override
@@ -40,9 +38,7 @@ public class PollingBean extends TimerTask {
             if (!ssoTokenClient.queryExistence(tokenId)) {
                 List<AalCacheKey> cacheKeys = entry.getValue();
                 for (AalCacheKey cacheKey : cacheKeys) {
-                    if (cacheKey instanceof PrincipalKey) {
-                        principalCache.invalidate(cacheKey);
-                    } else if (cacheKey instanceof PolicyDecisionKey) {
+                    if (cacheKey instanceof PolicyDecisionKey) {
                         isAllowedPolicyDecisionsCache.invalidate(cacheKey);
                     }
                 }
@@ -55,9 +51,6 @@ public class PollingBean extends TimerTask {
 
     private Map<Principal, List<AalCacheKey>> getCachedPrincipals() {
         Map<Principal, List<AalCacheKey>> cachedPrincipals = new HashMap<Principal, List<AalCacheKey>>();
-        for (Map.Entry<PrincipalKey, Principal> entry : principalCache.asMap().entrySet()) {
-            addCacheKey(cachedPrincipals, entry.getValue(), entry.getKey());
-        }
         for (PolicyDecisionKey policyDecisionKey : isAllowedPolicyDecisionsCache.asMap().keySet()) {
             addCacheKey(cachedPrincipals, policyDecisionKey.getSubject(), policyDecisionKey);
         }

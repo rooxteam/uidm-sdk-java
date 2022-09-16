@@ -64,8 +64,7 @@ public class SsoAuthorizationClientByConfig extends CommonSsoAuthorizationClient
         if (subject.isAnonymous()) {
             userAuthLevel = 0;
         } else {
-            List<String> authLevels = (List<String>) subject.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS,
-                    "authLevel");
+            List<String> authLevels = (List<String>) subject.getProperty("authLevel");
             if (authLevels == null || authLevels.isEmpty()) {
                 userAuthLevel = 0;
             } else {
@@ -94,11 +93,6 @@ public class SsoAuthorizationClientByConfig extends CommonSsoAuthorizationClient
         }
 
         return result;
-    }
-
-    @Override
-    public Principal validate(final String token) {
-        return validate(DummyRequest.getInstance(), token);
     }
 
     @Override

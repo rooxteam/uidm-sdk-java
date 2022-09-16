@@ -18,5 +18,5 @@ public interface ServletAuthFilterService {
      * @param accessToken - access token to validate.
      * @return Optional with claims about principal.
      */
-    Principal authenticate(String accessToken);
+    Principal authenticate(HttpServletRequest request, String accessToken);
 }

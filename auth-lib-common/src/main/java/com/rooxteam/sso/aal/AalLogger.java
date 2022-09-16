@@ -13,10 +13,7 @@ import org.jboss.logging.annotations.ValidIdRanges;
 
 import java.io.IOException;
 
-import static org.jboss.logging.Logger.Level.ERROR;
-import static org.jboss.logging.Logger.Level.INFO;
-import static org.jboss.logging.Logger.Level.TRACE;
-import static org.jboss.logging.Logger.Level.WARN;
+import static org.jboss.logging.Logger.Level.*;
 import static org.jboss.logging.annotations.Message.Format.MESSAGE_FORMAT;
 
 @MessageLogger(projectCode = "RX_UIDM_AAL___", length = 4)
@@ -227,12 +224,12 @@ public interface AalLogger extends BasicLogger {
     @Message(id = 4007, format = MESSAGE_FORMAT, value = "Request cookie store context is not defined!")
     void warnRequestCookieStoreContextIsNotDefined();
 
-    @LogMessage(level = INFO)
-    @Message(id = 6001, format = MESSAGE_FORMAT,
-            value = "Filter {0} authentication success: {1}")
-    void infoFilterAuthenticationSuccess(String filter,
-                                         Object principal);
 
+    @LogMessage(level = DEBUG)
+    @Message(id = 7001, format = MESSAGE_FORMAT,
+            value = "Filter {0} authentication success: {1}")
+    void debugFilterAuthenticationSuccess(String filter,
+                                          Object principal);
 
     @LogMessage(level = TRACE)
     @Message(id = 9001, format = MESSAGE_FORMAT,

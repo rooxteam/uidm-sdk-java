@@ -1,43 +1,24 @@
 package com.rooxteam.sso.aal;
 
 import com.google.common.cache.Cache;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
-import com.rooxteam.sso.aal.client.EvaluationContext;
-import com.rooxteam.sso.aal.client.OtpClient;
-import com.rooxteam.sso.aal.client.SsoAuthenticationClient;
-import com.rooxteam.sso.aal.client.SsoAuthorizationClient;
-import com.rooxteam.sso.aal.client.SsoTokenClient;
+import com.rooxteam.sso.aal.client.*;
 import com.rooxteam.sso.aal.client.model.AuthenticationResponse;
 import com.rooxteam.sso.aal.client.model.EvaluationRequest;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.context.TokenContextFactory;
-import com.rooxteam.sso.aal.exception.AalException;
-import com.rooxteam.sso.aal.exception.AuthenticationException;
 import com.rooxteam.sso.aal.metrics.MetricsIntegration;
-import com.rooxteam.sso.aal.otp.OtpFlowState;
-import com.rooxteam.sso.aal.otp.OtpResponse;
-import com.rooxteam.sso.aal.otp.ResendOtpParameter;
-import com.rooxteam.sso.aal.otp.SendOtpParameter;
-import com.rooxteam.sso.aal.otp.ValidateOtpParameter;
-import com.rooxteam.sso.aal.utils.DummyRequest;
+import com.rooxteam.sso.aal.otp.*;
+import com.rooxteam.sso.aal.validation.AccessTokenValidator;
 
 import javax.servlet.http.HttpServletRequest;
-import java.text.ParseException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
+import java.util.*;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
 import static com.rooxteam.sso.aal.AalLogger.LOG;
 import static com.rooxteam.sso.aal.metrics.MetricNames.METRIC_POLICY_DECISIONS_COUNT_IN_CACHE;
-import static com.rooxteam.sso.aal.metrics.MetricNames.METRIC_PRINCIPALS_COUNT_IN_CACHE;
 
 /**
  * Реализация AuthenticationAuthorizationLibrary, работающая с ForgeRock OpenAM
@@ -52,28 +33,22 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
      */
     public static final int TRIM_JWT_CHARS = 50;
 
-    private static final String AUTHENTICATE_PARAMS_SHOULDNT_BE_EMPTY = "Authenticate parameters shouldn't be empty.";
-    private static final String UNSUPPORTED_AUTHENTICATION_PARAMETER = "Unsupported authentication parameter: ";
     private static final String SUBJECT_SHOULD_BE_SPECIFIED = "Subject should be specified.";
     private static final String RESOURCE_SHOULD_BE_SPECIFIED = "Resource should be specified.";
     private static final String ACTION_SHOULD_BE_SPECIFIED = "Resource should be specified.";
-    private static final String IMSI_CLAIM_NAME = "imsi";
 
     private final SsoAuthorizationClient ssoAuthorizationClient;
     private final SsoAuthenticationClient ssoAuthenticationClient;
     private final SsoTokenClient ssoTokenClient;
     private final OtpClient otpClient;
     private final Cache<PolicyDecisionKey, EvaluationResponse> isAllowedPolicyDecisionsCache;
-    private final Cache<PrincipalKey, Principal> principalCache;
-
     private final Timer timer;
     private final CopyOnWriteArrayList<PrincipalEventListener> principalEventListeners =
             new CopyOnWriteArrayList<PrincipalEventListener>();
-    private final JwtValidator jwtValidator;
-    private final AuthorizationType authorizationType;
     private final MetricsIntegration metricsIntegration;
     private volatile PollingBean pollingBean;
-    private Configuration configuration;
+    private final Configuration configuration;
+    private final AccessTokenValidator accessTokenValidator;
 
     RooxAuthenticationAuthorizationLibrary(Configuration configuration,
                                            Timer timer,
@@ -82,9 +57,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
                                            SsoTokenClient ssoTokenClient,
                                            OtpClient otpClient,
                                            Cache<PolicyDecisionKey, EvaluationResponse> policyDecisionsCache,
-                                           Cache<PrincipalKey, Principal> principalCache,
-                                           JwtValidator jwtValidator,
-                                           AuthorizationType authorizationType,
+                                           AccessTokenValidator accessTokenValidator,
                                            MetricsIntegration metricsIntegration) {
         this.configuration = configuration;
         this.ssoAuthorizationClient = ssoAuthorizationClient;
@@ -92,119 +65,15 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         this.ssoTokenClient = ssoTokenClient;
         this.otpClient = otpClient;
         this.isAllowedPolicyDecisionsCache = policyDecisionsCache;
-        this.principalCache = principalCache;
         this.timer = timer;
-        this.jwtValidator = jwtValidator;
-        this.authorizationType = authorizationType;
+        this.accessTokenValidator = accessTokenValidator;
         this.metricsIntegration = metricsIntegration;
 
         metricsIntegration.registerMapSizeGauge(METRIC_POLICY_DECISIONS_COUNT_IN_CACHE,
                 new HashMap<String, String>(),
                 isAllowedPolicyDecisionsCache.asMap()
         );
-        metricsIntegration.registerMapSizeGauge(METRIC_PRINCIPALS_COUNT_IN_CACHE,
-                new HashMap<String, String>(),
-                RooxAuthenticationAuthorizationLibrary.this.principalCache.asMap()
-        );
     }
-
-    @Override
-    @Deprecated
-    public Principal authenticate(Map<String, ?> params,
-                                  long timeOut,
-                                  TimeUnit timeUnit) {
-        return authenticate(params);
-    }
-
-    @Override
-    public Principal authenticate(Map<String, ?> params) {
-        if (params == null || params.isEmpty()) {
-            throw new IllegalArgumentException(AUTHENTICATE_PARAMS_SHOULDNT_BE_EMPTY);
-        }
-
-        Principal result = null;
-
-        if (!(params.containsKey(AuthParamType.IP.getValue()) || params.containsKey(AuthParamType.JWT.getValue()))) {
-            throw new IllegalArgumentException(AUTHENTICATE_PARAMS_SHOULDNT_BE_EMPTY);
-        }
-
-        // search in cache by IP address
-        String ip = (String) params.get(AuthParamType.IP.getValue());
-
-        String clientIps = (String) params.get(AuthParamType.CLIENT_IPS.getValue());
-
-        if (ip != null) {
-            result = getPrincipalFromCache(new PrincipalKey(AuthParamType.IP, ip, clientIps));
-        }
-
-        if (result == null) {
-            result = authenticateOnSsoServer(params);
-        }
-
-        if (result != null) {
-            fireOnAuthenticate(result);
-        }
-
-        return result;
-    }
-
-
-    /**
-     * Searches principal in cache by given key
-     *
-     * @param key
-     * @return principal or null if not found in cache
-     */
-    private Principal getPrincipalFromCache(PrincipalKey key) {
-        Principal result;
-        result = principalCache.getIfPresent(key);
-        if (result != null) {
-            metricsIntegration.incrementPrincipalCacheHitMeter();
-        } else {
-            metricsIntegration.incrementPrincipalCacheMissMeter();
-        }
-        return result;
-    }
-
-    private Principal authenticateOnSsoServer(Map<String, ?> params) {
-        String ip = (String) params.get(AuthParamType.IP.getValue());
-
-        String jwt = trimJwt((String) params.get(AuthParamType.JWT.getValue()));
-
-        String clientIps = (String) params.get(AuthParamType.CLIENT_IPS.getValue());
-
-        LOG.traceSsoAuthenticationRequest(ip, jwt, clientIps);
-        AuthenticationResponse authResult = ssoAuthenticationClient.authenticate(params);
-
-        if (authResult != null) {
-            Principal principal =
-                    TokenContextFactory.get(TokenContextFactory.TYPE.JWTToken).createPrincipal(authResult);
-            String authType = (String) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "authType");
-            if (authType != null && authType.equals(AuthParamType.IP.getValue())) {
-                principalCache.put(new PrincipalKey(AuthParamType.IP, ip, clientIps), principal);
-                metricsIntegration.incrementPrincipalCacheAddMeter();
-            }
-            return principal;
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * Trim passed JWT to TRIM_JWT_CHARS
-     *
-     * @param jwt token to trim or null
-     * @return trimmed jwt or null if not passed
-     */
-    private String trimJwt(String jwt) {
-        if (jwt == null) return null;
-        if (jwt.length() >= TRIM_JWT_CHARS) {
-            return jwt.substring(0, TRIM_JWT_CHARS) + "...";
-        } else {
-            return jwt;
-        }
-    }
-
 
     @Override
     @Deprecated
@@ -238,12 +107,6 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         if (principal == null) {
             throw new IllegalArgumentException(PRINCIPAL_IS_MISSING_MESSAGE);
         }
-        ConcurrentMap<PrincipalKey, Principal> principalMap = principalCache.asMap();
-        for (Map.Entry<PrincipalKey, Principal> entry : principalMap.entrySet()) {
-            if (entry.getValue().equals(principal)) {
-                principalCache.invalidate(entry.getKey());
-            }
-        }
 
         ConcurrentMap<PolicyDecisionKey, EvaluationResponse> policyDecisionMap = isAllowedPolicyDecisionsCache.asMap();
         for (PolicyDecisionKey key : policyDecisionMap.keySet()) {
@@ -257,51 +120,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
 
     @Override
     public void invalidate() {
-        Collection<Principal> principals = principalCache.asMap().values();
-        for (Principal principal : principals) {
-            fireOnInvalidate(principal);
-        }
-        principalCache.invalidateAll();
         isAllowedPolicyDecisionsCache.invalidateAll();
-    }
-
-    @Override
-    public void invalidateByImsi(final String imsi) {
-        if (imsi == null) {
-            throw new IllegalArgumentException("imsi");
-        }
-        ConcurrentMap<PrincipalKey, Principal> principalMap = principalCache.asMap();
-        for (Map.Entry<PrincipalKey, Principal> entry : principalMap.entrySet()) {
-            Principal principal = entry.getValue();
-            String token;
-            if (principal instanceof PrincipalImpl) {
-                token = ((PrincipalImpl) principal).getPrivateJwtToken();
-            } else {
-                token = principal.getJwtToken();
-            }
-            SignedJWT jwt = null;
-            JWTClaimsSet claims = null;
-            try {
-                jwt = SignedJWT.parse(token);
-                claims = jwt.getJWTClaimsSet();
-            } catch (ParseException e) {
-                throw new AalException("Failed to parse JWT", e);
-            }
-            if (claims.getClaim(IMSI_CLAIM_NAME) != null) {
-                String claimImsi = (String) claims.getClaim(IMSI_CLAIM_NAME);
-                if (imsi.equalsIgnoreCase(claimImsi)) {
-                    principalCache.invalidate(entry.getKey());
-                    fireOnInvalidate(principal);
-                }
-            }
-        }
-        ConcurrentMap<PolicyDecisionKey, EvaluationResponse> policyDecisionMap = isAllowedPolicyDecisionsCache.asMap();
-        for (PolicyDecisionKey key : policyDecisionMap.keySet()) {
-            Object currentImsi = key.getSubject().getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, IMSI_CLAIM_NAME);
-            if (imsi.equals(currentImsi)) {
-                isAllowedPolicyDecisionsCache.invalidate(key);
-            }
-        }
     }
 
     @Override
@@ -372,9 +191,9 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
 
     @Override
     public String postprocessPolicy(Principal subject,
-                                             String resourceName,
-                                             String actionName,
-                                             Map<String, ?> envParameters, String response) {
+                                    String resourceName,
+                                    String actionName,
+                                    Map<String, ?> envParameters, String response) {
         if (subject == null) {
             LOG.errorIllegalSubjectParameter();
             throw new IllegalArgumentException(SUBJECT_SHOULD_BE_SPECIFIED);
@@ -436,20 +255,8 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     }
 
     @Override
-    public Principal parseToken(String jwt) {
-        throw new AuthenticationException("for authentication by jwt use AAL.authenticate");
-    }
-
-    @Override
-    @Deprecated
-    public Principal validate(String jwt) {
-        return ssoAuthorizationClient.validate(DummyRequest.getInstance(), jwt);
-    }
-
-    @Override
-    public Principal validate(HttpServletRequest request,
-                              String token) {
-        return ssoAuthorizationClient.validate(request, token);
+    public Principal validate(HttpServletRequest request, String token) {
+        return accessTokenValidator.validate(request, token);
     }
 
     @Override
@@ -476,7 +283,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
             if (isPollingEnabled()) {
                 disablePolling();
             }
-            pollingBean = new PollingBean(ssoTokenClient, isAllowedPolicyDecisionsCache, principalCache,
+            pollingBean = new PollingBean(ssoTokenClient, isAllowedPolicyDecisionsCache,
                     principalEventListeners);
             timer.schedule(pollingBean, 0, TimeUnit.MILLISECONDS.convert(period, unit));
         }
@@ -517,7 +324,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
 
     private String fetchRealm(Principal principal) {
         if (principal != null) {
-            String realm = (String) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "realm");
+            String realm = (String) principal.getProperty("realm");
             if (realm != null && !realm.isEmpty()) {
                 return realm;
             }
@@ -598,16 +405,6 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     @Override
     public void close() throws Exception {
         this.timer.cancel();
-    }
-
-    private void fireOnAuthenticate(Principal principal) {
-        for (PrincipalEventListener eventListener : principalEventListeners) {
-            try {
-                eventListener.onAuthenticate(principal);
-            } catch (Exception e) {
-                LOG.errorExecutingPrincipalEventListener(e);
-            }
-        }
     }
 
     private void fireOnInvalidate(Principal principal) {

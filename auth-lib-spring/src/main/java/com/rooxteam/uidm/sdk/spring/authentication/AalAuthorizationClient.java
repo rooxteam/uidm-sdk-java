@@ -1,18 +1,10 @@
 package com.rooxteam.uidm.sdk.spring.authentication;
 
-import com.rooxteam.sso.aal.AalLogger;
-import com.rooxteam.sso.aal.AnonymousPrincipalImpl;
-import com.rooxteam.sso.aal.AuthenticationAuthorizationLibrary;
-import com.rooxteam.sso.aal.AuthorizationType;
-import com.rooxteam.sso.aal.Principal;
-import com.rooxteam.sso.aal.PrincipalImpl;
-import com.rooxteam.sso.aal.PropertyScope;
+import com.rooxteam.sso.aal.*;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
+import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.exception.AalException;
 import com.rooxteam.uidm.sdk.spring.authorization.AalResourceValidation;
-import lombok.Setter;
-import org.springframework.context.EnvironmentAware;
-import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -21,42 +13,33 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-import static com.rooxteam.sso.aal.ConfigKeys.AUTHORIZATION_TYPE;
-import static com.rooxteam.sso.aal.ConfigKeys.AUTHORIZATION_TYPE_DEFAULT;
-import static com.rooxteam.sso.aal.ConfigKeys.POLICIES_FOR_SYSTEM;
-import static com.rooxteam.sso.aal.ConfigKeys.POLICIES_FOR_SYSTEM_DEFAULT;
+import static com.rooxteam.sso.aal.ConfigKeys.*;
 
 /**
  * @author RooX Solutions
  */
-public class AalAuthorizationClient implements SsoAuthorizationClient, AalResourceValidation, EnvironmentAware {
+public class AalAuthorizationClient implements SsoAuthorizationClient, AalResourceValidation {
 
     public static final String AAL_PRINCIPAL_ATTRIBUTE_NAME = "aalPrincipal";
     public static final String EVALUATION_CLAIMS_ATTRIBUTE_NAME = "evaluationClaims";
     public static final String EVALUATION_ADVICES_ATTRIBUTE_NAME = "evaluationAdvices";
 
-    @Setter
-    private Environment environment;
+    private final Configuration configuration;
 
     private final AuthenticationAuthorizationLibrary aal;
 
     public AalAuthorizationClient(AuthenticationAuthorizationLibrary aal) {
         this.aal = aal;
+        this.configuration = aal.getConfiguration();
     }
 
     @Override
-    public AuthenticationState validate(HttpServletRequest request, String jwt) {
+    public AuthenticationState validate(HttpServletRequest request, String accessToken) {
         Principal principal = null;
         try {
-            principal = aal.validate(request, jwt);
+            principal = aal.validate(request, accessToken);
         } catch (Exception e) {
             AalLogger.LOG.errorAuthentication(e);
             return null;
@@ -66,24 +49,29 @@ public class AalAuthorizationClient implements SsoAuthorizationClient, AalResour
         }
 
         AuthenticationState authenticationState = new AuthenticationState(getAuthorities(principal));
-        authenticationState.setPrincipal((String) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "prn"));
-        authenticationState.setClientSystem((String) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "client_id"));
-        authenticationState.setRealm((String) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "realm"));
-        List<String> authLevelList = (List<String>) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "authLevel");
-        if (!authLevelList.isEmpty()) {
+        String sub = (String) principal.getProperty("sub");
+        if (sub != null) {
+            authenticationState.setPrincipal(sub);
+        } else {
+            authenticationState.setPrincipal((String) principal.getProperty("prn"));
+        }
+        authenticationState.setClientSystem((String) principal.getProperty("client_id"));
+        authenticationState.setRealm((String) principal.getProperty("realm"));
+        List<String> authLevelList = (List<String>) principal.getProperty("authLevel");
+        if (!(authLevelList == null || authLevelList.isEmpty())) {
             authenticationState.setAuthLevel(Integer.valueOf(authLevelList.get(0)));
         }
 
         authenticationState.setAuthenticated(true);
-        authenticationState.setCredentials(jwt);
+        authenticationState.setCredentials(accessToken);
         authenticationState.getAttributes().put(AAL_PRINCIPAL_ATTRIBUTE_NAME, principal);
-        authenticationState.setModule((String) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "authType"));
+        authenticationState.setModule((String) principal.getProperty("authType"));
         passPrincipalProperties(principal, authenticationState);
         return authenticationState;
     }
 
     private Collection<? extends GrantedAuthority> getAuthorities(Principal principal) {
-        Object roles = principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "roles");
+        Object roles = principal.getProperty("roles");
 
         if (roles == null) {
             // old or unspecified
@@ -96,11 +84,6 @@ public class AalAuthorizationClient implements SsoAuthorizationClient, AalResour
         }
 
         return result;
-    }
-
-    @Override
-    public Map<String, Set<String>> getAttributesIfAllowed(String ssoToken, String resource, String method, Map<String, Object> envParameters) {
-        return null;
     }
 
     @Override
@@ -127,15 +110,14 @@ public class AalAuthorizationClient implements SsoAuthorizationClient, AalResour
                     // If dev token is both enabled and presented,
                     // we mark all the checks as passed if SSO policy evaluation mode is on
                     // if local config policy mode is on we pass execution to AAL
-                    String authzTypeString = environment.getProperty(AUTHORIZATION_TYPE, AUTHORIZATION_TYPE_DEFAULT);
+                    String authzTypeString = configuration.getString(AUTHORIZATION_TYPE, AUTHORIZATION_TYPE_DEFAULT);
                     AuthorizationType authorizationType = AuthorizationType.valueOf(authzTypeString);
                     if (authorizationType == AuthorizationType.CONFIG) {
                         aalPrincipal = reconstructPrincipalFromAuthState(authState);
                     } else {
                         return true;
                     }
-                } else if (isSystemAuthenticated(authState) && !environment.getProperty(POLICIES_FOR_SYSTEM,
-                        Boolean.class,
+                } else if (isSystemAuthenticated(authState) && !configuration.getBoolean(POLICIES_FOR_SYSTEM,
                         POLICIES_FOR_SYSTEM_DEFAULT)) {
                     return true;
                 } else {
@@ -201,14 +183,13 @@ public class AalAuthorizationClient implements SsoAuthorizationClient, AalResour
     }
 
     protected void passPrincipalProperties(Principal principal, AuthenticationState authenticationState) {
-        for (Map.Entry<String, Object> property : principal.getProperties(PropertyScope.SHARED_IDENTITY_PARAMS).entrySet()) {
+        for (Map.Entry<String, Object> property : principal.getProperties().entrySet()) {
             authenticationState.getAttributes().put(property.getKey(), property.getValue());
         }
     }
 
     private boolean isDevToken(AuthenticationState authentication) {
-        return authentication.isUserDev()
-                && DevTokenUtils.isDevTokenEnabled(environment);
+        return authentication.isUserDev() && DevTokenUtils.isDevTokenEnabled(configuration);
     }
 
     private boolean isSystemAuthenticated(AuthenticationState authentication) {

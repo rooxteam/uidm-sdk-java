@@ -9,18 +9,22 @@ import java.util.Map;
 public interface Principal {
 
     /**
-     * Имя параметра для хранения внутренней сессии SSO-сервера
+     * Получить свойство принципала.
+     *
+     * @param propertyScope уровень видимости свойства
+     * @param name          имя свойства
+     * @return значение свойства
      */
-    String SESSION_PARAM = "session";
+    @Deprecated
+    Object getProperty(PropertyScope propertyScope, String name);
 
     /**
      * Получить свойство принципала.
      *
-     * @param propertyScope уровень видимости свойства
-     * @param name          имя свойтства
+     * @param name          имя свойства
      * @return значение свойства
      */
-    Object getProperty(PropertyScope propertyScope, String name);
+    Object getProperty(String name);
 
     /**
      * Получить свойства принципала.
@@ -28,16 +32,16 @@ public interface Principal {
      * @param propertyScope уровень видимости свойств
      * @return пары имя-значение для всех свойств с данным уровнем видимости
      */
+    @Deprecated
     Map<String, Object> getProperties(PropertyScope propertyScope);
 
     /**
-     * Установить свойство принципала (значения остаются только в клиентском кеше)
+     * Получить свойства принципала.
      *
-     * @param propertyScope уровень видимости свойства
-     * @param name          имя свойтства
-     * @param value         значение свойства
+     * @return пары имя-значение для всех свойств с данным уровнем видимости
      */
-    void setProperty(PropertyScope propertyScope, String name, Object value);
+    Map<String, Object> getProperties();
+
 
     /**
      * Получить дату и время, с которой сведения о принципале станут недействительными.

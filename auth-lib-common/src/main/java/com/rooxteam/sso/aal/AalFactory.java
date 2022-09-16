@@ -3,9 +3,9 @@ package com.rooxteam.sso.aal;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.rooxteam.compat.Objects;
-import com.rooxteam.jwt.IatClaimChecker;
-import com.rooxteam.jwt.NbfClaimChecker;
-import com.rooxteam.jwt.StringClaimChecker;
+import com.rooxteam.sso.aal.validation.AccessTokenValidator;
+import com.rooxteam.sso.aal.validation.impl.JwtTokenValidator;
+import com.rooxteam.sso.aal.validation.impl.TokeninfoTokenValidator;
 import com.rooxteam.sso.aal.client.MonitoringHttpClientRequestInterceptor;
 import com.rooxteam.sso.aal.client.OtpClient;
 import com.rooxteam.sso.aal.client.SsoAuthenticationClient;
@@ -32,32 +32,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 
-import static com.rooxteam.sso.aal.ConfigKeys.AUTHORIZATION_TYPE;
-import static com.rooxteam.sso.aal.ConfigKeys.AUTHORIZATION_TYPE_DEFAULT;
-import static com.rooxteam.sso.aal.ConfigKeys.CONNECTION_REUSE_STRATEGY;
-import static com.rooxteam.sso.aal.ConfigKeys.CONNECTION_REUSE_STRATEGY_DEFAULT;
-import static com.rooxteam.sso.aal.ConfigKeys.HTTP_CONNECTION_POOL_SIZE;
-import static com.rooxteam.sso.aal.ConfigKeys.HTTP_CONNECTION_POOL_SIZE_DEFAULT;
-import static com.rooxteam.sso.aal.ConfigKeys.HTTP_CONNECTION_POOL_SIZE_PER_ROUTE;
-import static com.rooxteam.sso.aal.ConfigKeys.HTTP_CONNECTION_POOL_SIZE_PER_ROUTE_DEFAULT;
-import static com.rooxteam.sso.aal.ConfigKeys.HTTP_CONNECTION_TIMEOUT;
-import static com.rooxteam.sso.aal.ConfigKeys.HTTP_CONNECTION_TIMEOUT_DEFAULT;
-import static com.rooxteam.sso.aal.ConfigKeys.HTTP_SOCKET_TIMEOUT;
-import static com.rooxteam.sso.aal.ConfigKeys.HTTP_SOCKET_TIMEOUT_DEFAULT;
-import static com.rooxteam.sso.aal.ConfigKeys.JWT_ISSUER;
-import static com.rooxteam.sso.aal.ConfigKeys.POLICY_CACHE_EXPIRE_AFTER_WRITE;
-import static com.rooxteam.sso.aal.ConfigKeys.POLICY_CACHE_EXPIRE_AFTER_WRITE_DEFAULT;
-import static com.rooxteam.sso.aal.ConfigKeys.POLICY_CACHE_LIMIT;
-import static com.rooxteam.sso.aal.ConfigKeys.POLICY_CACHE_LIMIT_DEFAULT;
-import static com.rooxteam.sso.aal.ConfigKeys.POLLING_ENABLED;
-import static com.rooxteam.sso.aal.ConfigKeys.POLLING_ENABLED_DEFAULT;
-import static com.rooxteam.sso.aal.ConfigKeys.POLLING_PERIOD;
-import static com.rooxteam.sso.aal.ConfigKeys.POLLING_PERIOD_DEFAULT;
-import static com.rooxteam.sso.aal.ConfigKeys.PRINCIPAL_CACHE_EXPIRE_AFTER_WRITE;
-import static com.rooxteam.sso.aal.ConfigKeys.PRINCIPAL_CACHE_EXPIRE_AFTER_WRITE_DEFAULT;
-import static com.rooxteam.sso.aal.ConfigKeys.PRINCIPAL_CACHE_LIMIT;
-import static com.rooxteam.sso.aal.ConfigKeys.PRINCIPAL_CACHE_LIMIT_DEFAULT;
-import static com.rooxteam.sso.aal.ConfigKeys.SHARED_KEY;
+import static com.rooxteam.sso.aal.ConfigKeys.*;
 
 @SuppressWarnings({"WeakerAccess", "UnstableApiUsage"})
 public class AalFactory {
@@ -93,14 +68,18 @@ public class AalFactory {
 
         SsoAuthorizationClient authorizationClient = createSsoAuthorizationClient(authorizationType, config,
                 httpClient);
+
+        String validationTypeString = config.getString(VALIDATION_TYPE, VALIDATION_TYPE_TYPE_DEFAULT);
+        ValidationType validationType = ValidationType.valueOf(validationTypeString);
+
+        AccessTokenValidator accessTokenValidator = createAccessTokenValidator(validationType, authorizationClient, config, httpClient);
+
         SsoAuthenticationClient authenticationClient = new SsoAuthenticationClient(config, httpClient);
         SsoTokenClient tokenClient = new SsoTokenClient(config, httpClient);
         UserIpProvider userIpProvider = new UserIpProviderFactory(config).create();
         OtpClient otpClient = new OtpClient(config, httpClient, userIpProvider);
 
-        Cache<PrincipalKey, Principal> principalCache = initPrincipalsCache(config);
         Cache<PolicyDecisionKey, EvaluationResponse> isAllowedPolicyDecisionsCache = initPoliciesCache(config);
-        JwtValidator jwtValidator = createJwtValidator(config);
 
         RooxAuthenticationAuthorizationLibrary aal = new RooxAuthenticationAuthorizationLibrary(config,
                 pollingTimer,
@@ -109,11 +88,9 @@ public class AalFactory {
                 tokenClient,
                 otpClient,
                 isAllowedPolicyDecisionsCache,
-                principalCache,
-                jwtValidator,
-                authorizationType,
+                accessTokenValidator,
                 createMetricsIntegration());
-        // TODO: implement intantiation of metrics
+        // TODO: implement instantiation of metrics
         if (config.getBoolean(POLLING_ENABLED, POLLING_ENABLED_DEFAULT)) {
             int pollingDefaultTimeoutSeconds = config.getInt(POLLING_PERIOD, POLLING_PERIOD_DEFAULT);
             aal.enablePolling(pollingDefaultTimeoutSeconds, TimeUnit.SECONDS);
@@ -182,15 +159,6 @@ public class AalFactory {
                 .build();
     }
 
-    private static JwtValidator createJwtValidator(Configuration config) {
-        String sharedKey = config.getString(SHARED_KEY);
-        NbfClaimChecker nbfClaimChecker = new NbfClaimChecker();
-        IatClaimChecker iatClaimChecker = new IatClaimChecker();
-        String issuer = config.getString(JWT_ISSUER);
-        StringClaimChecker issuerClaimChecker = new StringClaimChecker("iss", issuer, true);
-        return new JwtValidator(sharedKey, nbfClaimChecker, iatClaimChecker, issuerClaimChecker);
-    }
-
     private static SsoAuthorizationClient createSsoAuthorizationClient(AuthorizationType authorizationType,
                                                                        Configuration config,
                                                                        CloseableHttpClient httpClient) {
@@ -227,6 +195,22 @@ public class AalFactory {
         return ssoAuthorizationClient;
     }
 
+    private static AccessTokenValidator createAccessTokenValidator(ValidationType validationType,
+                                                                   SsoAuthorizationClient ssoAuthorizationClient,
+                                                                   Configuration configuration, CloseableHttpClient httpClient) {
+        switch (validationType) {
+            case INTROSPECTION:
+                throw new IllegalArgumentException("unsupported yet");
+            case JWT: {
+                return new JwtTokenValidator(configuration, httpClient);
+            }
+            default:
+            case TOKENINFO: {
+                return new TokeninfoTokenValidator(ssoAuthorizationClient);
+            }
+        }
+    }
+
     private static String getSsoAuthorizationClientName(AuthorizationType authorizationType) {
         switch (authorizationType) {
             case OPA:
@@ -241,18 +225,7 @@ public class AalFactory {
         }
     }
 
-    private static Cache<PrincipalKey, Principal> initPrincipalsCache(Configuration config) {
-        int principalCacheSize = config.getInt(PRINCIPAL_CACHE_LIMIT, PRINCIPAL_CACHE_LIMIT_DEFAULT);
-        int principalExpireAfterWrite = config.getInt(PRINCIPAL_CACHE_EXPIRE_AFTER_WRITE,
-                PRINCIPAL_CACHE_EXPIRE_AFTER_WRITE_DEFAULT);
-        Cache<PrincipalKey, Principal> principalCache =
-                CacheBuilder.newBuilder()
-                        .maximumSize(principalCacheSize)
-                        .expireAfterWrite(principalExpireAfterWrite, TimeUnit.SECONDS)
-                        .build();
-        AalLogger.LOG.traceInitPrincipalCacheWithSize(principalCacheSize);
-        return principalCache;
-    }
+
 
     private static Cache<PolicyDecisionKey, EvaluationResponse> initPoliciesCache(Configuration config) {
         int policyCacheSize = config.getInt(POLICY_CACHE_LIMIT, POLICY_CACHE_LIMIT_DEFAULT);
