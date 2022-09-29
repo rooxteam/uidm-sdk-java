@@ -63,9 +63,8 @@ public class ServletAuthFilterHttpRequestWrapper extends HttpServletRequestWrapp
         Objects.requireNonNull(principal);
         Objects.requireNonNull(attributeNamesOfTokenClaims);
         Objects.requireNonNull(headerNamesOfTokenClaims);
-        this.principal = (String) principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS,
-                PrincipalClaims.prn.name());
-        Object uncastRoles = principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, PrincipalClaims.roles.name());
+        this.principal = (String) principal.getProperty(PrincipalClaims.prn.name());
+        Object uncastRoles = principal.getProperty(PrincipalClaims.roles.name());
         this.roles = uncastRoles != null
                 ? Collections.unmodifiableSet(new TreeSet<String>((List<String>) uncastRoles))
                 : Collections.unmodifiableSet(new TreeSet<String>());
@@ -74,12 +73,12 @@ public class ServletAuthFilterHttpRequestWrapper extends HttpServletRequestWrapp
         this.attributes = new TreeMap();
 
         for (Map.Entry<String, String> entry : headerNamesOfTokenClaims.entrySet()) {
-            Object propValue = principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, entry.getKey());
+            Object propValue = principal.getProperty(entry.getKey());
             putIntoHeader(entry.getValue(), getCollection(propValue));
         }
 
         for (Map.Entry<String, String> entry : attributeNamesOfTokenClaims.entrySet()) {
-            Object propValue = principal.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, entry.getKey());
+            Object propValue = principal.getProperty(entry.getKey());
             this.attributes.put(entry.getValue(), propValue);
         }
 

@@ -21,40 +21,6 @@ import java.util.concurrent.TimeUnit;
  */
 public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
 
-    /**
-     * Аутентифицировать по набору параметров и вернуть Principal.
-     * Набор параметров представлен словарём, потому что аутентификация может производится по различным факторам – пара username/password, IP-адрес, OpenID и т.д.
-     * Эти параметры должны передаваться в движок оркестрации OpenAM, который по имеющимся параметрам собирает Identity-параметры из бэкэнда (из PCRF, например).
-     * Если по этим параметрам аутентификация уже была пройдена, то повторный вызов authenticate не будет обращаться в OpenAM, а вернёт принципала из кеша.
-     * Чтобы переаутентифицировать запрос, нужно сначала вызвать invalidate, потом authenticate
-     *
-     * @param params   параметры аутентификации. Для аутентификации по IP-адресу необходимо передать параметр "ip",
-     *                 для аутентификации по ранее выданному JWT необходимо передать параметр "jwt".
-     *                 Опционально передать список клиентских IP-адресов в параметре clientIps (формат, IP-адреса в dot-представлении разделенные между собой запятой).
-     * @param timeOut  таймаут выполнения.
-     * @param timeUnit единица измерения таймаута.
-     * @return Principal с заполненными атрибутами при успешной аутентификации
-     * @throws IllegalArgumentException                               Если параметр {@code params} не содержит параметер "ip"
-     * @throws com.rooxteam.sso.aal.exception.AuthenticationException В случае неуспеха аутентификации
-     */
-    @Deprecated
-    Principal authenticate(Map<String, ?> params, long timeOut, TimeUnit timeUnit);
-
-    /**
-     * Аутентифицировать по набору параметров и вернуть Principal.
-     * Набор параметров представлен словарём, потому что аутентификация может производится по различным факторам – пара username/password, IP-адрес, OpenID и т.д.
-     * Эти параметры должны передаваться в движок оркестрации OpenAM, который по имеющимся параметрам собирает Identity-параметры из бэкэнда (из PCRF, например).
-     * Если по этим параметрам аутентификация уже была пройдена, то повторный вызов authenticate не будет обращаться в OpenAM, а вернёт принципала из кеша.
-     * Чтобы переаутентифицировать запрос, нужно сначала вызвать invalidate, потом authenticate
-     *
-     * @param params параметры аутентификации. Для аутентификации по IP-адресу необходимо передать параметр "ip",
-     *               для аутентификации по ранее выданному JWT необходимо передать параметр "jwt".
-     *               Опционально передать список клиентских IP-адресов в параметре clientIps (формат, IP-адреса в dot-представлении разделенные между собой запятой).
-     * @return Principal с заполненными атрибутами при успешной аутентификации
-     * @throws IllegalArgumentException                               Если параметр {@code params} не содержит параметр "ip"
-     * @throws com.rooxteam.sso.aal.exception.AuthenticationException В случае неуспеха аутентификации
-     */
-    Principal authenticate(Map<String, ?> params);
 
     /**
      * Запросить у OpenAM обновление сведений о принципале.
@@ -92,12 +58,6 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
      */
     void invalidate();
 
-    /**
-     * Объявить сведения о принципале с заданным IMSI не действительными и удалить их из кеша.
-     *
-     * @param imsi IMSI абонента, принципал которого требуется объявить недействительным.
-     */
-    void invalidateByImsi(String imsi);
 
     /**
      * Разрешено ли выполнение действия (actionName) над ресурсом (actionName) в контексте (envParameters).
@@ -176,21 +136,9 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
     void resetPolicies(Principal principal);
 
     /**
-     * Преобразовать JWT токен в принципал. Созданный принципал будет иметь только свойства из скоупа Shared Identity Params.
-     *
-     * @param jwt JWT токен, который требуется проверить
-     * @return Principal с атрибутами из JWT
-     */
-    Principal parseToken(String jwt);
-
-    /**
-     */
-    Principal validate(String jwt);
-
-    /**
      * Проверить валидность токена
      *
-     * @param jwt JWT токен для проверки
+     * @param accessToken токен для проверки
      * @return статус проверки
      * @throws com.rooxteam.sso.aal.exception.AalException Может содержать в себе причины (cause):
      *                                                     {@link java.security.NoSuchAlgorithmException},
@@ -200,7 +148,7 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
      * @throws java.lang.IllegalArgumentException          Если {@code jwt} равен null
      * @throws java.lang.IllegalStateException             Если параметры iat, nbf и другие с неправильными значениями*
      */
-    Principal validate(HttpServletRequest request, String jwt);
+    Principal validate(HttpServletRequest request, String accessToken);
 
     /**
      * Зарегистрировать PrincipalEventListener для обработки событий Principal.

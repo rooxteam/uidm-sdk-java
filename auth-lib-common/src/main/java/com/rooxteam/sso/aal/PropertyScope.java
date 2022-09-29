@@ -1,5 +1,6 @@
 package com.rooxteam.sso.aal;
 
+@Deprecated
 public enum PropertyScope {
     /**
      * Shared Identity Params, которые уникально идентифицируют абонента и могут быть помещены в JWT токен,
@@ -14,11 +15,13 @@ public enum PropertyScope {
      * Такие параметры в токен JWT не попадают, а хранятся только в кеше сервис провайдера.
      * Поставщиком этих параметров является OpenAM.
      */
+    @Deprecated
     PRIVATE_IDENTITY_PARAMS,
 
     /**
      * Session Params, параметры сессии, не относящиеся к параметрами идентификации и специфичные для канала.
      * Поставщиком этих параметров является сервис провайдер.
      */
+    @Deprecated
     SESSION_PARAMS
 }

@@ -87,27 +87,27 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
                 if (statusCode == HttpStatus.SC_OK) {
                     String responseJson = EntityUtils.toString(response.getEntity());
                     Map<String, Object> tokenClaims = parseJson(responseJson);
-                    Map<String, Object> sharedIdentityProperties = new HashMap<String, Object>();
+                    Map<String, Object> properties = new HashMap<String, Object>();
                     Object sub = tokenClaims.get("sub");
                     // legacy style claim for subject
-                    sharedIdentityProperties.put("prn", sub);
+                    properties.put("prn", sub);
                     for (Map.Entry<String, Object> entry : tokenClaims.entrySet()) {
-                        sharedIdentityProperties.put(entry.getKey(),entry.getValue());
+                        properties.put(entry.getKey(),entry.getValue());
                     }
 
                     // this is for backward compat because by some legacy nonsense authLevel has been defined as list
                     Object authLevel = tokenClaims.get("auth_level");
                     if (authLevel != null) {
-                        sharedIdentityProperties.put("authLevel", Collections.singletonList(authLevel.toString()));
+                        properties.put("authLevel", Collections.singletonList(authLevel.toString()));
                     } else {
-                        sharedIdentityProperties.put("authLevel", Collections.emptyList());
+                        properties.put("authLevel", Collections.emptyList());
                     }
 
                     Calendar expiresIn = new GregorianCalendar();
                     expiresIn.set(Calendar.HOUR, 0);
                     expiresIn.set(Calendar.MINUTE, Integer.valueOf(tokenClaims.get("expires_in").toString()));
                     expiresIn.set(Calendar.SECOND, 0);
-                    principal = new PrincipalImpl(token, sharedIdentityProperties, expiresIn);
+                    principal = new PrincipalImpl(token, properties, expiresIn);
                 }
                 return principal;
             } finally {
@@ -128,11 +128,6 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
                     e);
             throw e;
         }
-    }
-
-    @Override
-    public Principal validate(final String token) {
-        return validate(DummyRequest.getInstance(), token);
     }
 
     private static Map<String, Object> parseJson(String json) {

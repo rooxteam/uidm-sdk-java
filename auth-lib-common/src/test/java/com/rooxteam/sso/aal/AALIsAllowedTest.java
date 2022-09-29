@@ -25,15 +25,14 @@ public class AALIsAllowedTest {
     public static final TimeUnit DEFAULT_TIMEUNIT = TimeUnit.MILLISECONDS;
     private RooxAuthenticationAuthorizationLibrary aal;
     private final Cache<PolicyDecisionKey, EvaluationResponse> mockPolicyDecisionsCache = mock(Cache.class);
-    private final Cache<PrincipalKey, Principal> mockPrincipalCache = (Cache<PrincipalKey, Principal>) mock(Cache.class);
     private final SsoAuthorizationClient mockSsoAuthorizationClient = mock(SsoAuthorizationClient.class);
     private final SsoAuthenticationClient mockSsoAuthenticationClient = mock(SsoAuthenticationClient.class);
 
     @Before
     public void setUp() {
-        reset(mockPolicyDecisionsCache, mockPrincipalCache, mockSsoAuthorizationClient, mockSsoAuthenticationClient);
+        reset(mockPolicyDecisionsCache, mockSsoAuthorizationClient, mockSsoAuthenticationClient);
         aal = new RooxAuthenticationAuthorizationLibrary(null,null, mockSsoAuthorizationClient, mockSsoAuthenticationClient,
-                null, null, mockPolicyDecisionsCache, mockPrincipalCache, null, AuthorizationType.JWT,
+                null, null, mockPolicyDecisionsCache, null,
                 new NoOpMetricsIntegration());
     }
 
@@ -88,11 +87,6 @@ public class AALIsAllowedTest {
 //                .thenReturn(mockSsoToken);
         when(mockSsoAuthorizationClient.isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET", Collections.EMPTY_MAP))
                 .thenReturn(new EvaluationResponse(Decision.Permit));
-        ConcurrentHashMap<PrincipalKey, Principal> PrincipalCacheMap = new ConcurrentHashMap<PrincipalKey, Principal>();
-        PrincipalKey PrincipalKey = new PrincipalKey(AuthParamType.IP, IP_229_213_38_0);
-        PrincipalCacheMap.put(PrincipalKey, mockPrincipal);
-        when(mockPrincipalCache.asMap())
-                .thenReturn(PrincipalCacheMap);
         when(mockPolicyDecisionsCache.asMap())
                 .thenReturn(new ConcurrentHashMap<PolicyDecisionKey, EvaluationResponse>());
 
@@ -115,11 +109,6 @@ public class AALIsAllowedTest {
         PolicyDecisionKey key = new PolicyDecisionKey(mockPrincipal, "/TestResource", "GET");
         when(mockPolicyDecisionsCache.getIfPresent(key))
                 .thenReturn(new EvaluationResponse(Decision.Permit));
-        ConcurrentHashMap<PrincipalKey, Principal> PrincipalCacheMap = new ConcurrentHashMap<PrincipalKey, Principal>();
-        PrincipalKey PrincipalKey = new PrincipalKey(AuthParamType.IP, IP_229_213_38_0);
-        PrincipalCacheMap.put(PrincipalKey, mockPrincipal);
-        when(mockPrincipalCache.asMap())
-                .thenReturn(PrincipalCacheMap);
 
         Map<String, Object> envParameters = Collections.emptyMap();
         boolean isAllowed = aal.isAllowed(mockPrincipal, "/TestResource", "GET", envParameters, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
@@ -135,11 +124,6 @@ public class AALIsAllowedTest {
         PolicyDecisionKey key = new PolicyDecisionKey(mockPrincipal, "/TestResource", "GET");
         when(mockPolicyDecisionsCache.getIfPresent(key))
                 .thenReturn(new EvaluationResponse(Decision.Deny));
-        ConcurrentHashMap<PrincipalKey, Principal> PrincipalCacheMap = new ConcurrentHashMap<PrincipalKey, Principal>();
-        PrincipalKey PrincipalKey = new PrincipalKey(AuthParamType.IP, IP_229_213_38_0);
-        PrincipalCacheMap.put(PrincipalKey, mockPrincipal);
-        when(mockPrincipalCache.asMap())
-                .thenReturn(PrincipalCacheMap);
 
         Map<String, Object> envParameters = Collections.emptyMap();
         boolean isAllowed = aal.isAllowed(mockPrincipal, "/TestResource", "GET", envParameters, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
@@ -171,8 +155,6 @@ public class AALIsAllowedTest {
         policyDecisionsCacheMap.put(key, new EvaluationResponse(Decision.Permit));
         when(mockPolicyDecisionsCache.asMap())
                 .thenReturn(policyDecisionsCacheMap);
-        when(mockPrincipalCache.asMap())
-                .thenReturn(new ConcurrentHashMap<PrincipalKey, Principal>());
 
         aal.invalidate(mockPrincipal);
 

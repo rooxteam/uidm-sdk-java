@@ -39,7 +39,6 @@ public class RequestCookieStore implements CookieStore {
     private CookieStore getCookieStore() {
         CookieStore cookieStore = RequestCookieStoreHolder.getCookieStore();
         if (cookieStore == null) {
-            LOG.warnRequestCookieStoreContextIsNotDefined();
             cookieStore = new BasicCookieStore();
         }
         return cookieStore;

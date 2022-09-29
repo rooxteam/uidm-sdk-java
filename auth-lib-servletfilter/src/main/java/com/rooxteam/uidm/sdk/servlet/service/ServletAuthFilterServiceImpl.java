@@ -1,7 +1,6 @@
 package com.rooxteam.uidm.sdk.servlet.service;
 
 import com.rooxteam.sso.aal.AalFactory;
-import com.rooxteam.sso.aal.AuthParamType;
 import com.rooxteam.sso.aal.AuthenticationAuthorizationLibrary;
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.exception.AuthorizationException;
@@ -35,9 +34,9 @@ public class ServletAuthFilterServiceImpl implements ServletAuthFilterService {
         this.cookieNames = getCookieNames(filterConfig);
     }
 
-    public Principal authenticate(String accessToken) {
+    public Principal authenticate(HttpServletRequest request, String accessToken) {
         try {
-            return aal.validate(accessToken);
+            return aal.validate(request, accessToken);
         } catch (AuthorizationException e) {
             AuthFilterLogger.LOG.errorAuthentication(LoggerUtils.trimAccessTokenForLogging(accessToken), e);
             return null;

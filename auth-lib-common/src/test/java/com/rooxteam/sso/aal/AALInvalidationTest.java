@@ -35,13 +35,4 @@ public class AALInvalidationTest {
         aal.invalidate(null);
     }
 
-
-    @Test(expected = IllegalArgumentException.class)
-    public void invalidate_by_imsi_should_throw_illegalArgumentException_when_principal_is_null() {
-        Configuration config = new BaseConfiguration();
-        config.setProperty("com.rooxteam.aal.jwt.issuer", "TEST_ISSUER");
-        AuthenticationAuthorizationLibrary aal = AalFactory.create(ConfigurationBuilder.fromApacheCommonsConfiguration(config));
-        Whitebox.setInternalState(aal, "ssoAuthenticationClient", mockSsoAuthenticationClient);
-        aal.invalidateByImsi(null);
-    }
 }

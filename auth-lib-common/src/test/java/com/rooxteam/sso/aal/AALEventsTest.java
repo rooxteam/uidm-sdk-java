@@ -28,15 +28,14 @@ public class AALEventsTest {
     private final PrincipalEventListener mockListener = mock(PrincipalEventListener.class);
     private final SsoAuthenticationClient mockSsoAuthenticationClient = mock(SsoAuthenticationClient.class);
     private final SsoAuthorizationClient mockSsoAuthorizationClient = mock(SsoAuthorizationClient.class);
-    private final Cache<PrincipalKey, Principal> mockPrincipalCache = (Cache<PrincipalKey, Principal>) mock(Cache.class);
     private final Cache<PolicyDecisionKey, EvaluationResponse> mockPolicyDecisionsCache = mock(Cache.class);
 
     @Before
     public void setUp() {
-        reset(mockSsoAuthenticationClient, mockSsoAuthorizationClient, mockPrincipalCache, mockPolicyDecisionsCache, mockListener);
+        reset(mockSsoAuthenticationClient, mockSsoAuthorizationClient, mockPolicyDecisionsCache, mockListener);
         aal = new RooxAuthenticationAuthorizationLibrary(
                 null,null, mockSsoAuthorizationClient, mockSsoAuthenticationClient, null, null,
-                mockPolicyDecisionsCache, mockPrincipalCache, null, AuthorizationType.JWT, new NoOpMetricsIntegration());
+                mockPolicyDecisionsCache, null, new NoOpMetricsIntegration());
         aal.addPrincipalListener(mockListener);
     }
 
@@ -45,23 +44,6 @@ public class AALEventsTest {
         aal.removePrincipalListener(mockListener);
     }
 
-    @Test
-    public void invalidate_principal_should_fire_onInvalidate_event() {
-        Principal mockPrincipal = mock(Principal.class);
-        ConcurrentHashMap<PrincipalKey, Principal> PrincipalCacheMap = new ConcurrentHashMap<PrincipalKey, Principal>();
-        PrincipalKey PrincipalKey = new PrincipalKey(AuthParamType.IP, IP_229_213_38_0);
-        PrincipalCacheMap.put(PrincipalKey, mockPrincipal);
-        when(mockPrincipalCache.asMap())
-                .thenReturn(PrincipalCacheMap);
-        when(mockPolicyDecisionsCache.asMap())
-                .thenReturn(new ConcurrentHashMap<PolicyDecisionKey, EvaluationResponse>());
-
-        aal.invalidate(mockPrincipal);
-        verify(mockListener, times(1)).onInvalidate(mockPrincipal);
-        verify(mockListener, times(0)).onAuthenticate(any(Principal.class));
-        verify(mockListener, times(0)).onRequestPrincipal(any(Principal.class));
-        verify(mockPrincipalCache, times(1)).invalidate(PrincipalKey);
-    }
 
     @Test
     public void should_NOT_fire_onRequestPrincipal_event_if_jwt_is_not_valid() {

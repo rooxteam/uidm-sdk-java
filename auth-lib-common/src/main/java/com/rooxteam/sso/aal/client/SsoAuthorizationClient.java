@@ -17,16 +17,6 @@ public interface SsoAuthorizationClient {
     /**
      * Token validation
      *
-     * @param token Token value
-     * @return True if token is valid
-     * @deprecated use {@link #validate(HttpServletRequest, String)}
-     */
-    @Deprecated
-    Principal validate(final String token);
-
-    /**
-     * Token validation
-     *
      * @param request Request
      * @param token   Token value
      * @return True if token is valid

@@ -8,12 +8,7 @@ import com.rooxteam.uidm.sdk.servlet.service.ServletAuthFilterServiceImpl;
 import com.rooxteam.uidm.sdk.servlet.util.LoggerUtils;
 import com.rooxteam.uidm.sdk.servlet.util.ParseStringUtils;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -23,6 +18,7 @@ import java.util.Map;
  * This filter attempts to authenticate the user by Cookie or, if absent, by Authorization header.
  * If the user can not be authenticated, then the user is redirected to authentication endpoint.
  * On successful authentication some claims from access token are placed in the request and forwarded.
+ *
  * @author Denis Rylow
  */
 public class ServletAuthFilter implements Filter {
@@ -55,9 +51,9 @@ public class ServletAuthFilter implements Filter {
         HttpServletResponse response = (HttpServletResponse) servletResponse;
 
         String accToken = servletAuthFilterHelper.extractAccessToken(request);
-        if (accToken!=null) {
-            Principal principal = servletAuthFilterHelper.authenticate(accToken);
-            if (principal!=null) {
+        if (accToken != null) {
+            Principal principal = servletAuthFilterHelper.authenticate(request, accToken);
+            if (principal != null) {
                 request = new ServletAuthFilterHttpRequestWrapper(request, principal, headerNameOfTokenClaim, attributeNameOfTokenClaim);
                 AuthFilterLogger.LOG.infoSuccessAuthentication(LoggerUtils.trimAccessTokenForLogging(accToken));
                 filterChain.doFilter(request, response);

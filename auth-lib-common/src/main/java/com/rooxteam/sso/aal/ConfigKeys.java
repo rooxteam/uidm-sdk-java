@@ -225,6 +225,10 @@ public interface ConfigKeys {
 
     String AUTHORIZATION_TYPE_DEFAULT = AuthorizationType.JWT.toString();
 
+    String VALIDATION_TYPE = "com.rooxteam.aal.validation_type";
+
+    String VALIDATION_TYPE_TYPE_DEFAULT = ValidationType.TOKENINFO.toString();
+
 
     String CONNECTION_REUSE_STRATEGY = "com.rooxteam.aal.connection_reuse_strategy";
 
@@ -302,4 +306,6 @@ public interface ConfigKeys {
      */
     String CLIENT_SECRET_FOR_REALM = "com.rooxteam.realms.{realm}.aal.auth.password";
 
+    String JWKS_URL = "com.rooxteam.aal.jwks.url";
+    String JWT_VALIDATORS = "com.rooxteam.all.jwt.validators";
 }

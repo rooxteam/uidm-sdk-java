@@ -75,7 +75,7 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
             throw new IllegalArgumentException("Method name is not supplied");
         }
 
-        String realm = (String) subject.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "realm");
+        String realm = (String) subject.getProperty("realm");
         if (realm == null) {
             realm = config.getString(ConfigKeys.REALM, ConfigKeys.REALM_DEFAULT);
         }
@@ -110,7 +110,7 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
         }
 
         try {
-            String realm = (String) subject.getProperty(PropertyScope.SHARED_IDENTITY_PARAMS, "realm");
+            String realm = (String) subject.getProperty("realm");
             List<EvaluationContext> contexts = new ArrayList<EvaluationContext>();
             for (EvaluationRequest policy : policies) {
                 String method = policy.getActionName();

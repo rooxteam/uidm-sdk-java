@@ -22,9 +22,7 @@ import static com.rooxteam.sso.aal.AalLogger.LOG;
  */
 public class PrincipalImpl extends AbstractPrincipal {
 
-    private final Map<String, Object> sharedIdentityProperties = new ConcurrentHashMap<String, Object>();
-    private final Map<String, Object> privateIdentityProperties = new ConcurrentHashMap<String, Object>();
-    private final Map<String, Object> sessionProperties = new ConcurrentHashMap<String, Object>();
+    private final Map<String, Object> properties = new ConcurrentHashMap<String, Object>();
     private final String policyContextJwtToken;
     private final String publicJwtToken;
     private Calendar expirationTime;
@@ -44,14 +42,14 @@ public class PrincipalImpl extends AbstractPrincipal {
         }
     }
 
-    public PrincipalImpl(String publicJwtToken, Map<String, Object> sharedIdentityProperties, Calendar expirationTime) {
+    public PrincipalImpl(String publicJwtToken, Map<String, Object> properties, Calendar expirationTime) {
         this.policyContextJwtToken = publicJwtToken;
         this.publicJwtToken = publicJwtToken;
-        for (Map.Entry<String, Object> entry : sharedIdentityProperties.entrySet()) {
+        for (Map.Entry<String, Object> entry : properties.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
             if (key != null && value != null) {
-                this.sharedIdentityProperties.put(key, value);
+                this.properties.put(key, value);
             }
         }
         this.expirationTime = expirationTime;
@@ -73,6 +71,16 @@ public class PrincipalImpl extends AbstractPrincipal {
         return policyContextJwtToken;
     }
 
+
+    @Override
+    public Object getProperty(String name) {
+        return properties.get(name);
+    }
+
+    @Override
+    public Map<String, Object> getProperties() {
+        return properties;
+    }
 
     @Override
     public Calendar getExpirationTime() {
@@ -106,7 +114,7 @@ public class PrincipalImpl extends AbstractPrincipal {
             for (Map.Entry<String, Object> entry : claimsSet.getClaims().entrySet()) {
                 Object claimValue = claimsSet.getClaim(entry.getKey());
                 if (claimValue != null) {
-                    sharedIdentityProperties.put(entry.getKey(), claimValue);
+                    properties.put(entry.getKey(), claimValue);
                 }
             }
         } catch (RuntimeException e) {
@@ -118,18 +126,6 @@ public class PrincipalImpl extends AbstractPrincipal {
         }
     }
 
-    @Override
-    protected Map<String, Object> getSharedIdentityProperties() {
-        return sharedIdentityProperties;
-    }
 
-    @Override
-    protected Map<String, Object> getPrivateIdentityProperties() {
-        return privateIdentityProperties;
-    }
 
-    @Override
-    protected Map<String, Object> getSessionProperties() {
-        return sessionProperties;
-    }
 }

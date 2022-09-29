@@ -96,7 +96,7 @@ public abstract class AbstractUserPreAuthenticatedProcessingFilter extends Gener
     protected void successfulUserAuthentication(HttpServletRequest request,
                                                 HttpServletResponse response,
                                                 Authentication userAuthResult) {
-        AalLogger.LOG.infoFilterAuthenticationSuccess(this.getClass().getSimpleName(), userAuthResult.getPrincipal());
+        AalLogger.LOG.debugFilterAuthenticationSuccess(this.getClass().getSimpleName(), userAuthResult.getPrincipal());
         SecurityContextHolder.getContext().setAuthentication(userAuthResult);
         // Fire event
         if (this.eventPublisher != null) {
