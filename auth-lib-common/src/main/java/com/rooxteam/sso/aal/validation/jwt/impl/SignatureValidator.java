@@ -68,9 +68,11 @@ public class SignatureValidator implements JwtValidatorSPI {
             if (signedJwt.verify(signingHandler)) {
                 return ValidationResult.success();
             } else {
+                LOG.warn("JWT validation failed");
                 return ValidationResult.fail(ValidationResult.Reason.SignatureNotValid);
             }
         } catch (JOSEException e) {
+            LOG.warn("JWT validation failed with exception", e);
             return ValidationResult.fail(ValidationResult.Reason.SignatureNotValid);
         }
     }
