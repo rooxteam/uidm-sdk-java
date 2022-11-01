@@ -1,6 +1,5 @@
 package com.rooxteam.sso.aal;
 
-import com.google.common.cache.Cache;
 import com.rooxteam.sso.aal.client.SsoAuthenticationClient;
 import com.rooxteam.sso.aal.client.SsoAuthorizationClient;
 import com.rooxteam.sso.aal.client.model.Decision;
@@ -11,12 +10,16 @@ import org.junit.Test;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import static com.rooxteam.sso.aal.AALInvalidationTest.IP_229_213_38_0;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @SuppressWarnings("unchecked")
 public class AALIsAllowedTest {
@@ -24,15 +27,14 @@ public class AALIsAllowedTest {
     public static final long DEFAULT_TIMEOUT = 0;
     public static final TimeUnit DEFAULT_TIMEUNIT = TimeUnit.MILLISECONDS;
     private RooxAuthenticationAuthorizationLibrary aal;
-    private final Cache<PolicyDecisionKey, EvaluationResponse> mockPolicyDecisionsCache = mock(Cache.class);
     private final SsoAuthorizationClient mockSsoAuthorizationClient = mock(SsoAuthorizationClient.class);
     private final SsoAuthenticationClient mockSsoAuthenticationClient = mock(SsoAuthenticationClient.class);
 
     @Before
     public void setUp() {
-        reset(mockPolicyDecisionsCache, mockSsoAuthorizationClient, mockSsoAuthenticationClient);
-        aal = new RooxAuthenticationAuthorizationLibrary(null,null, mockSsoAuthorizationClient, mockSsoAuthenticationClient,
-                null, null, mockPolicyDecisionsCache, null,
+        reset(mockSsoAuthorizationClient, mockSsoAuthenticationClient);
+        aal = new RooxAuthenticationAuthorizationLibrary(null, null, mockSsoAuthorizationClient, mockSsoAuthenticationClient,
+                null, null, null,
                 new NoOpMetricsIntegration());
     }
 
@@ -53,8 +55,6 @@ public class AALIsAllowedTest {
         assertTrue(isAllowed);
 
         verify(mockSsoAuthorizationClient, times(1)).isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET", Collections.EMPTY_MAP);
-        verify(mockPolicyDecisionsCache, times(1)).getIfPresent(any());
-        verify(mockPolicyDecisionsCache, times(1)).put(any(PolicyDecisionKey.class), eq(new EvaluationResponse(Decision.Permit)));
     }
 
     @Test
@@ -73,93 +73,8 @@ public class AALIsAllowedTest {
         assertFalse(isAllowed);
 
         verify(mockSsoAuthorizationClient, times(1)).isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET", Collections.EMPTY_MAP);
-        verify(mockPolicyDecisionsCache, times(1)).getIfPresent(any());
-        verify(mockPolicyDecisionsCache, times(1)).put(any(PolicyDecisionKey.class), eq(new EvaluationResponse(Decision.Deny)));
     }
 
-    @Test
-    public void aal_should_allow_test_request_after_invalidation() {
-        Principal mockPrincipal = mock(Principal.class);
-        final String testToken = "Test JWT Token";
-        when(mockPrincipal.getJwtToken())
-                .thenReturn(testToken);
-//        when(mockSsoAuthorizationClient.authenticate(testToken))
-//                .thenReturn(mockSsoToken);
-        when(mockSsoAuthorizationClient.isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET", Collections.EMPTY_MAP))
-                .thenReturn(new EvaluationResponse(Decision.Permit));
-        when(mockPolicyDecisionsCache.asMap())
-                .thenReturn(new ConcurrentHashMap<PolicyDecisionKey, EvaluationResponse>());
-
-        Map<String, Object> envParameters = Collections.emptyMap();
-        boolean isAllowed = aal.isAllowed(mockPrincipal, "/TestResource", "GET", envParameters, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
-        assertTrue(isAllowed);
-        aal.invalidate(mockPrincipal);
-        isAllowed = aal.isAllowed(mockPrincipal, "/TestResource", "GET", envParameters, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
-        assertTrue(isAllowed);
-
-        verify(mockSsoAuthorizationClient, times(2)).isActionOnResourceAllowedByPolicy(mockPrincipal, "/TestResource", "GET", Collections.EMPTY_MAP);
-        verify(mockPolicyDecisionsCache, times(2)).getIfPresent(any());
-        verify(mockPolicyDecisionsCache, times(2)).put(any(PolicyDecisionKey.class), eq(new EvaluationResponse(Decision.Permit)));
-    }
-
-
-    @Test
-    public void aal_should_use_policy_decision_cache_to_allow_test_request() {
-        Principal mockPrincipal = mock(Principal.class);
-        PolicyDecisionKey key = new PolicyDecisionKey(mockPrincipal, "/TestResource", "GET");
-        when(mockPolicyDecisionsCache.getIfPresent(key))
-                .thenReturn(new EvaluationResponse(Decision.Permit));
-
-        Map<String, Object> envParameters = Collections.emptyMap();
-        boolean isAllowed = aal.isAllowed(mockPrincipal, "/TestResource", "GET", envParameters, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
-        assertTrue(isAllowed);
-
-//        verify(mockSsoAuthorizationClient, times(0)).authenticate(anyString());
-        verify(mockPolicyDecisionsCache, times(1)).getIfPresent(key);
-    }
-
-    @Test
-    public void aal_should_use_policy_decision_cache_to_disallow_test_request() {
-        Principal mockPrincipal = mock(Principal.class);
-        PolicyDecisionKey key = new PolicyDecisionKey(mockPrincipal, "/TestResource", "GET");
-        when(mockPolicyDecisionsCache.getIfPresent(key))
-                .thenReturn(new EvaluationResponse(Decision.Deny));
-
-        Map<String, Object> envParameters = Collections.emptyMap();
-        boolean isAllowed = aal.isAllowed(mockPrincipal, "/TestResource", "GET", envParameters, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
-        assertFalse(isAllowed);
-
-//        verify(mockSsoAuthorizationClient, times(0)).authenticate(anyString());
-        verify(mockPolicyDecisionsCache, times(1)).getIfPresent(key);
-    }
-
-    @Test
-    public void aal_should_reset_policy_decision_from_cache() {
-        Principal mockPrincipal = mock(Principal.class);
-        PolicyDecisionKey key = new PolicyDecisionKey(mockPrincipal, "/TestResource", "GET");
-        ConcurrentHashMap<PolicyDecisionKey, EvaluationResponse> policyDecisionsCacheMap = new ConcurrentHashMap<PolicyDecisionKey, EvaluationResponse>();
-        policyDecisionsCacheMap.put(key, new EvaluationResponse(Decision.Permit));
-        when(mockPolicyDecisionsCache.asMap())
-                .thenReturn(policyDecisionsCacheMap);
-
-        aal.resetPolicies(mockPrincipal);
-
-        verify(mockPolicyDecisionsCache, times(1)).invalidate(key);
-    }
-
-    @Test
-    public void aal_should_reset_policy_decision_from_cache_on_invalidate() {
-        Principal mockPrincipal = mock(Principal.class);
-        PolicyDecisionKey key = new PolicyDecisionKey(mockPrincipal, "/TestResource", "GET");
-        ConcurrentHashMap<PolicyDecisionKey, EvaluationResponse> policyDecisionsCacheMap = new ConcurrentHashMap<PolicyDecisionKey, EvaluationResponse>();
-        policyDecisionsCacheMap.put(key, new EvaluationResponse(Decision.Permit));
-        when(mockPolicyDecisionsCache.asMap())
-                .thenReturn(policyDecisionsCacheMap);
-
-        aal.invalidate(mockPrincipal);
-
-        verify(mockPolicyDecisionsCache, times(1)).invalidate(key);
-    }
 
     @Test(expected = IllegalArgumentException.class)
     public void aal_should_throw_illegalArgumentException_when_principal_is_null() {

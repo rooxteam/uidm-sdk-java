@@ -1,7 +1,5 @@
 package com.rooxteam.sso.aal;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.rooxteam.compat.Objects;
 import com.rooxteam.sso.aal.validation.AccessTokenValidator;
 import com.rooxteam.sso.aal.validation.impl.JwtTokenValidator;
@@ -29,6 +27,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.Map;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 
@@ -79,24 +78,14 @@ public class AalFactory {
         UserIpProvider userIpProvider = new UserIpProviderFactory(config).create();
         OtpClient otpClient = new OtpClient(config, httpClient, userIpProvider);
 
-        Cache<PolicyDecisionKey, EvaluationResponse> isAllowedPolicyDecisionsCache = initPoliciesCache(config);
-
-        RooxAuthenticationAuthorizationLibrary aal = new RooxAuthenticationAuthorizationLibrary(config,
+        return new RooxAuthenticationAuthorizationLibrary(config,
                 pollingTimer,
                 authorizationClient,
                 authenticationClient,
                 tokenClient,
                 otpClient,
-                isAllowedPolicyDecisionsCache,
                 accessTokenValidator,
                 createMetricsIntegration());
-        // TODO: implement instantiation of metrics
-        if (config.getBoolean(POLLING_ENABLED, POLLING_ENABLED_DEFAULT)) {
-            int pollingDefaultTimeoutSeconds = config.getInt(POLLING_PERIOD, POLLING_PERIOD_DEFAULT);
-            aal.enablePolling(pollingDefaultTimeoutSeconds, TimeUnit.SECONDS);
-        }
-
-        return aal;
     }
 
     private static MetricsIntegration createMetricsIntegration() {
@@ -223,20 +212,5 @@ public class AalFactory {
                 return "com.rooxteam.sso.aal.client.SsoAuthorizationClientByJwt";
             }
         }
-    }
-
-
-
-    private static Cache<PolicyDecisionKey, EvaluationResponse> initPoliciesCache(Configuration config) {
-        int policyCacheSize = config.getInt(POLICY_CACHE_LIMIT, POLICY_CACHE_LIMIT_DEFAULT);
-        int policyExpireAfterWrite = config.getInt(POLICY_CACHE_EXPIRE_AFTER_WRITE,
-                POLICY_CACHE_EXPIRE_AFTER_WRITE_DEFAULT);
-        Cache<PolicyDecisionKey, EvaluationResponse> isAllowedPolicyDecisionsCache =
-                CacheBuilder.newBuilder()
-                        .maximumSize(policyCacheSize)
-                        .expireAfterWrite(policyExpireAfterWrite, TimeUnit.SECONDS)
-                        .build();
-        AalLogger.LOG.traceInitPolicyCacheWithSize(policyCacheSize);
-        return isAllowedPolicyDecisionsCache;
     }
 }

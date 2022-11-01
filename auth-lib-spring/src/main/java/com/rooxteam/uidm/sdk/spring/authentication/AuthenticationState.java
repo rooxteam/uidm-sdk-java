@@ -23,7 +23,7 @@ public class AuthenticationState extends AbstractAuthenticationToken {
     private Object credentials;
     private AuthenticationType authenticationType = AuthenticationType.storedToken;
 
-    private Collection<GrantedAuthority> authorities = AuthorityUtils.NO_AUTHORITIES;
+    private Collection<GrantedAuthority> authorities = new HashSet<>();
 
     /**
      * Токен, который подтверджает аутентификацию в IdP
@@ -72,21 +72,21 @@ public class AuthenticationState extends AbstractAuthenticationToken {
      * Создать новый анонимный state
      */
     public AuthenticationState() {
-        super(AuthorityUtils.NO_AUTHORITIES);
+        super(new HashSet<>());
     }
 
     public AuthenticationState(Collection<? extends GrantedAuthority> authority) {
         super(authority);
-        this.authorities = new ArrayList<GrantedAuthority>(authority);
+        this.authorities = new HashSet<>(authority);
     }
 
     public AuthenticationState(GrantedAuthority... authority) {
-        super(Arrays.asList(authority));
-        this.authorities = Arrays.asList(authority);
+        super( new HashSet<>(Arrays.asList(authority)));
+        this.authorities = new HashSet<>(Arrays.asList(authority));
     }
 
     public AuthenticationState(Authentication userAuthentication) {
-        super(AuthorityUtils.NO_AUTHORITIES);
+        super(new HashSet<>());
         setUserAuthentication(userAuthentication);
     }
 
@@ -124,7 +124,7 @@ public class AuthenticationState extends AbstractAuthenticationToken {
         setPrincipal(null);
         setCredentials(null);
         setDetails(null);
-        setAuthorities(AuthorityUtils.NO_AUTHORITIES);
+        setAuthorities(new HashSet<>());
     }
 
     public void setUserAuthentication(Authentication userAuthentication) {
@@ -152,7 +152,7 @@ public class AuthenticationState extends AbstractAuthenticationToken {
 
     public void setAuthorities(Collection<? extends GrantedAuthority> authorities) {
         if (this.authorities == AuthorityUtils.NO_AUTHORITIES) {
-            this.authorities = new ArrayList<GrantedAuthority>();
+            this.authorities = new HashSet<>();
         }
         this.authorities.addAll(authorities);
     }

@@ -1,9 +1,7 @@
 package com.rooxteam.sso.aal.utils;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -15,12 +13,14 @@ public class SsoPolicyDecisionUtils {
         if (advices == null || advices.isEmpty()) {
             return Collections.emptyMap();
         }
-        ImmutableMap.Builder<String, String> result = ImmutableMap.builder();
+        Map<String, String> result = new HashMap<>();
         for (Map.Entry entry : (Set<Map.Entry>) advices.entrySet()) {
             String name = (String) entry.getKey();
             Set values = (Set) entry.getValue();
-            result.put(name, (String) Iterables.getFirst(values, null));
+            if (values.size() > 0) {
+                result.put(name, (String) values.iterator().next());
+            }
         }
-        return result.build();
+        return Collections.unmodifiableMap(result);
     }
 }
