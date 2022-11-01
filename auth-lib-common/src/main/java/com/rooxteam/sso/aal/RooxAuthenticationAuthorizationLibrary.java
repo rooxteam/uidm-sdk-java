@@ -1,6 +1,5 @@
 package com.rooxteam.sso.aal;
 
-import com.google.common.cache.Cache;
 import com.rooxteam.sso.aal.client.*;
 import com.rooxteam.sso.aal.client.model.AuthenticationResponse;
 import com.rooxteam.sso.aal.client.model.EvaluationRequest;
@@ -13,7 +12,6 @@ import com.rooxteam.sso.aal.validation.AccessTokenValidator;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
@@ -41,12 +39,10 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     private final SsoAuthenticationClient ssoAuthenticationClient;
     private final SsoTokenClient ssoTokenClient;
     private final OtpClient otpClient;
-    private final Cache<PolicyDecisionKey, EvaluationResponse> isAllowedPolicyDecisionsCache;
     private final Timer timer;
     private final CopyOnWriteArrayList<PrincipalEventListener> principalEventListeners =
             new CopyOnWriteArrayList<PrincipalEventListener>();
     private final MetricsIntegration metricsIntegration;
-    private volatile PollingBean pollingBean;
     private final Configuration configuration;
     private final AccessTokenValidator accessTokenValidator;
 
@@ -56,7 +52,6 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
                                            SsoAuthenticationClient ssoAuthenticationClient,
                                            SsoTokenClient ssoTokenClient,
                                            OtpClient otpClient,
-                                           Cache<PolicyDecisionKey, EvaluationResponse> policyDecisionsCache,
                                            AccessTokenValidator accessTokenValidator,
                                            MetricsIntegration metricsIntegration) {
         this.configuration = configuration;
@@ -64,15 +59,10 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         this.ssoAuthenticationClient = ssoAuthenticationClient;
         this.ssoTokenClient = ssoTokenClient;
         this.otpClient = otpClient;
-        this.isAllowedPolicyDecisionsCache = policyDecisionsCache;
         this.timer = timer;
         this.accessTokenValidator = accessTokenValidator;
         this.metricsIntegration = metricsIntegration;
 
-        metricsIntegration.registerMapSizeGauge(METRIC_POLICY_DECISIONS_COUNT_IN_CACHE,
-                new HashMap<String, String>(),
-                isAllowedPolicyDecisionsCache.asMap()
-        );
     }
 
     @Override
@@ -108,19 +98,11 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
             throw new IllegalArgumentException(PRINCIPAL_IS_MISSING_MESSAGE);
         }
 
-        ConcurrentMap<PolicyDecisionKey, EvaluationResponse> policyDecisionMap = isAllowedPolicyDecisionsCache.asMap();
-        for (PolicyDecisionKey key : policyDecisionMap.keySet()) {
-            if (key.getSubject().equals(principal)) {
-                isAllowedPolicyDecisionsCache.invalidate(key);
-            }
-        }
-
         fireOnInvalidate(principal);
     }
 
     @Override
     public void invalidate() {
-        isAllowedPolicyDecisionsCache.invalidateAll();
     }
 
     @Override
@@ -165,15 +147,8 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
 
         PolicyDecisionKey key = new PolicyDecisionKey(subject, resourceName, actionName, envParameters);
         LOG.traceGetPolicyDecision(key);
-        EvaluationResponse result = isAllowedPolicyDecisionsCache.getIfPresent(key);
-        if (result != null) {
-            metricsIntegration.incrementPolicyCacheHitMeter();
-        } else {
-            metricsIntegration.incrementPolicyCacheMissMeter();
-            result = evaluatePolicyOnResource(key);
-        }
 
-        return result;
+        return evaluatePolicyOnResource(key);
     }
 
     public Map<EvaluationRequest, EvaluationResponse> evaluatePolicies(Principal subject,
@@ -227,17 +202,14 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
 
         Principal subject = key.getSubject();
 
-        EvaluationResponse result = ssoAuthorizationClient.isActionOnResourceAllowedByPolicy(subject,
+        return ssoAuthorizationClient.isActionOnResourceAllowedByPolicy(subject,
                 key.getResourceName(), key.getActionName(), key.getEnvParameters());
-        isAllowedPolicyDecisionsCache.put(key, result);
-        metricsIntegration.incrementPolicyCacheAddMeter();
-        return result;
     }
 
 
     @Override
     public void resetPolicies() {
-        isAllowedPolicyDecisionsCache.invalidateAll();
+
     }
 
     @Override
@@ -245,12 +217,6 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         if (principal == null) {
             LOG.errorIllegalSubjectParameter();
             throw new IllegalArgumentException(PRINCIPAL_IS_MISSING_MESSAGE);
-        }
-        final ConcurrentMap<PolicyDecisionKey, EvaluationResponse> decisionsMap = isAllowedPolicyDecisionsCache.asMap();
-        for (Map.Entry<PolicyDecisionKey, EvaluationResponse> entry : decisionsMap.entrySet()) {
-            if (entry.getKey().getSubject().equals(principal)) {
-                isAllowedPolicyDecisionsCache.invalidate(entry.getKey());
-            }
         }
     }
 
@@ -267,36 +233,6 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     @Override
     public void removePrincipalListener(PrincipalEventListener listener) {
         principalEventListeners.remove(listener);
-    }
-
-    @Override
-    public boolean isPollingEnabled() {
-        return pollingBean != null;
-    }
-
-    @Override
-    public final void enablePolling(int period,
-                                    TimeUnit unit) {
-        // Both enable- and disable- methods are synchronized to preserve pollingBean
-        // overwriting during disablePolling call.
-        synchronized (timer) {
-            if (isPollingEnabled()) {
-                disablePolling();
-            }
-            pollingBean = new PollingBean(ssoTokenClient, isAllowedPolicyDecisionsCache,
-                    principalEventListeners);
-            timer.schedule(pollingBean, 0, TimeUnit.MILLISECONDS.convert(period, unit));
-        }
-    }
-
-    @Override
-    public void disablePolling() {
-        synchronized (timer) {
-            if (pollingBean != null) {
-                pollingBean.cancel();
-                pollingBean = null;
-            }
-        }
     }
 
     @Override
@@ -403,7 +339,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         this.timer.cancel();
     }
 

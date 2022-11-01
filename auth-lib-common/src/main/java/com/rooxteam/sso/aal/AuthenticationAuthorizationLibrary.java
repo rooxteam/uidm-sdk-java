@@ -165,27 +165,6 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
     void removePrincipalListener(PrincipalEventListener listener);
 
     /**
-     * Включен ли поллинг для получения сведений о централизованно инвалидированных принципалах.
-     *
-     * @return true если поллинг включен, false если выключен.
-     */
-    boolean isPollingEnabled();
-
-    /**
-     * Включить поллинг.
-     * Если поллинг уже включен, то сначала выполняется его выключение (disablePolling()).
-     *
-     * @param period период запуска операции проверки токенов
-     * @param unit   единицы измерения периода операции проверки токенов
-     */
-    void enablePolling(int period, TimeUnit unit);
-
-    /**
-     * Выключить поллинг.
-     */
-    void disablePolling();
-
-    /**
      * Запрос одноразового пароля (One-time password, OTP).
      *
      * @param principal Принципал, которому отправляется уведомление

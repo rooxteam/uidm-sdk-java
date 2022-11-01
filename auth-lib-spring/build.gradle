@@ -16,7 +16,6 @@ buildscript {
 }
 
 
-apply plugin: 'roox-doc'
 apply plugin: 'roox-jar'
 apply plugin: 'com.bmuschko.nexus'
 

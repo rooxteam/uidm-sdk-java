@@ -1,9 +1,7 @@
 package com.rooxteam.sso.aal;
 
-import com.google.common.cache.Cache;
 import com.rooxteam.sso.aal.client.SsoAuthenticationClient;
 import com.rooxteam.sso.aal.client.SsoAuthorizationClient;
-import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.metrics.NoOpMetricsIntegration;
 import org.junit.After;
 import org.junit.Before;
@@ -11,12 +9,15 @@ import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-import static com.rooxteam.sso.aal.AALInvalidationTest.IP_229_213_38_0;
 import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @SuppressWarnings("unchecked")
 public class AALEventsTest {
@@ -28,14 +29,13 @@ public class AALEventsTest {
     private final PrincipalEventListener mockListener = mock(PrincipalEventListener.class);
     private final SsoAuthenticationClient mockSsoAuthenticationClient = mock(SsoAuthenticationClient.class);
     private final SsoAuthorizationClient mockSsoAuthorizationClient = mock(SsoAuthorizationClient.class);
-    private final Cache<PolicyDecisionKey, EvaluationResponse> mockPolicyDecisionsCache = mock(Cache.class);
 
     @Before
     public void setUp() {
-        reset(mockSsoAuthenticationClient, mockSsoAuthorizationClient, mockPolicyDecisionsCache, mockListener);
+        reset(mockSsoAuthenticationClient, mockSsoAuthorizationClient, mockListener);
         aal = new RooxAuthenticationAuthorizationLibrary(
-                null,null, mockSsoAuthorizationClient, mockSsoAuthenticationClient, null, null,
-                mockPolicyDecisionsCache, null, new NoOpMetricsIntegration());
+                null, null, mockSsoAuthorizationClient, mockSsoAuthenticationClient, null, null,
+                null, new NoOpMetricsIntegration());
         aal.addPrincipalListener(mockListener);
     }
 
