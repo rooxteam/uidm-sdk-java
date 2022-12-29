@@ -6,6 +6,7 @@ import com.rooxteam.sso.aal.client.EvaluationContext;
 import com.rooxteam.sso.aal.otp.OtpFlowStateImpl;
 import com.rooxteam.sso.aal.otp.SendOtpParameter;
 import com.rooxteam.uidm.sdk.spring.authentication.AuthenticationState;
+import com.rooxteam.uidm.sdk.spring.utils.RawRequest;
 import com.rooxteam.uidm.sdk.spring.utils.RequestData;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -58,6 +59,7 @@ public class M2MOtpController extends BaseController {
     }
 
     @Override
+    @RawRequest
     @RequestMapping(method = POST, value = "/validate")
     public ResponseEntity<?> validateOtp(@RequestBody final OtpFlowStateImpl state,
                                          @RequestParam(required = false) final String otp,

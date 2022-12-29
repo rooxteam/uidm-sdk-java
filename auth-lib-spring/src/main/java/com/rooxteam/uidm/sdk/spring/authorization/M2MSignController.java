@@ -5,6 +5,7 @@ import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.otp.OtpFlowStateImpl;
 import com.rooxteam.sso.aal.otp.SendOtpParameter;
 import com.rooxteam.uidm.sdk.spring.authentication.AuthenticationState;
+import com.rooxteam.uidm.sdk.spring.utils.RawRequest;
 import com.rooxteam.uidm.sdk.spring.utils.RequestData;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -49,6 +50,7 @@ public class M2MSignController extends BaseController {
         return super.resendOtp(state, SERVICE_NAME, principal);
     }
 
+    @RawRequest
     @RequestMapping(method = POST, value = "/validate")
     public ResponseEntity<?> validateOtp(@RequestBody final OtpFlowStateImpl state,
                                       @RequestParam(required = false) final String otp,
