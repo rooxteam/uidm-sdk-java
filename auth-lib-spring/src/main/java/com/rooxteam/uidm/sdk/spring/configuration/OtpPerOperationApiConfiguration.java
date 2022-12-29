@@ -5,9 +5,15 @@ import com.rooxteam.errors.exception.RethrowingEntityTranslator;
 import com.rooxteam.errors.exception.ToResponseEntityTranslator;
 import com.rooxteam.sso.aal.AuthenticationAuthorizationLibrary;
 import com.rooxteam.uidm.sdk.spring.authorization.*;
+import com.rooxteam.uidm.sdk.spring.utils.RawRequestAdvice;
+import com.rooxteam.uidm.sdk.spring.utils.RequestData;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 /**
  * Exposes /otp and /policyEvaluation API that can handle OTP per operation Use Cases.
@@ -15,7 +21,7 @@ import org.springframework.context.annotation.Import;
  */
 @Configuration
 @Import(UidmSdkConfiguration.class)
-public class OtpPerOperationApiConfiguration {
+public class OtpPerOperationApiConfiguration extends WebMvcConfigurerAdapter {
 
 
     public static final String ERROR_TRANSLATION_PROPERTY = "com.rooxteam.uidm.sdk.error.translation";
@@ -28,13 +34,17 @@ public class OtpPerOperationApiConfiguration {
     }
 
     @Bean
-    public M2MOtpController aalOtpController(M2MOtpService aalOtpService, ErrorTranslator errorTranslator) {
-        return new M2MOtpController(aalOtpService, errorTranslator);
+    public M2MOtpController aalOtpController(M2MOtpService aalOtpService,
+                                             ErrorTranslator errorTranslator,
+                                             RequestData requestData) {
+        return new M2MOtpController(aalOtpService, errorTranslator, requestData);
     }
 
     @Bean
-    public M2MSignController aalSignController(M2MOtpService aalOtpService, ErrorTranslator errorTranslator) {
-        return new M2MSignController(aalOtpService, errorTranslator);
+    public M2MSignController aalSignController(M2MOtpService aalOtpService,
+                                               ErrorTranslator errorTranslator,
+                                               RequestData requestData) {
+        return new M2MSignController(aalOtpService, errorTranslator, requestData);
     }
 
     @Bean
@@ -59,5 +69,17 @@ public class OtpPerOperationApiConfiguration {
             return new RethrowingEntityTranslator();
         }
         throw new IllegalArgumentException("'com.rooxteam.uidm.sdk.error.translation' should be one of 'respond' or 'rethrow'");
+    }
+
+    @Bean
+    @Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
+    public RequestData requestRawData() {
+        return new RequestData();
+    }
+
+    @Bean
+    public RawRequestAdvice rawRequestBodyAdvice(RequestData requestData,
+                                                 AuthenticationAuthorizationLibrary aal) {
+        return new RawRequestAdvice(requestData, aal.getConfiguration());
     }
 }

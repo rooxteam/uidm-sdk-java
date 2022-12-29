@@ -1,15 +1,13 @@
 package com.rooxteam.sso.aal.client;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rooxteam.compat.StandardCharsets;
 import com.rooxteam.errors.exception.ApiException;
 import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.client.exception.UnknownResponseException;
-import com.rooxteam.sso.aal.client.model.AuthenticationResponse;
-import com.rooxteam.sso.aal.client.model.BearerAuthenticationResponse;
 import com.rooxteam.sso.aal.client.model.Form;
-import com.rooxteam.sso.aal.client.model.JWTAuthenticationResponse;
 import com.rooxteam.sso.aal.client.model.OtpFlowStateJson;
 import com.rooxteam.sso.aal.client.model.ResponseError;
 import com.rooxteam.sso.aal.configuration.Configuration;
@@ -41,15 +39,20 @@ import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
+import org.springframework.http.HttpInputMessage;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.rooxteam.sso.aal.AalLogger.LOG;
 import static com.rooxteam.sso.aal.client.SsoAuthenticationClient.CLIENT_ID_PARAM_NAME;
@@ -75,14 +78,16 @@ public class OtpClient {
     private static final String SESSION_ID_COOKIE_NAME = "RX_SID";
     private static final String NEXT_OTP_OPERATION_PERIOD_PARAM_NAME = "com.rooxteam.uidm.otp.operation.next_otp_period";
     private static final int NEXT_OTP_OPERATION_PERIOD_DEFAULT_VALUE = 10;
-    private final Map<String, Class<? extends AuthenticationResponse>> responseTypes;
+    private static final String ORIGINAL_REQUEST_BODY_PARAM = "originalRequestBody";
+    private static final String ORIGINAL_HEADERS_PARAM = "originalHeaders";
+    private static final String X_REQUEST_SIGNATURE_HEADER = "X-Request-Signature";
 
     private final Configuration config;
     private final CloseableHttpClient httpClient;
     private final ObjectMapper jsonMapper;
     private final UserIpProvider userIpProvider;
 
-    private Map<String, OtpStatus> otpStatusMapping = new HashMap<String, OtpStatus>() {{
+    private final Map<String, OtpStatus> otpStatusMapping = new HashMap<String, OtpStatus>() {{
         put("too_many_sms", OtpStatus.TOO_MANY_OTP);
         put("error_sending_otp", OtpStatus.SEND_OTP_FAIL);
         put("invalid_otp", OtpStatus.OTP_REQUIRED);
@@ -94,9 +99,6 @@ public class OtpClient {
         this.userIpProvider = userIpProvider;
         this.jsonMapper = new ObjectMapper();
         this.httpClient = httpClient;
-        responseTypes = new HashMap<String, Class<? extends AuthenticationResponse>>();
-        responseTypes.put("Bearer", BearerAuthenticationResponse.class);
-        responseTypes.put("JWTToken", BearerAuthenticationResponse.class);
     }
 
     public OtpResponse sendOtp(String realm, String jwt) {
@@ -152,11 +154,16 @@ public class OtpClient {
     }
 
     public OtpResponse resendOtp(ResendOtpParameter resendOtpParameter) {
-        return sendOtpEvent(resendOtpParameter.getOtpFlowState(), resendOtpParameter.getRealm(), null,
-                EVENT_ID_SEND, resendOtpParameter.getService());
+        return sendOtpEvent(resendOtpParameter.getOtpFlowState(), resendOtpParameter.getRealm(),
+                resendOtpParameter.getService());
     }
 
-    private OtpResponse sendOtpEvent(OtpFlowState otpState, String realm, String otpCode, String eventId, String service) {
+    private OtpResponse sendOtpEvent(OtpFlowState otpState, String realm, String service) {
+        return sendOtpEvent(otpState, realm, null, OtpClient.EVENT_ID_SEND, service, null);
+    }
+
+    private OtpResponse sendOtpEvent(OtpFlowState otpState, String realm, String otpCode, String eventId, 
+                                     String service, HttpInputMessage inputMessage) {
         if (StringUtils.isEmpty(otpState.getExecution())) {
             throw new IllegalStateException("OtpFlowState should contain execution");
         }
@@ -167,7 +174,31 @@ public class OtpClient {
         if (!StringUtils.isEmpty(otpCode)) {
             params.add(new BasicNameValuePair(OTP_CODE_PARAM_NAME, otpCode));
         }
+        Optional.ofNullable(inputMessage)
+                .ifPresent(message -> mapInputMessage(params, message));
+
         return makeOtpRequest(params, otpState);
+    }
+
+    private void mapInputMessage(List<NameValuePair> params, HttpInputMessage message) {
+        try (InputStream inputStream = message.getBody()) {
+            byte[] bytes = StreamUtils.copyToByteArray(inputStream);
+            String str = Base64.getEncoder().encodeToString(bytes);
+            params.add(new BasicNameValuePair(ORIGINAL_REQUEST_BODY_PARAM, str));
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+
+        Map<String, List<String>> filteredHeaders = new HashMap<>();
+        if (message.getHeaders().containsKey(X_REQUEST_SIGNATURE_HEADER)) {
+            filteredHeaders.put(X_REQUEST_SIGNATURE_HEADER, message.getHeaders().get(X_REQUEST_SIGNATURE_HEADER));
+        }
+        try {
+            String headerJson = jsonMapper.writeValueAsString(filteredHeaders);
+            params.add(new BasicNameValuePair(ORIGINAL_HEADERS_PARAM, headerJson));
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     public OtpResponse validateOtp(OtpFlowState otpState, String otpCode) {
@@ -178,7 +209,8 @@ public class OtpClient {
 
     public OtpResponse validateOtp(ValidateOtpParameter validateOtpParameter) {
         return sendOtpEvent(validateOtpParameter.getOtpFlowState(), validateOtpParameter.getRealm(),
-                validateOtpParameter.getOtpCode(), EVENT_ID_VALIDATE, validateOtpParameter.getService());
+                validateOtpParameter.getOtpCode(), EVENT_ID_VALIDATE, validateOtpParameter.getService(), 
+                validateOtpParameter.getInputMessage());
     }
 
     protected String currentTokenParamName() {
@@ -234,7 +266,7 @@ public class OtpClient {
             realm = config.getString(ConfigKeys.REALM, ConfigKeys.REALM_DEFAULT);
         }
 
-        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        List<NameValuePair> params = new ArrayList<>();
         params.add(new BasicNameValuePair(REALM_PARAM_NAME, realm));
         params.add(new BasicNameValuePair(CLIENT_ID_PARAM_NAME, getClientId(realm)));
         params.add(new BasicNameValuePair(CLIENT_SECRET, getClientSecret(realm)));
@@ -283,7 +315,7 @@ public class OtpClient {
         try {
             JsonNode jsonNode = jsonMapper.readTree(json);
             if (jsonNode.has("token_type")) {
-                TokenContextFactory factory = TokenContextFactory.get(jsonNode.get("token_type").asText());
+                TokenContextFactory<?, ?> factory = TokenContextFactory.get(jsonNode.get("token_type").asText());
                 OtpResponseImpl response = new OtpResponseImpl();
                 response.setStatus(OtpStatus.SUCCESS);
                 response.setPrincipal(factory.createPrincipal(jsonMapper, jsonNode));
@@ -337,11 +369,6 @@ public class OtpClient {
             message = httpStatus.getReasonPhrase();
         }
         return new ApiException(httpStatus, message);
-    }
-
-    private Class<? extends AuthenticationResponse> resolveClass(String tokenType) {
-        Class<? extends AuthenticationResponse> value = responseTypes.get(tokenType);
-        return value == null ? JWTAuthenticationResponse.class : value;
     }
 
     private String getDefaultService() {

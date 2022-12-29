@@ -308,4 +308,6 @@ public interface ConfigKeys {
 
     String JWKS_URL = "com.rooxteam.aal.jwks.url";
     String JWT_VALIDATORS = "com.rooxteam.all.jwt.validators";
+
+    String PASS_IMITATION_PARAMS = "com.rooxteam.aal.pass-imitation-params";
 }
