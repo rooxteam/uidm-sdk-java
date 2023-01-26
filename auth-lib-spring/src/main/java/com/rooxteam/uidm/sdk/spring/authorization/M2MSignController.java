@@ -5,8 +5,6 @@ import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.otp.OtpFlowStateImpl;
 import com.rooxteam.sso.aal.otp.SendOtpParameter;
 import com.rooxteam.uidm.sdk.spring.authentication.AuthenticationState;
-import com.rooxteam.uidm.sdk.spring.utils.RawRequest;
-import com.rooxteam.uidm.sdk.spring.utils.RequestData;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,8 +19,8 @@ public class M2MSignController extends BaseController {
 
     public static final String SERVICE_NAME = "sign_document_batch";
 
-    public M2MSignController(M2MOtpService otpService, ErrorTranslator errorTranslator, RequestData requestData) {
-        super(otpService, errorTranslator, requestData);
+    public M2MSignController(M2MOtpService otpService, ErrorTranslator errorTranslator) {
+        super(otpService, errorTranslator);
     }
 
     @RequestMapping(method = POST, value = "/send")
@@ -30,7 +28,7 @@ public class M2MSignController extends BaseController {
                             @RequestParam(required = false) String category,
                             java.security.Principal principal) {
         final AuthenticationState authentication = principal instanceof AuthenticationState
-            ? (AuthenticationState) principal : null;
+                ? (AuthenticationState) principal : null;
         Principal caller = authentication != null ? (Principal) authentication.getAttributes().get("aalPrincipal") : null;
         String jwtToken = caller != null ? caller.getJwtToken() : null;
         String realm = authentication != null ? authentication.getRealm() : null;
@@ -50,12 +48,11 @@ public class M2MSignController extends BaseController {
         return super.resendOtp(state, SERVICE_NAME, principal);
     }
 
-    @RawRequest
     @RequestMapping(method = POST, value = "/validate")
     public ResponseEntity<?> validateOtp(@RequestBody final OtpFlowStateImpl state,
-                                      @RequestParam(required = false) final String otp,
-                                      @RequestParam(required = false) final String otpCode,
-                                      java.security.Principal principal) {
+                                         @RequestParam(required = false) final String otp,
+                                         @RequestParam(required = false) final String otpCode,
+                                         java.security.Principal principal) {
         return super.validateOtp(state, otp, otpCode, SERVICE_NAME, principal);
     }
 

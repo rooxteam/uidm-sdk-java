@@ -2,7 +2,6 @@ package com.rooxteam.sso.aal.otp;
 
 import lombok.Getter;
 import lombok.Builder;
-import org.springframework.http.HttpInputMessage;
 
 /**
  * Параметры для валидации OTP
@@ -31,10 +30,4 @@ public class ValidateOtpParameter {
      * Реалм в котором зарегистрирован пользователь (из токена)
      */
     private String realm;
-
-    /**
-     * Исходный HTTP-запрос (тело и заголовки)
-     */
-    private HttpInputMessage inputMessage;
-
 }

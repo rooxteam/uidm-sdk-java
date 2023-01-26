@@ -6,7 +6,6 @@ import com.rooxteam.sso.aal.otp.OtpFlowStateImpl;
 import com.rooxteam.sso.aal.otp.ResendOtpParameter;
 import com.rooxteam.sso.aal.otp.ValidateOtpParameter;
 import com.rooxteam.uidm.sdk.spring.authentication.AuthenticationState;
-import com.rooxteam.uidm.sdk.spring.utils.RequestData;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 public class BaseController {
     protected final M2MOtpService otpService;
     private final ErrorTranslator errorTranslator;
-    private final RequestData requestData;
 
     protected Response resendOtp(OtpFlowStateImpl state,
                                  String service,
@@ -47,7 +45,6 @@ public class BaseController {
                 .otpCode(otpCode != null ? otpCode : otp)
                 .service(service)
                 .realm(realm)
-                .inputMessage(requestData.getWrapper())
                 .build();
         Response response = otpService.validate(validateOtpParameter);
         return new ResponseEntity<>(response, HttpStatus.OK);

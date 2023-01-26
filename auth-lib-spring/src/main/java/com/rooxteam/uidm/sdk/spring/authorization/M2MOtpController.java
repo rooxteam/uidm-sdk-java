@@ -6,11 +6,10 @@ import com.rooxteam.sso.aal.client.EvaluationContext;
 import com.rooxteam.sso.aal.otp.OtpFlowStateImpl;
 import com.rooxteam.sso.aal.otp.SendOtpParameter;
 import com.rooxteam.uidm.sdk.spring.authentication.AuthenticationState;
-import com.rooxteam.uidm.sdk.spring.utils.RawRequest;
-import com.rooxteam.uidm.sdk.spring.utils.RequestData;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,8 +20,8 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 @RequestMapping("/otp")
 public class M2MOtpController extends BaseController {
 
-    public M2MOtpController(M2MOtpService otpService, ErrorTranslator errorTranslator, RequestData requestData) {
-        super(otpService, errorTranslator, requestData);
+    public M2MOtpController(M2MOtpService otpService, ErrorTranslator errorTranslator) {
+        super(otpService, errorTranslator);
     }
 
     @RequestMapping(method = POST, value = "/send")
@@ -35,7 +34,7 @@ public class M2MOtpController extends BaseController {
             principal = SecurityContextHolder.getContext().getAuthentication();
         }
         final AuthenticationState authentication = principal instanceof AuthenticationState
-            ? (AuthenticationState) principal : null;
+                ? (AuthenticationState) principal : null;
         Principal caller = authentication != null ? (Principal) authentication.getAttributes().get("aalPrincipal") : null;
         String jwtToken = caller != null ? caller.getJwtToken() : null;
         String realm = authentication != null ? authentication.getRealm() : null;
@@ -58,8 +57,6 @@ public class M2MOtpController extends BaseController {
         return super.resendOtp(state, service, principal);
     }
 
-    @Override
-    @RawRequest
     @RequestMapping(method = POST, value = "/validate")
     public ResponseEntity<?> validateOtp(@RequestBody final OtpFlowStateImpl state,
                                          @RequestParam(required = false) final String otp,

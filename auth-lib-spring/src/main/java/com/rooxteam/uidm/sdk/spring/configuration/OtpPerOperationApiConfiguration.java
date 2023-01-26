@@ -4,16 +4,20 @@ import com.rooxteam.errors.exception.ErrorTranslator;
 import com.rooxteam.errors.exception.RethrowingEntityTranslator;
 import com.rooxteam.errors.exception.ToResponseEntityTranslator;
 import com.rooxteam.sso.aal.AuthenticationAuthorizationLibrary;
-import com.rooxteam.uidm.sdk.spring.authorization.*;
-import com.rooxteam.uidm.sdk.spring.utils.RawRequestAdvice;
-import com.rooxteam.uidm.sdk.spring.utils.RequestData;
+import com.rooxteam.uidm.sdk.spring.authorization.M2MOtpController;
+import com.rooxteam.uidm.sdk.spring.authorization.M2MOtpService;
+import com.rooxteam.uidm.sdk.spring.authorization.M2MSignController;
+import com.rooxteam.uidm.sdk.spring.authorization.PolicyEvaluationController;
+import com.rooxteam.uidm.sdk.spring.authorization.PolicyEvaluationService;
+import com.rooxteam.uidm.sdk.spring.authorization.PolicyEvaluationServiceImpl;
+import com.rooxteam.uidm.sdk.spring.hmac.CachedRequestFilter;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
-import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+
+import javax.servlet.Filter;
 
 /**
  * Exposes /otp and /policyEvaluation API that can handle OTP per operation Use Cases.
@@ -34,17 +38,13 @@ public class OtpPerOperationApiConfiguration extends WebMvcConfigurerAdapter {
     }
 
     @Bean
-    public M2MOtpController aalOtpController(M2MOtpService aalOtpService,
-                                             ErrorTranslator errorTranslator,
-                                             RequestData requestData) {
-        return new M2MOtpController(aalOtpService, errorTranslator, requestData);
+    public M2MOtpController aalOtpController(M2MOtpService aalOtpService, ErrorTranslator errorTranslator) {
+        return new M2MOtpController(aalOtpService, errorTranslator);
     }
 
     @Bean
-    public M2MSignController aalSignController(M2MOtpService aalOtpService,
-                                               ErrorTranslator errorTranslator,
-                                               RequestData requestData) {
-        return new M2MSignController(aalOtpService, errorTranslator, requestData);
+    public M2MSignController aalSignController(M2MOtpService aalOtpService, ErrorTranslator errorTranslator) {
+        return new M2MSignController(aalOtpService, errorTranslator);
     }
 
     @Bean
@@ -72,14 +72,8 @@ public class OtpPerOperationApiConfiguration extends WebMvcConfigurerAdapter {
     }
 
     @Bean
-    @Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
-    public RequestData requestRawData() {
-        return new RequestData();
-    }
-
-    @Bean
-    public RawRequestAdvice rawRequestBodyAdvice(RequestData requestData,
-                                                 AuthenticationAuthorizationLibrary aal) {
-        return new RawRequestAdvice(requestData, aal.getConfiguration());
+    @Conditional(HMACCondition.class)
+    public Filter requestBodyFilter() {
+        return new CachedRequestFilter();
     }
 }
