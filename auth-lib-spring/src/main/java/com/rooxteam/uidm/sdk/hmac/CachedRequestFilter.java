@@ -1,4 +1,4 @@
-package com.rooxteam.uidm.sdk.spring.hmac;
+package com.rooxteam.uidm.sdk.hmac;
 
 import lombok.AllArgsConstructor;
 import org.springframework.web.filter.OncePerRequestFilter;

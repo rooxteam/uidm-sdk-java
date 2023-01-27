@@ -1,4 +1,4 @@
-package com.rooxteam.uidm.sdk.spring.hmac;
+package com.rooxteam.uidm.sdk.hmac;
 
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.utils.StringUtils;

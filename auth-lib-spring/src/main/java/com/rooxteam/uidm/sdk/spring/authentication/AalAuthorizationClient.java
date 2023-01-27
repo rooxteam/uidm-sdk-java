@@ -10,7 +10,7 @@ import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.exception.AalException;
 import com.rooxteam.uidm.sdk.spring.authorization.AalResourceValidation;
-import com.rooxteam.uidm.sdk.spring.hmac.HMACPayloadBuilder;
+import com.rooxteam.uidm.sdk.hmac.HMACPayloadBuilder;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;

@@ -1,15 +1,13 @@
-package com.rooxteam.uidm.sdk.spring.hmac;
+package com.rooxteam.uidm.sdk.hmac;
 
 import com.rooxteam.sso.aal.exception.ValidateException;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.StringTokenizer;
-import java.util.TreeMap;
 
 /**
  * Парсер заголовка с HMAC-подписью.

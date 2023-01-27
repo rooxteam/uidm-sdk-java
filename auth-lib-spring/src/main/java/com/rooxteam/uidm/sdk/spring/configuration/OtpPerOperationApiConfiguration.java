@@ -10,7 +10,7 @@ import com.rooxteam.uidm.sdk.spring.authorization.M2MSignController;
 import com.rooxteam.uidm.sdk.spring.authorization.PolicyEvaluationController;
 import com.rooxteam.uidm.sdk.spring.authorization.PolicyEvaluationService;
 import com.rooxteam.uidm.sdk.spring.authorization.PolicyEvaluationServiceImpl;
-import com.rooxteam.uidm.sdk.spring.hmac.CachedRequestFilter;
+import com.rooxteam.uidm.sdk.hmac.CachedRequestFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
