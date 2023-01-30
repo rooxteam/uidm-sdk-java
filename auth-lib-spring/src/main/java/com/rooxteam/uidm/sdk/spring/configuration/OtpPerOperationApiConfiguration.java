@@ -72,7 +72,6 @@ public class OtpPerOperationApiConfiguration extends WebMvcConfigurerAdapter {
     }
 
     @Bean
-    @Conditional(HMACCondition.class)
     public Filter requestBodyFilter() {
         return new CachedRequestFilter();
     }

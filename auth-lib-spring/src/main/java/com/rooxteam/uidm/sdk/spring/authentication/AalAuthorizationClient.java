@@ -9,8 +9,8 @@ import com.rooxteam.sso.aal.PrincipalImpl;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.exception.AalException;
-import com.rooxteam.uidm.sdk.spring.authorization.AalResourceValidation;
 import com.rooxteam.uidm.sdk.hmac.HMACPayloadBuilder;
+import com.rooxteam.uidm.sdk.spring.authorization.AalResourceValidation;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -31,7 +31,6 @@ import java.util.stream.Stream;
 
 import static com.rooxteam.sso.aal.ConfigKeys.AUTHORIZATION_TYPE;
 import static com.rooxteam.sso.aal.ConfigKeys.AUTHORIZATION_TYPE_DEFAULT;
-import static com.rooxteam.sso.aal.ConfigKeys.HMAC_ENABLED;
 import static com.rooxteam.sso.aal.ConfigKeys.POLICIES_FOR_SYSTEM;
 import static com.rooxteam.sso.aal.ConfigKeys.POLICIES_FOR_SYSTEM_DEFAULT;
 
@@ -121,9 +120,9 @@ public class AalAuthorizationClient implements SsoAuthorizationClient, AalResour
             return true;
         }
 
-        if (configuration.getBoolean(HMAC_ENABLED, false)) {
-            Map<String, ?> hmacParameters = HMACPayloadBuilder.build(aalPrincipal);
-            envParameters =  Stream.of(envParameters, hmacParameters).flatMap(m -> m.entrySet().stream())
+        Map<String, ?> hmacParameters = HMACPayloadBuilder.build(aalPrincipal);
+        if (!hmacParameters.isEmpty()) {
+            envParameters = Stream.of(envParameters, hmacParameters).flatMap(m -> m.entrySet().stream())
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         }
 

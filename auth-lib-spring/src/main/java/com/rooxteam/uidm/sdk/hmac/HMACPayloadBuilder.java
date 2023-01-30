@@ -10,6 +10,7 @@ import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -24,19 +25,21 @@ public final class HMACPayloadBuilder {
     public static final String EOL = "\n";
 
     public static Map<String, ?> build(Principal principal) {
-        Map<String, Object> result = new HashMap<>();
-
         ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = requestAttributes.getRequest();
 
         String hmacHeader = request.getHeader(REQUEST_SIGNATURE_HEADER);
-        String requestEncoded = takeRequestEncoded((ContentCachingRequestWrapper) request);
-        if (StringUtils.isEmpty(hmacHeader) || StringUtils.isEmpty(requestEncoded)) {
-            return result;
+        if (StringUtils.isEmpty(hmacHeader)) {
+            return Collections.emptyMap();
         }
 
         HMACSignature hmacSignature = HMACRequestHeaderParser.parse(hmacHeader);
+        String requestEncoded = takeRequestEncoded((ContentCachingRequestWrapper) request);
+        if (StringUtils.isEmpty(requestEncoded)) {
+            return Collections.emptyMap();
+        }
         String payload = innerBuild(request, principal, hmacSignature, requestEncoded);
+        Map<String, Object> result = new HashMap<>();
         result.put(HMAC_HEADER_PARAM_NAME, hmacHeader);
         result.put(SOURCE_REQUEST_ATTRIBUTE, payload);
         return result;
