@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 @AllArgsConstructor
-public class BaseController {
+public abstract class BaseController {
     protected final M2MOtpService otpService;
     private final ErrorTranslator errorTranslator;
 

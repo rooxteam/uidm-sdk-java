@@ -1,5 +1,6 @@
 package com.rooxteam.uidm.sdk.hmac;
 
+import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.utils.StringUtils;
 import lombok.AccessLevel;
@@ -19,7 +20,6 @@ import java.util.Optional;
 public final class HMACPayloadBuilder {
 
     private static final String SOURCE_REQUEST_ATTRIBUTE = "hmacPayload";
-    private static final String REQUEST_SIGNATURE_HEADER = "X-Request-Signature";
     private static final String HMAC_HEADER_PARAM_NAME = "hmacHeader";
 
     public static final String EOL = "\n";
@@ -28,7 +28,7 @@ public final class HMACPayloadBuilder {
         ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = requestAttributes.getRequest();
 
-        String hmacHeader = request.getHeader(REQUEST_SIGNATURE_HEADER);
+        String hmacHeader = request.getHeader(ConfigKeys.REQUEST_SIGNATURE_HEADER);
         if (StringUtils.isEmpty(hmacHeader)) {
             return Collections.emptyMap();
         }
