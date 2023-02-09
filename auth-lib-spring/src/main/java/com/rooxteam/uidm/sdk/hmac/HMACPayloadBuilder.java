@@ -10,7 +10,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.Base64;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -34,11 +35,8 @@ public final class HMACPayloadBuilder {
         }
 
         HMACSignature hmacSignature = HMACRequestHeaderParser.parse(hmacHeader);
-        String requestEncoded = takeRequestEncoded((ContentCachingRequestWrapper) request);
-        if (StringUtils.isEmpty(requestEncoded)) {
-            return Collections.emptyMap();
-        }
-        String payload = innerBuild(request, principal, hmacSignature, requestEncoded);
+        String requestBody = extractRequestBody(request);
+        String payload = innerBuild(request, principal, hmacSignature, requestBody);
         Map<String, Object> result = new HashMap<>();
         result.put(HMAC_HEADER_PARAM_NAME, hmacHeader);
         result.put(SOURCE_REQUEST_ATTRIBUTE, payload);
@@ -75,12 +73,7 @@ public final class HMACPayloadBuilder {
         sb.append(method).append(EOL);
 
         // полезные данные запроса. JSON объект или массив сериализованный стандартными средствами браузера.
-        // Дополнение к ТР: берутся двоичные данные, которые преобразованы к Base64-строке
-        if (request instanceof ContentCachingRequestWrapper) {
-            sb.append(requestEncoded).append(EOL);
-        } else {
-            sb.append(EOL).append(EOL);
-        }
+        sb.append(requestEncoded).append(EOL);
 
         // Timestamp
         Long timestamp = hmacSignature.getTimestamp();
@@ -101,9 +94,22 @@ public final class HMACPayloadBuilder {
         return sb.toString();
     }
 
-    private static String takeRequestEncoded(ContentCachingRequestWrapper request) {
-        byte[] requestData = request.getContentAsByteArray();
-        return Base64.getEncoder().encodeToString(requestData);
+    private static String extractRequestBody(HttpServletRequest request) {
+        if (!(request instanceof ContentCachingRequestWrapper)) {
+            return "";
+        }
+        ContentCachingRequestWrapper requestWrapper = (ContentCachingRequestWrapper) request;
+        byte[] requestData = requestWrapper.getContentAsByteArray();
+        if (requestData == null) {
+            return "";
+        }
+        String encoding = Optional.ofNullable(requestWrapper.getCharacterEncoding())
+                .orElse(StandardCharsets.UTF_8.displayName());
+        try {
+            return new String(requestData, encoding);
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalArgumentException("Unknown request encoding '" + encoding + "'", e);
+        }
     }
 
     private static String takeApiPath(HttpServletRequest request) {
