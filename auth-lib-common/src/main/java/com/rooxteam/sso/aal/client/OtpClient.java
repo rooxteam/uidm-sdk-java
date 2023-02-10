@@ -6,10 +6,7 @@ import com.rooxteam.compat.StandardCharsets;
 import com.rooxteam.errors.exception.ApiException;
 import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.client.exception.UnknownResponseException;
-import com.rooxteam.sso.aal.client.model.AuthenticationResponse;
-import com.rooxteam.sso.aal.client.model.BearerAuthenticationResponse;
 import com.rooxteam.sso.aal.client.model.Form;
-import com.rooxteam.sso.aal.client.model.JWTAuthenticationResponse;
 import com.rooxteam.sso.aal.client.model.OtpFlowStateJson;
 import com.rooxteam.sso.aal.client.model.ResponseError;
 import com.rooxteam.sso.aal.configuration.Configuration;
@@ -75,14 +72,13 @@ public class OtpClient {
     private static final String SESSION_ID_COOKIE_NAME = "RX_SID";
     private static final String NEXT_OTP_OPERATION_PERIOD_PARAM_NAME = "com.rooxteam.uidm.otp.operation.next_otp_period";
     private static final int NEXT_OTP_OPERATION_PERIOD_DEFAULT_VALUE = 10;
-    private final Map<String, Class<? extends AuthenticationResponse>> responseTypes;
 
     private final Configuration config;
     private final CloseableHttpClient httpClient;
     private final ObjectMapper jsonMapper;
     private final UserIpProvider userIpProvider;
 
-    private Map<String, OtpStatus> otpStatusMapping = new HashMap<String, OtpStatus>() {{
+    private final Map<String, OtpStatus> otpStatusMapping = new HashMap<String, OtpStatus>() {{
         put("too_many_sms", OtpStatus.TOO_MANY_OTP);
         put("error_sending_otp", OtpStatus.SEND_OTP_FAIL);
         put("invalid_otp", OtpStatus.OTP_REQUIRED);
@@ -94,9 +90,6 @@ public class OtpClient {
         this.userIpProvider = userIpProvider;
         this.jsonMapper = new ObjectMapper();
         this.httpClient = httpClient;
-        responseTypes = new HashMap<String, Class<? extends AuthenticationResponse>>();
-        responseTypes.put("Bearer", BearerAuthenticationResponse.class);
-        responseTypes.put("JWTToken", BearerAuthenticationResponse.class);
     }
 
     public OtpResponse sendOtp(String realm, String jwt) {
@@ -152,8 +145,12 @@ public class OtpClient {
     }
 
     public OtpResponse resendOtp(ResendOtpParameter resendOtpParameter) {
-        return sendOtpEvent(resendOtpParameter.getOtpFlowState(), resendOtpParameter.getRealm(), null,
-                EVENT_ID_SEND, resendOtpParameter.getService());
+        return sendOtpEvent(resendOtpParameter.getOtpFlowState(), resendOtpParameter.getRealm(),
+                resendOtpParameter.getService());
+    }
+
+    private OtpResponse sendOtpEvent(OtpFlowState otpState, String realm, String service) {
+        return sendOtpEvent(otpState, realm, null, OtpClient.EVENT_ID_SEND, service);
     }
 
     private OtpResponse sendOtpEvent(OtpFlowState otpState, String realm, String otpCode, String eventId, String service) {
@@ -167,6 +164,7 @@ public class OtpClient {
         if (!StringUtils.isEmpty(otpCode)) {
             params.add(new BasicNameValuePair(OTP_CODE_PARAM_NAME, otpCode));
         }
+
         return makeOtpRequest(params, otpState);
     }
 
@@ -234,7 +232,7 @@ public class OtpClient {
             realm = config.getString(ConfigKeys.REALM, ConfigKeys.REALM_DEFAULT);
         }
 
-        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        List<NameValuePair> params = new ArrayList<>();
         params.add(new BasicNameValuePair(REALM_PARAM_NAME, realm));
         params.add(new BasicNameValuePair(CLIENT_ID_PARAM_NAME, getClientId(realm)));
         params.add(new BasicNameValuePair(CLIENT_SECRET, getClientSecret(realm)));
@@ -283,7 +281,7 @@ public class OtpClient {
         try {
             JsonNode jsonNode = jsonMapper.readTree(json);
             if (jsonNode.has("token_type")) {
-                TokenContextFactory factory = TokenContextFactory.get(jsonNode.get("token_type").asText());
+                TokenContextFactory<?, ?> factory = TokenContextFactory.get(jsonNode.get("token_type").asText());
                 OtpResponseImpl response = new OtpResponseImpl();
                 response.setStatus(OtpStatus.SUCCESS);
                 response.setPrincipal(factory.createPrincipal(jsonMapper, jsonNode));
@@ -337,11 +335,6 @@ public class OtpClient {
             message = httpStatus.getReasonPhrase();
         }
         return new ApiException(httpStatus, message);
-    }
-
-    private Class<? extends AuthenticationResponse> resolveClass(String tokenType) {
-        Class<? extends AuthenticationResponse> value = responseTypes.get(tokenType);
-        return value == null ? JWTAuthenticationResponse.class : value;
     }
 
     private String getDefaultService() {

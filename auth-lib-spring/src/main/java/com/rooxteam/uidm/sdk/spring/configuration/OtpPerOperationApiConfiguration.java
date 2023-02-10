@@ -4,10 +4,20 @@ import com.rooxteam.errors.exception.ErrorTranslator;
 import com.rooxteam.errors.exception.RethrowingEntityTranslator;
 import com.rooxteam.errors.exception.ToResponseEntityTranslator;
 import com.rooxteam.sso.aal.AuthenticationAuthorizationLibrary;
-import com.rooxteam.uidm.sdk.spring.authorization.*;
+import com.rooxteam.uidm.sdk.spring.authorization.M2MOtpController;
+import com.rooxteam.uidm.sdk.spring.authorization.M2MOtpService;
+import com.rooxteam.uidm.sdk.spring.authorization.M2MSignController;
+import com.rooxteam.uidm.sdk.spring.authorization.PolicyEvaluationController;
+import com.rooxteam.uidm.sdk.spring.authorization.PolicyEvaluationService;
+import com.rooxteam.uidm.sdk.spring.authorization.PolicyEvaluationServiceImpl;
+import com.rooxteam.uidm.sdk.hmac.CachedRequestFilter;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+
+import javax.servlet.Filter;
 
 /**
  * Exposes /otp and /policyEvaluation API that can handle OTP per operation Use Cases.
@@ -15,7 +25,7 @@ import org.springframework.context.annotation.Import;
  */
 @Configuration
 @Import(UidmSdkConfiguration.class)
-public class OtpPerOperationApiConfiguration {
+public class OtpPerOperationApiConfiguration extends WebMvcConfigurerAdapter {
 
 
     public static final String ERROR_TRANSLATION_PROPERTY = "com.rooxteam.uidm.sdk.error.translation";
@@ -59,5 +69,10 @@ public class OtpPerOperationApiConfiguration {
             return new RethrowingEntityTranslator();
         }
         throw new IllegalArgumentException("'com.rooxteam.uidm.sdk.error.translation' should be one of 'respond' or 'rethrow'");
+    }
+
+    @Bean
+    public Filter requestBodyFilter() {
+        return new CachedRequestFilter();
     }
 }

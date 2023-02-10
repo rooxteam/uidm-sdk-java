@@ -1,18 +1,15 @@
 package com.rooxteam.uidm.sdk.spring.authorization;
 
-import com.rooxteam.errors.exception.BadRequestException;
 import com.rooxteam.errors.exception.ErrorTranslator;
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.client.EvaluationContext;
 import com.rooxteam.sso.aal.otp.OtpFlowStateImpl;
-import com.rooxteam.sso.aal.otp.ResendOtpParameter;
 import com.rooxteam.sso.aal.otp.SendOtpParameter;
-import com.rooxteam.sso.aal.otp.ValidateOtpParameter;
 import com.rooxteam.uidm.sdk.spring.authentication.AuthenticationState;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,14 +18,10 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 @RestController
 @RequestMapping("/otp")
-public class M2MOtpController {
-
-    private final M2MOtpService otpService;
-    private final ErrorTranslator errorTranslator;
+public class M2MOtpController extends BaseController {
 
     public M2MOtpController(M2MOtpService otpService, ErrorTranslator errorTranslator) {
-        this.otpService = otpService;
-        this.errorTranslator = errorTranslator;
+        super(otpService, errorTranslator);
     }
 
     @RequestMapping(method = POST, value = "/send")
@@ -41,7 +34,7 @@ public class M2MOtpController {
             principal = SecurityContextHolder.getContext().getAuthentication();
         }
         final AuthenticationState authentication = principal instanceof AuthenticationState
-            ? (AuthenticationState) principal : null;
+                ? (AuthenticationState) principal : null;
         Principal caller = authentication != null ? (Principal) authentication.getAttributes().get("aalPrincipal") : null;
         String jwtToken = caller != null ? caller.getJwtToken() : null;
         String realm = authentication != null ? authentication.getRealm() : null;
@@ -56,55 +49,28 @@ public class M2MOtpController {
         return otpService.send(sendOtpParameter);
     }
 
+    @Override
     @RequestMapping(method = POST, value = "/resend")
     public Response resendOtp(@RequestBody OtpFlowStateImpl state,
                               @RequestParam(required = false) String service,
                               java.security.Principal principal) {
-        final AuthenticationState authentication = principal instanceof AuthenticationState
-                ? (AuthenticationState) principal : null;
-        String realm = authentication != null ? authentication.getRealm() : null;
-        ResendOtpParameter resendOtpParameter = ResendOtpParameter.builder()
-                .otpFlowState(state)
-                .service(service)
-                .realm(realm)
-                .build();
-        return otpService.resend(resendOtpParameter);
+        return super.resendOtp(state, service, principal);
     }
 
     @RequestMapping(method = POST, value = "/validate")
-    public ResponseEntity validateOtp(@RequestBody final OtpFlowStateImpl state,
-                                      @RequestParam(required = false) final String otp,
-                                      @RequestParam(required = false) final String otpCode,
-                                      @RequestParam(required = false) final String service,
-                                      java.security.Principal principal) {
-        if (otp == null && otpCode == null) {
-            return errorTranslator.translate(new BadRequestException("Parameter is missing: otpCode"));
-        }
-        final AuthenticationState authentication = principal instanceof AuthenticationState
-                ? (AuthenticationState) principal : null;
-        String realm = authentication != null ? authentication.getRealm() : null;
-        ValidateOtpParameter validateOtpParameter = ValidateOtpParameter.builder()
-                .otpFlowState(state)
-                .otpCode(otpCode != null ? otpCode : otp)
-                .service(service)
-                .realm(realm)
-                .build();
-        return new ResponseEntity<Response>(otpService.validate(validateOtpParameter), HttpStatus.OK);
+    public ResponseEntity<?> validateOtp(@RequestBody final OtpFlowStateImpl state,
+                                         @RequestParam(required = false) final String otp,
+                                         @RequestParam(required = false) final String otpCode,
+                                         @RequestParam(required = false) final String service,
+                                         java.security.Principal principal) {
+        return super.validateOtp(state, otp, otpCode, service, principal);
     }
 
+    @Override
     @RequestMapping(method = POST, value = "/check")
     public Response check(@RequestBody OtpFlowStateImpl state,
                           @RequestParam(required = false) String service,
                           java.security.Principal principal) {
-        final AuthenticationState authentication = principal instanceof AuthenticationState
-                ? (AuthenticationState) principal : null;
-        String realm = authentication != null ? authentication.getRealm() : null;
-
-        ValidateOtpParameter validateOtpParameter = ValidateOtpParameter.builder()
-                .otpFlowState(state)
-                .service(service)
-                .realm(realm)
-                .build();
-        return otpService.validate(validateOtpParameter);
+        return super.check(state, service, principal);
     }
 }

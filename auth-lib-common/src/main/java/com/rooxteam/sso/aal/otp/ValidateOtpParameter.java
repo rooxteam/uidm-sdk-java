@@ -30,5 +30,4 @@ public class ValidateOtpParameter {
      * Реалм в котором зарегистрирован пользователь (из токена)
      */
     private String realm;
-
 }

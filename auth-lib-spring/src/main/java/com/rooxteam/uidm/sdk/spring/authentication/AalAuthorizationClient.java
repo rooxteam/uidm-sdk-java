@@ -1,9 +1,15 @@
 package com.rooxteam.uidm.sdk.spring.authentication;
 
-import com.rooxteam.sso.aal.*;
+import com.rooxteam.sso.aal.AalLogger;
+import com.rooxteam.sso.aal.AnonymousPrincipalImpl;
+import com.rooxteam.sso.aal.AuthenticationAuthorizationLibrary;
+import com.rooxteam.sso.aal.AuthorizationType;
+import com.rooxteam.sso.aal.Principal;
+import com.rooxteam.sso.aal.PrincipalImpl;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.exception.AalException;
+import com.rooxteam.uidm.sdk.hmac.HMACPayloadBuilder;
 import com.rooxteam.uidm.sdk.spring.authorization.AalResourceValidation;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -13,9 +19,20 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static com.rooxteam.sso.aal.ConfigKeys.*;
+import static com.rooxteam.sso.aal.ConfigKeys.AUTHORIZATION_TYPE;
+import static com.rooxteam.sso.aal.ConfigKeys.AUTHORIZATION_TYPE_DEFAULT;
+import static com.rooxteam.sso.aal.ConfigKeys.POLICIES_FOR_SYSTEM;
+import static com.rooxteam.sso.aal.ConfigKeys.POLICIES_FOR_SYSTEM_DEFAULT;
 
 /**
  * @author RooX Solutions
@@ -37,7 +54,7 @@ public class AalAuthorizationClient implements SsoAuthorizationClient, AalResour
 
     @Override
     public AuthenticationState validate(HttpServletRequest request, String accessToken) {
-        Principal principal = null;
+        Principal principal;
         try {
             principal = aal.validate(request, accessToken);
         } catch (Exception e) {
@@ -78,7 +95,7 @@ public class AalAuthorizationClient implements SsoAuthorizationClient, AalResour
             return Collections.singleton(new SimpleGrantedAuthority("ROLE_CUSTOMER"));
         }
 
-        Set<GrantedAuthority> result = new LinkedHashSet<GrantedAuthority>();
+        Set<GrantedAuthority> result = new LinkedHashSet<>();
         for (String role : (List<String>) roles) {
             result.add(new SimpleGrantedAuthority(role));
         }
@@ -96,38 +113,19 @@ public class AalAuthorizationClient implements SsoAuthorizationClient, AalResour
         if (aal == null) {
             return false;
         }
-        Principal aalPrincipal;
+
         SecurityContext seco = SecurityContextHolder.getContext();
-        if (seco == null) {
-            aalPrincipal = new AnonymousPrincipalImpl();
-        } else {
-            Authentication authentication = seco.getAuthentication();
-            if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
-                aalPrincipal = new AnonymousPrincipalImpl();
-            } else {
-                AuthenticationState authState = (AuthenticationState) authentication;
-                if (isDevToken(authState)) {
-                    // If dev token is both enabled and presented,
-                    // we mark all the checks as passed if SSO policy evaluation mode is on
-                    // if local config policy mode is on we pass execution to AAL
-                    String authzTypeString = configuration.getString(AUTHORIZATION_TYPE, AUTHORIZATION_TYPE_DEFAULT);
-                    AuthorizationType authorizationType = AuthorizationType.valueOf(authzTypeString);
-                    if (authorizationType == AuthorizationType.CONFIG) {
-                        aalPrincipal = reconstructPrincipalFromAuthState(authState);
-                    } else {
-                        return true;
-                    }
-                } else if (isSystemAuthenticated(authState) && !configuration.getBoolean(POLICIES_FOR_SYSTEM,
-                        POLICIES_FOR_SYSTEM_DEFAULT)) {
-                    return true;
-                } else {
-                    aalPrincipal = (Principal) authState.getAttributes().get(AAL_PRINCIPAL_ATTRIBUTE_NAME);
-                    if (aalPrincipal == null) {
-                        aalPrincipal = reconstructPrincipalFromAuthState(authState);
-                    }
-                }
-            }
+        Principal aalPrincipal = currentPrincipal(seco);
+        if (aalPrincipal == null) {
+            return true;
         }
+
+        Map<String, ?> hmacParameters = HMACPayloadBuilder.build(aalPrincipal);
+        if (!hmacParameters.isEmpty()) {
+            envParameters = Stream.of(envParameters, hmacParameters).flatMap(m -> m.entrySet().stream())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        }
+
         EvaluationResponse result = aal.evaluatePolicy(aalPrincipal, resource, operation, envParameters);
         if (seco != null) {
             Authentication authentication = seco.getAuthentication();
@@ -166,6 +164,41 @@ public class AalAuthorizationClient implements SsoAuthorizationClient, AalResour
             }
         }
         return aal.postprocessPolicy(aalPrincipal, resource, operation, envParameters, response);
+    }
+
+    private Principal currentPrincipal(SecurityContext seco) {
+        Principal aalPrincipal;
+        if (seco == null) {
+            aalPrincipal = new AnonymousPrincipalImpl();
+        } else {
+            Authentication authentication = seco.getAuthentication();
+            if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
+                aalPrincipal = new AnonymousPrincipalImpl();
+            } else {
+                AuthenticationState authState = (AuthenticationState) authentication;
+                if (isDevToken(authState)) {
+                    // If dev token is both enabled and presented,
+                    // we mark all the checks as passed if SSO policy evaluation mode is on
+                    // if local config policy mode is on we pass execution to AAL
+                    String authzTypeString = configuration.getString(AUTHORIZATION_TYPE, AUTHORIZATION_TYPE_DEFAULT);
+                    AuthorizationType authorizationType = AuthorizationType.valueOf(authzTypeString);
+                    if (authorizationType == AuthorizationType.CONFIG) {
+                        aalPrincipal = reconstructPrincipalFromAuthState(authState);
+                    } else {
+                        return null;
+                    }
+                } else if (isSystemAuthenticated(authState) && !configuration.getBoolean(POLICIES_FOR_SYSTEM,
+                        POLICIES_FOR_SYSTEM_DEFAULT)) {
+                    return null;
+                } else {
+                    aalPrincipal = (Principal) authState.getAttributes().get(AAL_PRINCIPAL_ATTRIBUTE_NAME);
+                    if (aalPrincipal == null) {
+                        aalPrincipal = reconstructPrincipalFromAuthState(authState);
+                    }
+                }
+            }
+        }
+        return aalPrincipal;
     }
 
     private Principal reconstructPrincipalFromAuthState(AuthenticationState authenticationState) {
