@@ -9,7 +9,6 @@ import com.rooxteam.sso.aal.PrincipalImpl;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.exception.AalException;
-import com.rooxteam.uidm.sdk.hmac.HMACPayloadBuilder;
 import com.rooxteam.uidm.sdk.spring.authorization.AalResourceValidation;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -26,8 +25,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.rooxteam.sso.aal.ConfigKeys.AUTHORIZATION_TYPE;
 import static com.rooxteam.sso.aal.ConfigKeys.AUTHORIZATION_TYPE_DEFAULT;
@@ -118,12 +115,6 @@ public class AalAuthorizationClient implements SsoAuthorizationClient, AalResour
         Principal aalPrincipal = currentPrincipal(seco);
         if (aalPrincipal == null) {
             return true;
-        }
-
-        Map<String, ?> hmacParameters = HMACPayloadBuilder.build(aalPrincipal);
-        if (!hmacParameters.isEmpty()) {
-            envParameters = Stream.of(envParameters, hmacParameters).flatMap(m -> m.entrySet().stream())
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         }
 
         EvaluationResponse result = aal.evaluatePolicy(aalPrincipal, resource, operation, envParameters);
