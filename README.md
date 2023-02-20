@@ -93,7 +93,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
     @Bean
     @Override
     public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
+      return super.authenticationManagerBean();
     }
   
   ...
@@ -102,6 +102,10 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
 ```
 
 # История изменений
+
+## 3.23.1
+
+Реализован механизм имитозащиты на основе HMAC-подписи.
 
 ## 3.22.0
 
