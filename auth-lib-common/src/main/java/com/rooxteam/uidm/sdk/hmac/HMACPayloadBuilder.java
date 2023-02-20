@@ -5,8 +5,6 @@ import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.utils.StringUtils;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import javax.servlet.http.HttpServletRequest;
@@ -25,9 +23,7 @@ public final class HMACPayloadBuilder {
 
     public static final String EOL = "\n";
 
-    public static Map<String, ?> build(Principal principal) {
-        ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        HttpServletRequest request = requestAttributes.getRequest();
+    public static Map<String, ?> build(Principal principal, HttpServletRequest request) {
 
         String hmacHeader = request.getHeader(ConfigKeys.REQUEST_SIGNATURE_HEADER);
         if (StringUtils.isEmpty(hmacHeader)) {

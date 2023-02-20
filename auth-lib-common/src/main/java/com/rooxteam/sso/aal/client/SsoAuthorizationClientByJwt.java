@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.PrincipalImpl;
-import com.rooxteam.sso.aal.PropertyScope;
 import com.rooxteam.sso.aal.client.model.EvaluationRequest;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.configuration.Configuration;
@@ -15,6 +14,7 @@ import com.rooxteam.sso.aal.exception.AalException;
 import com.rooxteam.sso.aal.exception.AuthorizationException;
 import com.rooxteam.sso.aal.exception.NetworkErrorException;
 import com.rooxteam.sso.aal.utils.StringUtils;
+import com.rooxteam.uidm.sdk.hmac.HMACPayloadBuilder;
 import com.rooxteam.util.HttpHelper;
 import lombok.SneakyThrows;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -28,9 +28,12 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.rooxteam.sso.aal.AalLogger.LOG;
 
@@ -80,11 +83,8 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
             realm = config.getString(ConfigKeys.REALM, ConfigKeys.REALM_DEFAULT);
         }
 
-        ServletRequestAttributes requestAttributes = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes());
-        EvaluationContext evaluationContext = requestAttributes != null
-                ? new EvaluationContext(realm, resource, method, env, requestContextCollector.collect(requestAttributes.getRequest()))
-                : new EvaluationContext(realm, resource, method, env);
-
+        Map<String, Object> extraParams = getExtraParams(subject);
+        EvaluationContext evaluationContext = new EvaluationContext(realm, resource, method, env, extraParams);
         try {
             String url = config.getString(ConfigKeys.SSO_URL) + IS_ALLOWED_PATH;
             HttpPost post = HttpHelper.getHttpPostWithJsonBody(url, jsonMapper.writeValueAsString(evaluationContext));
@@ -111,7 +111,7 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
 
         try {
             String realm = (String) subject.getProperty("realm");
-            List<EvaluationContext> contexts = new ArrayList<EvaluationContext>();
+            List<EvaluationContext> contexts = new ArrayList<>();
             for (EvaluationRequest policy : policies) {
                 String method = policy.getActionName();
                 String resource = policy.getResourceName();
@@ -128,7 +128,7 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
                 throw new IllegalStateException("Wrong number of results");
             }
 
-            Map<EvaluationRequest, EvaluationResponse> result = new HashMap<EvaluationRequest, EvaluationResponse>();
+            Map<EvaluationRequest, EvaluationResponse> result = new HashMap<>();
 
             for (int i = 0; i < responses.length; i++) {
                 result.put(policies.get(i), responses[i]);
@@ -180,8 +180,7 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
         HttpClientContext context = new HttpClientContext();
         context.setCookieStore(new BasicCookieStore());
         String result;
-        CloseableHttpResponse response = httpClient.execute(post, context);
-        try {
+        try (CloseableHttpResponse response = httpClient.execute(post, context)) {
             result = EntityUtils.toString(response.getEntity());
 
             if (response.getStatusLine().getStatusCode() != 200) {
@@ -197,8 +196,6 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
                     throw new NetworkErrorException("Failed to read a response from the server:" + response.getStatusLine(), e);
                 }
             }
-        } finally {
-            response.close();
         }
         if (result == null) {
             throw new NetworkErrorException("Empty response from the server");
@@ -219,5 +216,16 @@ public class SsoAuthorizationClientByJwt extends CommonSsoAuthorizationClient {
             message = error.get("message").asText();
         }
         throw new AuthorizationException(message, message, errorCode);
+    }
+
+    private Map<String, Object> getExtraParams(Principal subject) {
+        ServletRequestAttributes requestAttributes = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes());
+        if (requestAttributes != null) {
+            Map<String, Object> extraParams = requestContextCollector.collect(requestAttributes.getRequest());
+            Map<String, ?> hmacParameters = HMACPayloadBuilder.build(subject, requestAttributes.getRequest());
+            return Stream.of(extraParams, hmacParameters).flatMap(m -> m.entrySet().stream())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        }
+        return Collections.emptyMap();
     }
 }
