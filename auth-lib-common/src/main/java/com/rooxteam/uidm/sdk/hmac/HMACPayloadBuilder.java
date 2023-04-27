@@ -48,46 +48,45 @@ public final class HMACPayloadBuilder {
 
         // хостнейм API запроса
         String host = request.getServerName();
-        sb.append(host).append(EOL);
+        appendLine(sb, host);
 
         // путь API запроса (с открывающим слешом, без знаков # и ?)
         String path = takeApiPath(request);
-        sb.append(path).append(EOL);
+        appendLine(sb, path);
 
         // параметры API запроса строкой. Значения параметров должны быть URL-кодированными,
         // если они используют символы, требующие кодирования
-        String queryString = Optional.ofNullable(request.getQueryString())
-                .orElse("");
-        sb.append(queryString).append(EOL);
+        appendLine(sb, request.getQueryString());
 
         // тип данных. В настоящий момент поддерживается только «application/json». Укажите данную строку в точности.
         String contentType = request.getContentType();
-        sb.append(contentType).append(EOL);
+        appendLine(sb, contentType);
 
         // HTTP-метод запроса апперкейсом, например GET, POST
         String method = request.getMethod().toUpperCase();
-        sb.append(method).append(EOL);
+        appendLine(sb, method);
 
         // полезные данные запроса. JSON объект или массив сериализованный стандартными средствами браузера.
-        sb.append(requestEncoded).append(EOL);
+        appendLine(sb, requestEncoded);
 
         // Timestamp
         Long timestamp = hmacSignature.getTimestamp();
         sb.append(timestamp).append(EOL);
 
         // Principal Id
-        String principalId = (String) Optional.ofNullable(principal.getProperty("sub"))
-                .orElse("");
-        sb.append(principalId).append(EOL);
+        String principalId = (String) principal.getProperty("sub");
+        appendLine(sb, principalId);
 
         // Realm
-        String realm = Optional.of(principal)
-                .map(p -> p.getProperty("realm"))
-                .map(value -> (String) value)
-                .orElse("");
-        sb.append(realm).append(EOL);
+        String realm = (String) principal.getProperty("realm");
+        appendLine(sb, realm);
 
         return sb.toString();
+    }
+
+    private static void appendLine(StringBuilder sb, String str) {
+        String valueToAdd = str != null ? str : "";
+        sb.append(valueToAdd).append(EOL);
     }
 
     private static String extractRequestBody(HttpServletRequest request) {

@@ -30,7 +30,7 @@ public class HMACPayloadBuilderTest {
     private Principal principal;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         MockitoAnnotations.initMocks(this);
     }
 
@@ -63,9 +63,41 @@ public class HMACPayloadBuilderTest {
                 "bis_____172345\n" +
                 "/customer\n", map.get("hmacPayload"));
 
+        verifyInteractions();
+        verify(request).getCharacterEncoding();
+    }
+
+    @Test
+    public void testNullValues() {
+        when(request.getHeader(eq(ConfigKeys.REQUEST_SIGNATURE_HEADER))).thenReturn(TEST_SIGNATURE_HEADER);
+        when(request.getMethod()).thenReturn("POST");
+        when(request.getContextPath()).thenReturn("/webapi-1.0");
+        when(request.getServletPath()).thenReturn("/payments/phone/subscriptions");
+
+        Map<String, ?> map = HMACPayloadBuilder.build(principal, request);
+        assertNotNull(map);
+        assertFalse(map.isEmpty());
+        assertEquals("\n" +
+                "/webapi-1.0/payments/phone/subscriptions\n" +
+                "\n" +
+                "\n" +
+                "POST\n" +
+                "\n" +
+                "1675766946\n" +
+                "\n" +
+                "\n", map.get("hmacPayload"));
+
+        verifyInteractions();
+    }
+
+    @After
+    public void tearDown() {
+        Mockito.verifyNoMoreInteractions(request, principal);
+    }
+
+    private void verifyInteractions() {
         verify(request).getHeader(ConfigKeys.REQUEST_SIGNATURE_HEADER);
         verify(request).getContentAsByteArray();
-        verify(request).getCharacterEncoding();
         verify(request).getServerName();
         verify(request).getContextPath();
         verify(request).getServletPath();
@@ -76,10 +108,5 @@ public class HMACPayloadBuilderTest {
         verify(principal).getProperty("realm");
         verify(principal).getProperty("sub");
         verify(request).getHeader("X-Request-Signature");
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        Mockito.verifyNoMoreInteractions(request, principal);
     }
 }
