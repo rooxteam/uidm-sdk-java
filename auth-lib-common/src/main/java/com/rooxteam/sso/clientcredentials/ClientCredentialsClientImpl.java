@@ -5,10 +5,12 @@ import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
 import com.rooxteam.sso.aal.exception.NetworkErrorException;
 import com.rooxteam.sso.clientcredentials.configuration.Configuration;
+import com.rooxteam.util.TokenUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -18,10 +20,12 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.rooxteam.sso.clientcredentials.ClientCredentialsClientLogger.LOG;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 
 final class ClientCredentialsClientImpl implements ClientCredentialsClient {
@@ -32,9 +36,7 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
     private final String headerPrefix;
     private final Configuration configuration;
 
-    private final ConcurrentHashMap<MultiValueMap<String, String>, String> tokens =
-            new ConcurrentHashMap<MultiValueMap<String, String>, String>();
-
+    private final ConcurrentHashMap<MultiValueMap<String, String>, ClientCredentialsTokenModel> tokens = new ConcurrentHashMap<>();
 
     ClientCredentialsClientImpl(final RestTemplate restTemplate,
                                 final URI accessTokenEndpoint,
@@ -78,12 +80,26 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
 
 
     private boolean isExpired(String token) {
+        if (token != null && !token.isEmpty()) {
+            return true;
+        }
         final String tokenForLogging = trimTokenForLogging(token);
-        final URI uri = UriComponentsBuilder.fromUri(tokenValidationEndpoint)
-                .queryParam("access_token", token)
-                .build().toUri();
         try {
-            restTemplate.getForEntity(uri, Object.class);
+            if (configuration.sendTokenInAuthorizationHeaderInValidationProcess()) {
+                final URI uri = UriComponentsBuilder.fromUri(tokenValidationEndpoint)
+                        .build().toUri();
+                RequestEntity.HeadersBuilder<?> requestBuilder = RequestEntity.get(uri)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE);
+                requestBuilder.header(AUTHORIZATION, TokenUtils.wrapBearerToken(token));
+                RequestEntity<Void> requestEntity = requestBuilder.build();
+                restTemplate.exchange(requestEntity, Object.class);
+            } else {
+                final URI uri = UriComponentsBuilder.fromUri(tokenValidationEndpoint)
+                        .queryParam("access_token", token)
+                        .build().toUri();
+                restTemplate.getForEntity(uri, Object.class);
+            }
             return false;
         } catch (HttpStatusCodeException e) {
             if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
@@ -123,29 +139,37 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
 
         LOG.traceGetToken(paramsForLogging);
 
-        String token = tokens.get(mergedParams);
-        String tokenForLogging = trimTokenForLogging(token);
+        ClientCredentialsTokenModel token = configuration.isTokensCacheEnabled() ? tokens.get(mergedParams) : null;
 
         if (token == null) {
             LOG.traceNoTokenInStore(paramsForLogging);
             token = authorizeAndGetToken(mergedParams);
-            putToken(mergedParams, token);
+            if (configuration.isTokensCacheEnabled()) {
+                putToken(mergedParams, token);
+            }
         } else {
-            if (isExpired(token)) {
+            String tokenForLogging = trimTokenForLogging(token.getValue());
+            if (isExpired(token.getValue())) {
                 LOG.traceTokenExpired(paramsForLogging, tokenForLogging);
                 clearToken(mergedParams);
                 token = authorizeAndGetToken(mergedParams);
                 putToken(mergedParams, token);
             } else {
+                LocalDateTime expirationUpdateTime = LocalDateTime.now().plusSeconds(configuration.getUpdateTimeBeforeTokenExpiration());
+                if (expirationUpdateTime.isAfter(token.getExpiresIn())) {
+                    LOG.traceTokenExpired(paramsForLogging, tokenForLogging);
+                    clearToken(mergedParams);
+                    token = authorizeAndGetToken(mergedParams);
+                    putToken(mergedParams, token);
+                }
                 LOG.traceGotTokenFromStore(paramsForLogging, tokenForLogging);
             }
         }
-        return token;
+        return token.getValue();
     }
 
-    private void putToken(MultiValueMap<String, String> params,
-                          String token) {
-        LOG.tracePutTokenInStore(clearParamsForLogging(params), trimTokenForLogging(token));
+    private void putToken(MultiValueMap<String, String> params, ClientCredentialsTokenModel token) {
+        LOG.tracePutTokenInStore(clearParamsForLogging(params), trimTokenForLogging(token.getValue()));
         tokens.put(params, token);
     }
 
@@ -154,7 +178,7 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
         tokens.remove(params);
     }
 
-    private String authorizeAndGetToken(MultiValueMap<String, String> additionalRequestParameters) {
+    private ClientCredentialsTokenModel authorizeAndGetToken(MultiValueMap<String, String> additionalRequestParameters) {
 
         final MultiValueMap<String, String> params;
         if (additionalRequestParameters != null) {
@@ -197,10 +221,12 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
 
         final TokenResponse body = responseEntity.getBody();
         final String token = body.getAccessToken();
+        LocalDateTime issueDate = LocalDateTime.now();
+        ClientCredentialsTokenModel tokenModel = new ClientCredentialsTokenModel(token, issueDate, issueDate.plusSeconds(body.getExpiresIn()));
 
         LOG.traceGotToken(paramsForLogging, trimTokenForLogging(token));
 
-        return token;
+        return tokenModel;
     }
 
     private String trimTokenForLogging(String token) {

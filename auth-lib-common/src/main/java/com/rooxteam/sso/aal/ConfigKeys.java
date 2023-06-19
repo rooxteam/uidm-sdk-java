@@ -52,6 +52,39 @@ public interface ConfigKeys {
     String REALM_DEFAULT = "/customer";
 
     /**
+     * {@value} - Включение/отключение механизма кэширования для clientCredentials аутентификации
+     * По умолчанию: {@value #CLIENT_CREDENTIALS_CACHE_ENABLED_DEFAULT}
+     */
+    String CLIENT_CREDENTIALS_CACHE_ENABLED = "com.rooxteam.auth.client_credentials.cacheEnabled";
+
+    /**
+     * Значение ClientCredentialsCacheEnabled для clientCredentials аутентификации по умолчанию
+     */
+    boolean CLIENT_CREDENTIALS_CACHE_ENABLED_DEFAULT = true;
+
+    /**
+     * {@value} - Время за сколько до истечения срока жизни токена, его необходимо обновить
+     * По умолчанию: {@value #UPDATE_TIME_BEFORE_TOKEN_EXPIRATION_DEFAULT}
+     */
+    String UPDATE_TIME_BEFORE_TOKEN_EXPIRATION = "com.rooxteam.auth.client_credentials.updateTimeBeforeTokenExpiration";
+
+    /**
+     * Значение UpdateTimeBeforeTokenExpiration для clientCredentials аутентификации в секундах по умолчанию
+     */
+    int UPDATE_TIME_BEFORE_TOKEN_EXPIRATION_DEFAULT = 60;
+
+    /**
+     * {@value} - Отправлять токен в заголовке Authorization в процессе валидации токена
+     * По умолчанию: {@value #SEND_TOKEN_IN_AUTHORIZATION_HEADER_IN_VALIDATION_DEFAULT}
+     */
+    String SEND_TOKEN_IN_AUTHORIZATION_HEADER_IN_VALIDATION_ENABLED = "com.rooxteam.auth.client_credentials.validation.enabledSendingTokenInHeader";
+
+    /**
+     * Значение ClientCredentialsCacheEnabled для clientCredentials аутентификации по умолчанию
+     */
+    boolean SEND_TOKEN_IN_AUTHORIZATION_HEADER_IN_VALIDATION_DEFAULT = false;
+
+    /**
      * {@value} - Имя цепочки аутентификации в Customer SSO для AAL.
      * По умолчанию: {@value #AUTH_SERVICE_DEFAULT}
      */

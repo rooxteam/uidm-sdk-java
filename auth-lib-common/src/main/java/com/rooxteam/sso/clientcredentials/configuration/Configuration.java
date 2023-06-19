@@ -28,5 +28,9 @@ public interface Configuration {
 
     int getPoolSize();
 
+    boolean isTokensCacheEnabled();
 
+    int getUpdateTimeBeforeTokenExpiration();
+
+    boolean sendTokenInAuthorizationHeaderInValidationProcess();
 }

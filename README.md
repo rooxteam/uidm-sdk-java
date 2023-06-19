@@ -103,6 +103,23 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
 
 # История изменений
 
+## 3.23.2
+
+1. Возможность отключения кэширования токенов в SDK при получении системного токена по client credentials аутентификации
+2. Возможность настройки - за сколько до истечения срока жизни токена, его необходимо обновить
+3. Возможность отправлять access_token при валидации в механизме кэширования в Authorization заголовке
+
+```properties
+# Отключаем кэширование токенов
+com.rooxteam.auth.client_credentials.cacheEnabled=false
+
+# Задаем в секундах (с) время за сколько до ExpirationTime, следует обновить токен в кэше
+com.rooxteam.auth.client_credentials.updateTimeBeforeTokenExpiration=60
+
+# Отправлять access_token в Authorization header-е
+com.rooxteam.auth.client_credentials.validation.enabledSendingTokenInHeader=true
+```
+
 ## 3.23.1
 
 Реализован механизм имитозащиты на основе HMAC-подписи.

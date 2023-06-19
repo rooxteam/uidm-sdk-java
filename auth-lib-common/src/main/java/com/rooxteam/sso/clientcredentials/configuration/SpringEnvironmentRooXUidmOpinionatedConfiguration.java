@@ -19,6 +19,12 @@ import static com.rooxteam.sso.aal.ConfigKeys.HTTP_SOCKET_TIMEOUT_DEFAULT;
 import static com.rooxteam.sso.aal.ConfigKeys.REALM;
 import static com.rooxteam.sso.aal.ConfigKeys.REALM_DEFAULT;
 import static com.rooxteam.sso.aal.ConfigKeys.SSO_URL;
+import static com.rooxteam.sso.aal.ConfigKeys.CLIENT_CREDENTIALS_CACHE_ENABLED;
+import static com.rooxteam.sso.aal.ConfigKeys.CLIENT_CREDENTIALS_CACHE_ENABLED_DEFAULT;
+import static com.rooxteam.sso.aal.ConfigKeys.UPDATE_TIME_BEFORE_TOKEN_EXPIRATION;
+import static com.rooxteam.sso.aal.ConfigKeys.UPDATE_TIME_BEFORE_TOKEN_EXPIRATION_DEFAULT;
+import static com.rooxteam.sso.aal.ConfigKeys.SEND_TOKEN_IN_AUTHORIZATION_HEADER_IN_VALIDATION_ENABLED;
+import static com.rooxteam.sso.aal.ConfigKeys.SEND_TOKEN_IN_AUTHORIZATION_HEADER_IN_VALIDATION_DEFAULT;
 
 /**
  * Implementation that instantiates configuration from Spring Env using required keys:
@@ -30,6 +36,9 @@ import static com.rooxteam.sso.aal.ConfigKeys.SSO_URL;
  * {@value com.rooxteam.sso.aal.ConfigKeys#HTTP_CONNECTION_TIMEOUT} Connection timeout in ms (defaults to {@value com.rooxteam.sso.aal.ConfigKeys#HTTP_CONNECTION_TIMEOUT_DEFAULT})<p>
  * {@value com.rooxteam.sso.aal.ConfigKeys#HTTP_SOCKET_TIMEOUT} Read timeout in ms (defaults to {@value com.rooxteam.sso.aal.ConfigKeys#HTTP_SOCKET_TIMEOUT_DEFAULT})<p>
  * {@value com.rooxteam.sso.aal.ConfigKeys#HTTP_CONNECTION_POOL_SIZE} Pool size (defaults to {@value com.rooxteam.sso.aal.ConfigKeys#HTTP_CONNECTION_POOL_SIZE_DEFAULT})<p>
+ * {@value com.rooxteam.sso.aal.ConfigKeys#CLIENT_CREDENTIALS_CACHE_ENABLED} Cache enabled (defaults to {@value com.rooxteam.sso.aal.ConfigKeys#CLIENT_CREDENTIALS_CACHE_ENABLED_DEFAULT})<p>
+ * {@value com.rooxteam.sso.aal.ConfigKeys#UPDATE_TIME_BEFORE_TOKEN_EXPIRATION} Update time before expiration (defaults to {@value com.rooxteam.sso.aal.ConfigKeys#UPDATE_TIME_BEFORE_TOKEN_EXPIRATION_DEFAULT})<p>
+ * {@value com.rooxteam.sso.aal.ConfigKeys#SEND_TOKEN_IN_AUTHORIZATION_HEADER_IN_VALIDATION_ENABLED} Send token in authorization header (defaults to {@value com.rooxteam.sso.aal.ConfigKeys#SEND_TOKEN_IN_AUTHORIZATION_HEADER_IN_VALIDATION_DEFAULT})<p>
  */
 public final class SpringEnvironmentRooXUidmOpinionatedConfiguration implements Configuration {
 
@@ -95,5 +104,20 @@ public final class SpringEnvironmentRooXUidmOpinionatedConfiguration implements 
     @Override
     public int getPoolSize() {
         return environment.getProperty(HTTP_CONNECTION_POOL_SIZE, Integer.class, HTTP_CONNECTION_POOL_SIZE_DEFAULT);
+    }
+
+    @Override
+    public boolean isTokensCacheEnabled() {
+        return environment.getProperty(CLIENT_CREDENTIALS_CACHE_ENABLED, Boolean.class, CLIENT_CREDENTIALS_CACHE_ENABLED_DEFAULT);
+    }
+
+    @Override
+    public int getUpdateTimeBeforeTokenExpiration() {
+        return environment.getProperty(UPDATE_TIME_BEFORE_TOKEN_EXPIRATION, Integer.class, UPDATE_TIME_BEFORE_TOKEN_EXPIRATION_DEFAULT);
+    }
+
+    @Override
+    public boolean sendTokenInAuthorizationHeaderInValidationProcess() {
+        return environment.getProperty(SEND_TOKEN_IN_AUTHORIZATION_HEADER_IN_VALIDATION_ENABLED, Boolean.class, SEND_TOKEN_IN_AUTHORIZATION_HEADER_IN_VALIDATION_DEFAULT);
     }
 }
