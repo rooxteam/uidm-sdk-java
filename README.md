@@ -107,6 +107,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
 1. Добавлен метод валидации JWT в AalAuthorizationClient и RooxAuthenticationAuthorizationLibrary с ValidationResult-ом
 2. Переименована системная настройка com.rooxteam.aal.validation_type -> com.rooxteam.aal.filter.principal_provider_type   
 
+## 3.26.0
+Добавлена возможность настраивать кэш JWKS
+
 ## 3.24.0
 
 1. Возможность отключения кэширования токенов в SDK при получении системного токена по client credentials аутентификации

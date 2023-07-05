@@ -349,4 +349,18 @@ public interface ConfigKeys {
     String JWKS_URL = "com.rooxteam.aal.jwks.url";
     String JWT_VALIDATORS = "com.rooxteam.all.jwt.validators";
     String REQUEST_SIGNATURE_HEADER = "X-Request-Signature";
+
+    /**
+     * Время жизни JWKS в кэше (в минутах). В случае значения -1 время жизни не лимитируется.
+     * Значение по умолчанию берется из {@value com.nimbusds.jose.jwk.source.DefaultJWKSetCache#DEFAULT_LIFESPAN_MINUTES}
+     */
+    String JWKS_CACHE_LIFESPAN = "com.rooxteam.aal.jwks.cache.lifespan";
+
+    /**
+     * Период обновления JWKS в кэше (в минутах). Должен быть меньше либо равен времени жизни {@value #JWKS_CACHE_LIFESPAN}
+     * В случае значения -1 обновление происходить не будет.
+     * Значение по умолчанию берется из {@value com.nimbusds.jose.jwk.source.DefaultJWKSetCache#DEFAULT_REFRESH_TIME_MINUTES}
+     */
+    String JWKS_CACHE_REFRESH_TIME = "com.rooxteam.aal.jwks.cache.refreshTime";
+
 }
