@@ -43,7 +43,7 @@ public class UidmUserPreAuthenticationFilter extends AbstractUserPreAuthenticate
             return null;
         }
 
-        final AuthenticationState authenticationState = authorizationClient.validate(request, token);
+        final AuthenticationState authenticationState = authorizationClient.getPreAuthenticatedUserState(request, token);
         setupMDC(request, authenticationState);
 
         return authenticationState;

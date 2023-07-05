@@ -1,5 +1,6 @@
 package com.rooxteam.sso.aal;
 
+import com.nimbusds.jwt.JWT;
 import com.rooxteam.sso.aal.client.*;
 import com.rooxteam.sso.aal.client.model.AuthenticationResponse;
 import com.rooxteam.sso.aal.client.model.EvaluationRequest;
@@ -9,6 +10,7 @@ import com.rooxteam.sso.aal.context.TokenContextFactory;
 import com.rooxteam.sso.aal.metrics.MetricsIntegration;
 import com.rooxteam.sso.aal.otp.*;
 import com.rooxteam.sso.aal.validation.AccessTokenValidator;
+import com.rooxteam.sso.aal.validation.jwt.ValidationResult;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -44,6 +46,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
             new CopyOnWriteArrayList<PrincipalEventListener>();
     private final MetricsIntegration metricsIntegration;
     private final Configuration configuration;
+    private final PrincipalProvider principalProvider;
     private final AccessTokenValidator accessTokenValidator;
 
     RooxAuthenticationAuthorizationLibrary(Configuration configuration,
@@ -52,6 +55,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
                                            SsoAuthenticationClient ssoAuthenticationClient,
                                            SsoTokenClient ssoTokenClient,
                                            OtpClient otpClient,
+                                           PrincipalProvider principalProvider,
                                            AccessTokenValidator accessTokenValidator,
                                            MetricsIntegration metricsIntegration) {
         this.configuration = configuration;
@@ -60,6 +64,7 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
         this.ssoTokenClient = ssoTokenClient;
         this.otpClient = otpClient;
         this.timer = timer;
+        this.principalProvider = principalProvider;
         this.accessTokenValidator = accessTokenValidator;
         this.metricsIntegration = metricsIntegration;
 
@@ -221,8 +226,18 @@ class RooxAuthenticationAuthorizationLibrary implements AuthenticationAuthorizat
     }
 
     @Override
-    public Principal validate(HttpServletRequest request, String token) {
-        return accessTokenValidator.validate(request, token);
+    public Principal validate(HttpServletRequest request, String accessToken) {
+        return getPreAuthenticatedUserPrincipal(request, accessToken);
+    }
+
+    @Override
+    public Principal getPreAuthenticatedUserPrincipal(HttpServletRequest request, String token) {
+        return principalProvider.getPrincipal(request, token);
+    }
+
+    @Override
+    public ValidationResult validateJWT(JWT jwtToken) {
+        return accessTokenValidator.validate(jwtToken);
     }
 
     @Override

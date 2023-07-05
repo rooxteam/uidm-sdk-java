@@ -1,6 +1,6 @@
 package com.rooxteam.sso.aal;
 
-public enum ValidationType {
+public enum ProviderType {
 
     JWT,
     TOKENINFO,

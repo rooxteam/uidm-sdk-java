@@ -1,10 +1,11 @@
 package com.rooxteam.sso.aal.validation;
 
-import com.rooxteam.sso.aal.Principal;
-
-import javax.servlet.http.HttpServletRequest;
+import com.nimbusds.jwt.JWT;
+import com.rooxteam.sso.aal.validation.jwt.ValidationResult;
 
 public interface AccessTokenValidator {
 
-    Principal validate(HttpServletRequest request, String token);
+    ValidationResult validate(String token);
+
+    ValidationResult validate(JWT jwtToken);
 }
