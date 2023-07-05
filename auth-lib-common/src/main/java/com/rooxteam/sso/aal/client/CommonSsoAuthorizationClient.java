@@ -57,10 +57,9 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
     }
 
     /**
-     * Token validation
-     *
-     * @param token Token value
-     * @return True if token is valid
+     * Метод не рекомендуется к использованию и скоро будет удален
+     * Функционал по валидации с ValidationResult добавлен в AalAuthorizationClient (validateJWT method)
+     * Функционал по предоставлению Principal по методу tokenInfo добавлен в PrincipalTokenInfoProviderImpl, AalAuthorizationClient (getPreAuthenticatedUserState method)
      */
     @SneakyThrows({JsonProcessingException.class})
     @Override

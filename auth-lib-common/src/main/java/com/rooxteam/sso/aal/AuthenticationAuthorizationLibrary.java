@@ -1,5 +1,6 @@
 package com.rooxteam.sso.aal;
 
+import com.nimbusds.jwt.JWT;
 import com.rooxteam.compat.AutoCloseable;
 import com.rooxteam.sso.aal.client.EvaluationContext;
 import com.rooxteam.sso.aal.client.model.EvaluationRequest;
@@ -10,6 +11,7 @@ import com.rooxteam.sso.aal.otp.OtpResponse;
 import com.rooxteam.sso.aal.otp.ResendOtpParameter;
 import com.rooxteam.sso.aal.otp.SendOtpParameter;
 import com.rooxteam.sso.aal.otp.ValidateOtpParameter;
+import com.rooxteam.sso.aal.validation.jwt.ValidationResult;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -136,10 +138,16 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
     void resetPolicies(Principal principal);
 
     /**
-     * Проверить валидность токена
+     * Метод будет заменен - getPreAuthenticatedUserPrincipal(HttpServletRequest request, String accessToken)
+     */
+    @Deprecated
+    Principal validate(HttpServletRequest request, String accessToken);
+
+    /**
+     * Проверить валидность токена и получить Principal
      *
      * @param accessToken токен для проверки
-     * @return статус проверки
+     * @return Principal данные о пользователе
      * @throws com.rooxteam.sso.aal.exception.AalException Может содержать в себе причины (cause):
      *                                                     {@link java.security.NoSuchAlgorithmException},
      *                                                     {@link java.security.spec.InvalidKeySpecException},
@@ -148,7 +156,22 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
      * @throws java.lang.IllegalArgumentException          Если {@code jwt} равен null
      * @throws java.lang.IllegalStateException             Если параметры iat, nbf и другие с неправильными значениями*
      */
-    Principal validate(HttpServletRequest request, String accessToken);
+    Principal getPreAuthenticatedUserPrincipal(HttpServletRequest request, String accessToken);
+
+    /**
+     * Проверить валидность токена
+     *
+     * @param JWT токен для проверки
+     * @return Результат валидации
+     * @throws com.rooxteam.sso.aal.exception.AalException Может содержать в себе причины (cause):
+     *                                                     {@link java.security.NoSuchAlgorithmException},
+     *                                                     {@link java.security.spec.InvalidKeySpecException},
+     *                                                     {@link com.nimbusds.jose.JOSEException},
+     *                                                     {@link java.lang.RuntimeException}
+     * @throws java.lang.IllegalArgumentException          Если {@code jwt} равен null
+     * @throws java.lang.IllegalStateException             Если параметры iat, nbf и другие с неправильными значениями*
+     */
+    ValidationResult validateJWT(JWT jwt);
 
     /**
      * Зарегистрировать PrincipalEventListener для обработки событий Principal.

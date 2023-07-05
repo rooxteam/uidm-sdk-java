@@ -38,7 +38,7 @@ public class AALTest {
 
         final OtpClient mockOtpClient = mock(OtpClient.class);
         AuthenticationAuthorizationLibrary aal = new RooxAuthenticationAuthorizationLibrary(null,null, null, null, null,
-                mockOtpClient, null, new NoOpMetricsIntegration());
+                mockOtpClient, null, null, new NoOpMetricsIntegration());
 
         try {
             aal.sendOtp(null, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
@@ -59,7 +59,7 @@ public class AALTest {
 
         final OtpClient mockOtpClient = mock(OtpClient.class);
         AuthenticationAuthorizationLibrary aal = new RooxAuthenticationAuthorizationLibrary(null,null, null, null, null,
-                mockOtpClient, null, new NoOpMetricsIntegration());
+                mockOtpClient, null, null, new NoOpMetricsIntegration());
 
         try {
             aal.sendOtp(mockYotaPrincipal, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
@@ -88,7 +88,7 @@ public class AALTest {
         when(mockOtpClient.sendOtp(anyString(), anyString()))
                 .thenReturn(mockResponse);
         AuthenticationAuthorizationLibrary aal = new RooxAuthenticationAuthorizationLibrary(null,null, null, null, null,
-                mockOtpClient, null,  new NoOpMetricsIntegration());
+                mockOtpClient, null, null,  new NoOpMetricsIntegration());
 
         OtpResponse response = aal.sendOtp(mockYotaPrincipal, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT);
 

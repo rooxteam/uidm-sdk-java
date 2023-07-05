@@ -44,7 +44,7 @@ public class ServletAuthFilterTest {
         Principal principal = new PrincipalImpl(token, sharedIdentityProperties, expirationTime);
 
         AuthenticationAuthorizationLibrary aal = Mockito.mock(AuthenticationAuthorizationLibrary.class);
-        when(aal.validate(any(HttpServletRequest.class),anyString())).thenReturn(principal);
+        when(aal.getPreAuthenticatedUserPrincipal(any(HttpServletRequest.class),anyString())).thenReturn(principal);
 
         ServletAuthFilterService servletAuthFilterHelper = new ServletAuthFilterServiceImpl(filterConfig, aal);
 

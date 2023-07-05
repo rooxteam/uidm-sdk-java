@@ -75,11 +75,11 @@ public class UidmUserPreAuthenticationFilterTest {
 
         final MockHttpServletResponse response = new MockHttpServletResponse();
 
-        when(ssoAuthorizationClient.validate((HttpServletRequest) any(), eq(authToken))).thenReturn(mockAuthState(authToken));
+        when(ssoAuthorizationClient.getPreAuthenticatedUserState((HttpServletRequest) any(), eq(authToken))).thenReturn(mockAuthState(authToken));
 
         uidmUserPreAuthenticationFilter.doFilter(request, response, new MockFilterChain());
 
-        verify(ssoAuthorizationClient, atLeastOnce()).validate(Matchers.<HttpServletRequest>any(), eq(authToken));
+        verify(ssoAuthorizationClient, atLeastOnce()).getPreAuthenticatedUserState(Matchers.<HttpServletRequest>any(), eq(authToken));
 
         final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         assertEquals(authToken, auth.getCredentials());
@@ -94,12 +94,12 @@ public class UidmUserPreAuthenticationFilterTest {
 
         final MockHttpServletResponse response = new MockHttpServletResponse();
 
-        when(ssoAuthorizationClient.validate((HttpServletRequest) any(), eq(authToken))).thenReturn(mockAuthState(authToken));
+        when(ssoAuthorizationClient.getPreAuthenticatedUserState((HttpServletRequest) any(), eq(authToken))).thenReturn(mockAuthState(authToken));
         SecurityContextHolder.getContext().setAuthentication(null);
 
         uidmUserPreAuthenticationFilter.doFilter(request, response, new MockFilterChain());
 
-        verify(ssoAuthorizationClient, never()).validate(Matchers.<HttpServletRequest>any(), Matchers.<String>any());
+        verify(ssoAuthorizationClient, never()).getPreAuthenticatedUserState(Matchers.<HttpServletRequest>any(), Matchers.<String>any());
 
         final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         assertNull(auth);
@@ -115,12 +115,12 @@ public class UidmUserPreAuthenticationFilterTest {
 
         final MockHttpServletResponse response = new MockHttpServletResponse();
 
-        when(ssoAuthorizationClient.validate((HttpServletRequest) any(), eq(authToken))).thenReturn(mockAuthState(authToken));
+        when(ssoAuthorizationClient.getPreAuthenticatedUserState((HttpServletRequest) any(), eq(authToken))).thenReturn(mockAuthState(authToken));
         SecurityContextHolder.getContext().setAuthentication(null);
 
         uidmUserPreAuthenticationFilter.doFilter(request, response, new MockFilterChain());
 
-        verify(ssoAuthorizationClient, atLeastOnce()).validate(Matchers.<HttpServletRequest>any(), eq(prefixedAuthToken));
+        verify(ssoAuthorizationClient, atLeastOnce()).getPreAuthenticatedUserState(Matchers.<HttpServletRequest>any(), eq(prefixedAuthToken));
 
         final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         assertNull(auth);
@@ -137,12 +137,12 @@ public class UidmUserPreAuthenticationFilterTest {
         final MockHttpServletResponse response = new MockHttpServletResponse();
 
         when(userPreAuthFilterSettings.getCookieName()).thenReturn(cookieName);
-        when(ssoAuthorizationClient.validate((HttpServletRequest) any(), eq(authToken))).thenReturn(mockAuthState(authToken));
+        when(ssoAuthorizationClient.getPreAuthenticatedUserState((HttpServletRequest) any(), eq(authToken))).thenReturn(mockAuthState(authToken));
 
         uidmUserPreAuthenticationFilter.doFilter(request, response, new MockFilterChain());
 
         verify(userPreAuthFilterSettings, atLeastOnce()).getCookieName();
-        verify(ssoAuthorizationClient, atLeastOnce()).validate(Matchers.<HttpServletRequest>any(), eq(authToken));
+        verify(ssoAuthorizationClient, atLeastOnce()).getPreAuthenticatedUserState(Matchers.<HttpServletRequest>any(), eq(authToken));
 
         final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         assertEquals(authToken, auth.getCredentials());
@@ -163,11 +163,11 @@ public class UidmUserPreAuthenticationFilterTest {
         when(userPreAuthFilterSettings.getPrincipalAttributesExposedToMDC()).thenReturn(null);
 
         when(userPreAuthFilterSettings.getCookieName()).thenReturn(cookieName);
-        when(ssoAuthorizationClient.validate((HttpServletRequest) any(), eq(authToken))).thenReturn(mockAuthState(authToken));
+        when(ssoAuthorizationClient.getPreAuthenticatedUserState((HttpServletRequest) any(), eq(authToken))).thenReturn(mockAuthState(authToken));
 
         uidmUserPreAuthenticationFilter.doFilter(request, response, new MockFilterChain());
 
-        verify(ssoAuthorizationClient, atLeastOnce()).validate(Matchers.<HttpServletRequest>any(), eq(authToken));
+        verify(ssoAuthorizationClient, atLeastOnce()).getPreAuthenticatedUserState(Matchers.<HttpServletRequest>any(), eq(authToken));
         verify(userPreAuthFilterSettings, atLeastOnce()).getPrincipalAttributesExposedToMDC();
     }
 

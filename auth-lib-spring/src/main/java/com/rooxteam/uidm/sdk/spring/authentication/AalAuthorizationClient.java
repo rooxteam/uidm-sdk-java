@@ -1,5 +1,6 @@
 package com.rooxteam.uidm.sdk.spring.authentication;
 
+import com.nimbusds.jwt.JWT;
 import com.rooxteam.sso.aal.AalLogger;
 import com.rooxteam.sso.aal.AnonymousPrincipalImpl;
 import com.rooxteam.sso.aal.AuthenticationAuthorizationLibrary;
@@ -9,6 +10,7 @@ import com.rooxteam.sso.aal.PrincipalImpl;
 import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.exception.AalException;
+import com.rooxteam.sso.aal.validation.jwt.ValidationResult;
 import com.rooxteam.uidm.sdk.spring.authorization.AalResourceValidation;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -50,10 +52,10 @@ public class AalAuthorizationClient implements SsoAuthorizationClient, AalResour
     }
 
     @Override
-    public AuthenticationState validate(HttpServletRequest request, String accessToken) {
+    public AuthenticationState getPreAuthenticatedUserState(HttpServletRequest request, String accessToken) {
         Principal principal;
         try {
-            principal = aal.validate(request, accessToken);
+            principal = aal.getPreAuthenticatedUserPrincipal(request, accessToken);
         } catch (Exception e) {
             AalLogger.LOG.errorAuthentication(e);
             return null;
@@ -82,6 +84,11 @@ public class AalAuthorizationClient implements SsoAuthorizationClient, AalResour
         authenticationState.setModule((String) principal.getProperty("authType"));
         passPrincipalProperties(principal, authenticationState);
         return authenticationState;
+    }
+
+    @Override
+    public ValidationResult validateJWT(JWT jwtToken) {
+        return aal.validateJWT(jwtToken);
     }
 
     private Collection<? extends GrantedAuthority> getAuthorities(Principal principal) {

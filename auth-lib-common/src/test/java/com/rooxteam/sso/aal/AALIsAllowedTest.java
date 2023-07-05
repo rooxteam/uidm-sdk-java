@@ -34,7 +34,7 @@ public class AALIsAllowedTest {
     public void setUp() {
         reset(mockSsoAuthorizationClient, mockSsoAuthenticationClient);
         aal = new RooxAuthenticationAuthorizationLibrary(null, null, mockSsoAuthorizationClient, mockSsoAuthenticationClient,
-                null, null, null,
+                null, null, null, null,
                 new NoOpMetricsIntegration());
     }
 

@@ -1,22 +1,21 @@
 package com.rooxteam.sso.aal;
 
 import com.rooxteam.compat.Objects;
-import com.rooxteam.sso.aal.validation.AccessTokenValidator;
-import com.rooxteam.sso.aal.validation.impl.JwtTokenValidator;
-import com.rooxteam.sso.aal.validation.impl.TokeninfoTokenValidator;
+import com.rooxteam.sso.aal.client.RequestContextCollector;
 import com.rooxteam.sso.aal.client.MonitoringHttpClientRequestInterceptor;
 import com.rooxteam.sso.aal.client.OtpClient;
 import com.rooxteam.sso.aal.client.SsoAuthenticationClient;
 import com.rooxteam.sso.aal.client.SsoAuthorizationClient;
 import com.rooxteam.sso.aal.client.SsoTokenClient;
 import com.rooxteam.sso.aal.client.cookies.RequestCookieStore;
-import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.metrics.MetricsIntegration;
 import com.rooxteam.sso.aal.metrics.MicrometerMetricsIntegration;
 import com.rooxteam.sso.aal.metrics.NoOpMetricsIntegration;
 import com.rooxteam.sso.aal.userIp.UserIpProvider;
 import com.rooxteam.sso.aal.userIp.UserIpProviderFactory;
+import com.rooxteam.sso.aal.validation.AccessTokenValidator;
+import com.rooxteam.sso.aal.validation.impl.JwtTokenValidator;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.DefaultConnectionReuseStrategy;
@@ -27,9 +26,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Map;
 import java.util.Timer;
-import java.util.concurrent.TimeUnit;
 
 import static com.rooxteam.sso.aal.ConfigKeys.*;
 
@@ -68,10 +65,14 @@ public class AalFactory {
         SsoAuthorizationClient authorizationClient = createSsoAuthorizationClient(authorizationType, config,
                 httpClient);
 
-        String validationTypeString = config.getString(VALIDATION_TYPE, VALIDATION_TYPE_TYPE_DEFAULT);
-        ValidationType validationType = ValidationType.valueOf(validationTypeString);
+        String providerTypeString = config.getString(VALIDATION_TYPE);
+        if (providerTypeString == null || providerTypeString.isEmpty()) {
+            config.getString(PRINCIPAL_PROVIDER_TYPE, PRINCIPAL_PROVIDER_TYPE_DEFAULT);
+        }
+        ProviderType providerType = ProviderType.valueOf(providerTypeString);
 
-        AccessTokenValidator accessTokenValidator = createAccessTokenValidator(validationType, authorizationClient, config, httpClient);
+        PrincipalProvider principalProvider = createPrincipalProvider(providerType, config, httpClient);
+        AccessTokenValidator accessTokenValidator = new JwtTokenValidator(config, httpClient);
 
         SsoAuthenticationClient authenticationClient = new SsoAuthenticationClient(config, httpClient);
         SsoTokenClient tokenClient = new SsoTokenClient(config, httpClient);
@@ -84,6 +85,7 @@ public class AalFactory {
                 authenticationClient,
                 tokenClient,
                 otpClient,
+                principalProvider,
                 accessTokenValidator,
                 createMetricsIntegration());
     }
@@ -184,18 +186,17 @@ public class AalFactory {
         return ssoAuthorizationClient;
     }
 
-    private static AccessTokenValidator createAccessTokenValidator(ValidationType validationType,
-                                                                   SsoAuthorizationClient ssoAuthorizationClient,
-                                                                   Configuration configuration, CloseableHttpClient httpClient) {
-        switch (validationType) {
+    private static PrincipalProvider createPrincipalProvider(ProviderType providerType,
+                                                             Configuration configuration, CloseableHttpClient httpClient) {
+        switch (providerType) {
             case INTROSPECTION:
                 throw new IllegalArgumentException("unsupported yet");
             case JWT: {
-                return new JwtTokenValidator(configuration, httpClient);
+                return new PrincipalJwtProviderImpl(new JwtTokenValidator(configuration, httpClient));
             }
             default:
             case TOKENINFO: {
-                return new TokeninfoTokenValidator(ssoAuthorizationClient);
+                return new PrincipalTokenInfoProviderImpl(configuration, httpClient, new RequestContextCollector(new UserIpProviderFactory(configuration).create()));
             }
         }
     }

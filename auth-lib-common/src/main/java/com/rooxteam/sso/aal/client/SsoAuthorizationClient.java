@@ -15,12 +15,11 @@ public interface SsoAuthorizationClient {
     Map<EvaluationRequest, EvaluationResponse> whichActionAreAllowed(Principal subject, List<EvaluationRequest> policies);
 
     /**
-     * Token validation
-     *
-     * @param request Request
-     * @param token   Token value
-     * @return True if token is valid
+     * Метод не рекомендуется к использованию и скоро будет удален
+     * Функционал по валидации с ValidationResult добавлен в AalAuthorizationClient
+     * Функционал по предоставлению Principal по методу tokenInfo добавлен в PrincipalTokenInfoProviderImpl, AalAuthorizationClient
      */
+    @Deprecated
     Principal validate(HttpServletRequest request, final String token);
 
     String postprocess(Principal subject, String resourceName, String actionName, Map<String, ?> envParameters, String response);

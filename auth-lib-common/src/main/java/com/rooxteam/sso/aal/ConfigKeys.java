@@ -258,9 +258,16 @@ public interface ConfigKeys {
 
     String AUTHORIZATION_TYPE_DEFAULT = AuthorizationType.JWT.toString();
 
+    /**
+     * Переменная VALIDATION_TYPE переименована в PRINCIPAL_PROVIDER_TYPE
+     * Новое значение переменной com.rooxteam.aal.filter.principal_provider_type
+     */
+    @Deprecated
     String VALIDATION_TYPE = "com.rooxteam.aal.validation_type";
 
-    String VALIDATION_TYPE_TYPE_DEFAULT = ValidationType.TOKENINFO.toString();
+    String PRINCIPAL_PROVIDER_TYPE = "com.rooxteam.aal.filter.principal_provider_type";
+
+    String PRINCIPAL_PROVIDER_TYPE_DEFAULT = ProviderType.TOKENINFO.toString();
 
 
     String CONNECTION_REUSE_STRATEGY = "com.rooxteam.aal.connection_reuse_strategy";
