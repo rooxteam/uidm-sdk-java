@@ -4,6 +4,8 @@ import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKMatcher;
 import com.nimbusds.jose.jwk.JWKSelector;
+import com.nimbusds.jose.jwk.source.DefaultJWKSetCache;
+import com.nimbusds.jose.jwk.source.JWKSetCache;
 import com.nimbusds.jose.jwk.source.RemoteJWKSet;
 import com.nimbusds.jose.proc.SimpleSecurityContext;
 import com.rooxteam.sso.aal.ConfigKeys;
@@ -13,11 +15,12 @@ import lombok.SneakyThrows;
 
 import java.net.URL;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class JwksUrlKeyProvider implements KeyProvider {
 
 
-    private final RemoteJWKSet remoteJWKSet;
+    private final RemoteJWKSet<SimpleSecurityContext> remoteJWKSet;
 
     @SneakyThrows
     public JwksUrlKeyProvider(Configuration configuration) {
@@ -25,7 +28,12 @@ public class JwksUrlKeyProvider implements KeyProvider {
         if (url == null || url.isEmpty()) {
             throw new IllegalArgumentException("JWK url is not configured properly");
         }
-        remoteJWKSet = new RemoteJWKSet<>(new URL(url));
+        JWKSetCache jwkSetCache = new DefaultJWKSetCache(
+                configuration.getInt(ConfigKeys.JWKS_CACHE_LIFESPAN, (int) DefaultJWKSetCache.DEFAULT_LIFESPAN_MINUTES),
+                configuration.getInt(ConfigKeys.JWKS_CACHE_REFRESH_TIME, (int) DefaultJWKSetCache.DEFAULT_REFRESH_TIME_MINUTES),
+                TimeUnit.MINUTES
+        );
+        remoteJWKSet = new RemoteJWKSet<>(new URL(url), null, jwkSetCache);
     }
 
     @SneakyThrows
