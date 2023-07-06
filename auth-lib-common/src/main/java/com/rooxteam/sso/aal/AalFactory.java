@@ -67,7 +67,7 @@ public class AalFactory {
 
         String providerTypeString = config.getString(VALIDATION_TYPE);
         if (providerTypeString == null || providerTypeString.isEmpty()) {
-            config.getString(PRINCIPAL_PROVIDER_TYPE, PRINCIPAL_PROVIDER_TYPE_DEFAULT);
+            providerTypeString = config.getString(PRINCIPAL_PROVIDER_TYPE, PRINCIPAL_PROVIDER_TYPE_DEFAULT);
         }
         ProviderType providerType = ProviderType.valueOf(providerTypeString);
 
