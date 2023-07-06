@@ -65,10 +65,7 @@ public class AalFactory {
         SsoAuthorizationClient authorizationClient = createSsoAuthorizationClient(authorizationType, config,
                 httpClient);
 
-        String providerTypeString = config.getString(VALIDATION_TYPE);
-        if (providerTypeString == null || providerTypeString.isEmpty()) {
-            config.getString(PRINCIPAL_PROVIDER_TYPE, PRINCIPAL_PROVIDER_TYPE_DEFAULT);
-        }
+        String providerTypeString = config.getString(VALIDATION_TYPE, config.getString(PRINCIPAL_PROVIDER_TYPE, PRINCIPAL_PROVIDER_TYPE_DEFAULT));
         ProviderType providerType = ProviderType.valueOf(providerTypeString);
 
         PrincipalProvider principalProvider = createPrincipalProvider(providerType, config, httpClient);
