@@ -103,6 +103,11 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
 
 # История изменений
 
+## 3.27.0
+1. Исправлена ошибка в AbstractUserPreAuthenticatedProcessingFilter, приводящая к многократному обращению к ssо-server для валидации access_token, что сказывается на производительности.
+2. В сервлет-фильтре UidmUserPreAuthenticationFilter для названия куки используется шаблонизированный конфигурационный параметр.
+3. AbstractUserPreAuthenticatedProcessingFilter - deprecated, используем BaseUserPreAuthenticatedProcessingFilter вместо него.
+
 ## 3.26.0
 Добавлена возможность настраивать кэш JWKS
 

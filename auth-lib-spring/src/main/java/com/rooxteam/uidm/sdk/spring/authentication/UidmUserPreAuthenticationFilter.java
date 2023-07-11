@@ -7,18 +7,19 @@ import org.springframework.core.Ordered;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * UidmUserPreAuthenticationFilter - фильтр, обеспечивает sso аутентификацию по токену используя сервер UIDM.
  */
-public class UidmUserPreAuthenticationFilter extends AbstractUserPreAuthenticatedProcessingFilter implements Ordered, EnvironmentAware {
+public class UidmUserPreAuthenticationFilter extends BaseUserPreAuthenticatedProcessingFilter
+        implements Ordered, EnvironmentAware {
 
     private static final String TOKEN_PATTERN_PREFIX = "Bearer";
     private static final Pattern TOKEN_VALIDATION_PATTERN = Pattern.compile(String.format("%s ([a-zA-Z]+)_([\\.\\d]+)_(.+)", TOKEN_PATTERN_PREFIX));
@@ -44,7 +45,7 @@ public class UidmUserPreAuthenticationFilter extends AbstractUserPreAuthenticate
         }
 
         final AuthenticationState authenticationState = authorizationClient.getPreAuthenticatedUserState(request, token);
-        setupMDC(request, authenticationState);
+        setupMDC(authenticationState);
 
         return authenticationState;
     }
@@ -59,7 +60,9 @@ public class UidmUserPreAuthenticationFilter extends AbstractUserPreAuthenticate
         String authenticationToken = request.getHeader("Authorization");
 
         if (authenticationToken == null) {
-            final String tokenCookieName = setting.getCookieName();
+            final String clientId = Optional.ofNullable(request.getParameter("client_id"))
+                    .orElse(setting.getDefaultClientId());
+            final String tokenCookieName = setting.getCookieName(clientId);
 
             if (tokenCookieName != null) {
                 final Cookie[] cookies = request.getCookies();
@@ -95,12 +98,12 @@ public class UidmUserPreAuthenticationFilter extends AbstractUserPreAuthenticate
     }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        super.doFilter(request, response, chain);
-        clearMDC(request);
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
+        super.doFilterInternal(request, response, chain);
+        clearMDC();
     }
 
-    private void setupMDC(HttpServletRequest request, AuthenticationState authenticationState) {
+    private void setupMDC(AuthenticationState authenticationState) {
         if (authenticationState == null) return;
         if (!authenticationState.isAuthenticated()) {
             // we specially don't write anything in mdc in case of failure
@@ -115,7 +118,7 @@ public class UidmUserPreAuthenticationFilter extends AbstractUserPreAuthenticate
         }
     }
 
-    private void clearMDC(ServletRequest request) {
+    private void clearMDC() {
         final String[] exposeAttributeNames = setting.getPrincipalAttributesExposedToMDC();
         if (exposeAttributeNames != null) {
             for (String exposeAttributeName : exposeAttributeNames) {

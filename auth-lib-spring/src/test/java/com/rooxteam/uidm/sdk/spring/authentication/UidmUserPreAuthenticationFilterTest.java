@@ -22,12 +22,12 @@ import org.springframework.web.filter.GenericFilterBean;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
@@ -43,6 +43,7 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 })
 public class UidmUserPreAuthenticationFilterTest {
 
+    public static final String TEST_AUTH_TOKEN = "test-auth-token";
     @Autowired
     private GenericFilterBean uidmUserPreAuthenticationFilter;
 
@@ -61,45 +62,48 @@ public class UidmUserPreAuthenticationFilterTest {
 
     @Test
     public void test_versionedAuthHeaderIsUsedInFilter() throws ServletException, IOException {
-        test_authHeader("Bearer sso_1.0_%s", "test-auth-token");
+        test_authHeader();
     }
 
     @Test
     public void test_rawTokenAuthHeaderIsUsedInFilter() throws ServletException, IOException {
-        test_authHeader("Bearer %s", "test-auth-token");
+        test_authHeader();
     }
 
-    private void test_authHeader(String headerPrefixFormat, String authToken) throws ServletException, IOException {
+    private void test_authHeader() throws ServletException, IOException {
         final MockHttpServletRequest request = new MockHttpServletRequest();
-        request.addHeader(AUTHORIZATION, String.format("Bearer %s", authToken));
+        request.addHeader(AUTHORIZATION, String.format("Bearer %s", TEST_AUTH_TOKEN));
 
         final MockHttpServletResponse response = new MockHttpServletResponse();
 
-        when(ssoAuthorizationClient.getPreAuthenticatedUserState((HttpServletRequest) any(), eq(authToken))).thenReturn(mockAuthState(authToken));
+        when(ssoAuthorizationClient.getPreAuthenticatedUserState(any(), eq(TEST_AUTH_TOKEN)))
+                .thenReturn(mockAuthState(TEST_AUTH_TOKEN));
 
         uidmUserPreAuthenticationFilter.doFilter(request, response, new MockFilterChain());
 
-        verify(ssoAuthorizationClient, atLeastOnce()).getPreAuthenticatedUserState(Matchers.<HttpServletRequest>any(), eq(authToken));
+        verify(ssoAuthorizationClient, atLeastOnce())
+                .getPreAuthenticatedUserState(Matchers.any(), eq(TEST_AUTH_TOKEN));
 
         final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        assertEquals(authToken, auth.getCredentials());
+        assertEquals(TEST_AUTH_TOKEN, auth.getCredentials());
         assertEquals("test-principal", auth.getPrincipal());
     }
 
     @Test
     public void test_versionedAuthHeaderWrongVersionFails() throws ServletException, IOException {
-        final String authToken = "test-auth-token";
+        final String authToken = TEST_AUTH_TOKEN;
         final MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader(AUTHORIZATION, String.format("Bearer sso_2.0_%s", authToken));
 
         final MockHttpServletResponse response = new MockHttpServletResponse();
 
-        when(ssoAuthorizationClient.getPreAuthenticatedUserState((HttpServletRequest) any(), eq(authToken))).thenReturn(mockAuthState(authToken));
+        when(ssoAuthorizationClient.getPreAuthenticatedUserState(any(), eq(authToken)))
+                .thenReturn(mockAuthState(authToken));
         SecurityContextHolder.getContext().setAuthentication(null);
 
         uidmUserPreAuthenticationFilter.doFilter(request, response, new MockFilterChain());
 
-        verify(ssoAuthorizationClient, never()).getPreAuthenticatedUserState(Matchers.<HttpServletRequest>any(), Matchers.<String>any());
+        verify(ssoAuthorizationClient, never()).getPreAuthenticatedUserState(Matchers.any(), Matchers.any());
 
         final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         assertNull(auth);
@@ -107,7 +111,7 @@ public class UidmUserPreAuthenticationFilterTest {
 
     @Test
     public void test_versionedAuthHeaderUnknownPrefixFails() throws ServletException, IOException {
-        final String authToken = "test-auth-token";
+        final String authToken = TEST_AUTH_TOKEN;
         final String prefixedAuthToken = "prefix_" + authToken;
 
         final MockHttpServletRequest request = new MockHttpServletRequest();
@@ -115,12 +119,14 @@ public class UidmUserPreAuthenticationFilterTest {
 
         final MockHttpServletResponse response = new MockHttpServletResponse();
 
-        when(ssoAuthorizationClient.getPreAuthenticatedUserState((HttpServletRequest) any(), eq(authToken))).thenReturn(mockAuthState(authToken));
+        when(ssoAuthorizationClient.getPreAuthenticatedUserState(any(), eq(authToken)))
+                .thenReturn(mockAuthState(authToken));
         SecurityContextHolder.getContext().setAuthentication(null);
 
         uidmUserPreAuthenticationFilter.doFilter(request, response, new MockFilterChain());
 
-        verify(ssoAuthorizationClient, atLeastOnce()).getPreAuthenticatedUserState(Matchers.<HttpServletRequest>any(), eq(prefixedAuthToken));
+        verify(ssoAuthorizationClient, atLeastOnce())
+                .getPreAuthenticatedUserState(Matchers.any(), eq(prefixedAuthToken));
 
         final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         assertNull(auth);
@@ -129,20 +135,21 @@ public class UidmUserPreAuthenticationFilterTest {
     @Test
     public void test_tokenNameFromConfigurationIsUsedInFilter() throws ServletException, IOException {
         final String cookieName = "test-token-cookie";
-        final String authToken = "test-auth-token";
+        final String authToken = TEST_AUTH_TOKEN;
 
         final MockHttpServletRequest request = new MockHttpServletRequest();
         request.setCookies(new Cookie(cookieName, authToken));
 
         final MockHttpServletResponse response = new MockHttpServletResponse();
 
-        when(userPreAuthFilterSettings.getCookieName()).thenReturn(cookieName);
-        when(ssoAuthorizationClient.getPreAuthenticatedUserState((HttpServletRequest) any(), eq(authToken))).thenReturn(mockAuthState(authToken));
+        when(userPreAuthFilterSettings.getCookieName(anyString())).thenReturn(cookieName);
+        when(ssoAuthorizationClient.getPreAuthenticatedUserState(any(), eq(authToken)))
+                .thenReturn(mockAuthState(authToken));
 
         uidmUserPreAuthenticationFilter.doFilter(request, response, new MockFilterChain());
 
-        verify(userPreAuthFilterSettings, atLeastOnce()).getCookieName();
-        verify(ssoAuthorizationClient, atLeastOnce()).getPreAuthenticatedUserState(Matchers.<HttpServletRequest>any(), eq(authToken));
+        verify(userPreAuthFilterSettings, atLeastOnce()).getCookieName(anyString());
+        verify(ssoAuthorizationClient, atLeastOnce()).getPreAuthenticatedUserState(Matchers.any(), eq(authToken));
 
         final Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         assertEquals(authToken, auth.getCredentials());
@@ -152,7 +159,7 @@ public class UidmUserPreAuthenticationFilterTest {
     @Test
     public void test_principalPropertiesNameFromConfigurationIsUsedInFilter() throws ServletException, IOException {
         final String cookieName = "test-token-cookie";
-        final String authToken = "test-auth-token";
+        final String authToken = TEST_AUTH_TOKEN;
 
         final MockHttpServletRequest request = new MockHttpServletRequest();
         request.setCookies(new Cookie(cookieName, authToken));
@@ -162,12 +169,13 @@ public class UidmUserPreAuthenticationFilterTest {
         // NOTE: explicitly set "NULL" value defines contract for the filter to handle such Configurations
         when(userPreAuthFilterSettings.getPrincipalAttributesExposedToMDC()).thenReturn(null);
 
-        when(userPreAuthFilterSettings.getCookieName()).thenReturn(cookieName);
-        when(ssoAuthorizationClient.getPreAuthenticatedUserState((HttpServletRequest) any(), eq(authToken))).thenReturn(mockAuthState(authToken));
+        when(userPreAuthFilterSettings.getCookieName(anyString())).thenReturn(cookieName);
+        when(ssoAuthorizationClient.getPreAuthenticatedUserState(any(), eq(authToken)))
+                .thenReturn(mockAuthState(authToken));
 
         uidmUserPreAuthenticationFilter.doFilter(request, response, new MockFilterChain());
 
-        verify(ssoAuthorizationClient, atLeastOnce()).getPreAuthenticatedUserState(Matchers.<HttpServletRequest>any(), eq(authToken));
+        verify(ssoAuthorizationClient, atLeastOnce()).getPreAuthenticatedUserState(Matchers.any(), eq(authToken));
         verify(userPreAuthFilterSettings, atLeastOnce()).getPrincipalAttributesExposedToMDC();
     }
 
@@ -201,7 +209,7 @@ public class UidmUserPreAuthenticationFilterTest {
     }
 
     @Configuration
-    @Import({ UidmSpringSecurityFilterConfiguration.class })
+    @Import({UidmSpringSecurityFilterConfiguration.class})
     static class TestConfiguration {
 
         @Bean

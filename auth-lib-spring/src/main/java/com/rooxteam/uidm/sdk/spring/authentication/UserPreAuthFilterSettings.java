@@ -13,9 +13,19 @@ public interface UserPreAuthFilterSettings {
     String getCookieName();
 
     /**
+     * Получить имя куки для определенного OAuth2-клиента
+     * @param clientId ID клиента
+     * @return наименование акторизационной куки
+     */
+    String getCookieName(String clientId);
+
+    /**
      * Получить имена свойств Принципала, которые будут сохранены в MDC Контексте (и удалены при завершении запроса).
      *
      * @return список свойств Принципала
      */
     String[] getPrincipalAttributesExposedToMDC();
+
+
+    String getDefaultClientId();
 }
