@@ -103,9 +103,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
 
 # История изменений
 
-## 3.26.1
-Исправлен баг с невалидным токеном из кэша
-
 ## 3.26.0
 Добавлена возможность настраивать кэш JWKS
 
