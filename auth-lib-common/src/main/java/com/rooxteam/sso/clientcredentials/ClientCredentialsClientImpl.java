@@ -80,7 +80,7 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
 
 
     private boolean isExpired(String token) {
-        if (token != null && !token.isEmpty()) {
+        if (token == null || token.isEmpty()) {
             return true;
         }
         final String tokenForLogging = trimTokenForLogging(token);
