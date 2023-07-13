@@ -5,10 +5,7 @@ package com.rooxteam.sso.aal;
  */
 public interface ConfigKeys {
 
-    /**
-     * Обязательные ключи конфигурации
-     */
-
+    /* Обязательные ключи конфигурации */
 
     /**
      * {@value} - Внешний базовый URL SSO
@@ -36,9 +33,7 @@ public interface ConfigKeys {
     String JWT_ISSUER = "com.rooxteam.aal.jwt.issuer";
 
 
-    /**
-     * Опциональные ключи конфигурации
-     */
+    /* Опциональные ключи конфигурации */
 
     /**
      * {@value} - Realm для аутентификации в Customer SSO из AAL.
@@ -293,6 +288,11 @@ public interface ConfigKeys {
     String TOKEN_COOKIE_NAME_KEY = "com.rooxteam.aal.sso.token.cookie.name";
 
     /**
+     * Имя куки с шаблонным {clientId}. {@link #TOKEN_COOKIE_NAME_KEY} оставлено для обратной совместимости/
+     */
+    String TOKEN_COOKIE_NAME_PER_CLIENT_KEY = "com.rooxteam.aal.sso.{clientId}.token.cookie.name";
+
+    /**
      * Имя куки, где лежит токен доступа, старое имя свойства
      */
     String TOKEN_COOKIE_LEGACY_ROOX_PRODUCTS_KEY = "com.rooxteam.webapi.filters.cookieFilter.cookies.sso";
@@ -325,7 +325,7 @@ public interface ConfigKeys {
 
 
     /**
-     * OPA data API URL, like "http://opa.example.com/v1/data".
+     * OPA data API URL, like <a href="http://opa.example.com/v1/data">http://opa.example.com/v1/data</a>.
      */
     String OPA_DATA_API_URL = "com.rooxteam.aal.opa.data_api.endpoint";
 
