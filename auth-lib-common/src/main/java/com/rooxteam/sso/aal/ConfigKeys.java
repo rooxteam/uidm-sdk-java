@@ -363,4 +363,16 @@ public interface ConfigKeys {
      */
     String JWKS_CACHE_REFRESH_TIME = "com.rooxteam.aal.jwks.cache.refreshTime";
 
+    /**
+     * Таймаут подключения к HTTP сервису JWKS (в милисекундах). В случае значения 0 таймаут не лимитируется.
+     * Значение по умолчанию берется из {@value com.nimbusds.jose.jwk.source.RemoteJWKSet#DEFAULT_HTTP_CONNECT_TIMEOUT}
+     */
+    String JWKS_HTTP_CONNECT_TIMEOUT = "com.rooxteam.aal.jwks.connect.timeout";
+
+    /**
+     * Таймаут чтения из HTTP сервиса JWKS (в милисекундах). В случае значения 0 таймаут не лимитируется.
+     * Значение по умолчанию берется из {@value com.nimbusds.jose.jwk.source.RemoteJWKSet#DEFAULT_HTTP_READ_TIMEOUT}
+     */
+    String JWKS_HTTP_READ_TIMEOUT = "com.rooxteam.aal.jwks.read.timeout";
+
 }
