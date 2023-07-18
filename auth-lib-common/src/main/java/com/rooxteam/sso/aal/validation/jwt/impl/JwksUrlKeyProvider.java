@@ -8,6 +8,8 @@ import com.nimbusds.jose.jwk.source.DefaultJWKSetCache;
 import com.nimbusds.jose.jwk.source.JWKSetCache;
 import com.nimbusds.jose.jwk.source.RemoteJWKSet;
 import com.nimbusds.jose.proc.SimpleSecurityContext;
+import com.nimbusds.jose.util.DefaultResourceRetriever;
+import com.nimbusds.jose.util.ResourceRetriever;
 import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.validation.jwt.KeyProvider;
@@ -33,7 +35,10 @@ public class JwksUrlKeyProvider implements KeyProvider {
                 configuration.getInt(ConfigKeys.JWKS_CACHE_REFRESH_TIME, (int) DefaultJWKSetCache.DEFAULT_REFRESH_TIME_MINUTES),
                 TimeUnit.MINUTES
         );
-        remoteJWKSet = new RemoteJWKSet<>(new URL(url), null, jwkSetCache);
+        ResourceRetriever resourceRetriever = new DefaultResourceRetriever(
+                configuration.getInt(ConfigKeys.JWKS_HTTP_CONNECT_TIMEOUT, RemoteJWKSet.DEFAULT_HTTP_CONNECT_TIMEOUT),
+                configuration.getInt(ConfigKeys.JWKS_HTTP_READ_TIMEOUT, RemoteJWKSet.DEFAULT_HTTP_READ_TIMEOUT));
+        remoteJWKSet = new RemoteJWKSet<>(new URL(url), resourceRetriever, jwkSetCache);
     }
 
     @SneakyThrows
