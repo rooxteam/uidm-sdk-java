@@ -4,7 +4,7 @@ public final class ValidationResult {
 
     private final boolean success;
 
-    private Reason reason = Reason.Unknown;
+    private Reason reason = Reason.Success;
 
     ValidationResult(boolean success) {
         this.success = success;
@@ -16,7 +16,8 @@ public final class ValidationResult {
     }
 
     public enum Reason {
-        Unknown, UnsupportedAlg, NoValidatorsConfigured, BeforeNotBefore, Expired, SignatureNotValid, TokenWasUsed, TokenStoreError, KeyNotFound, TokenIsNotSigned, InvalidIssuer, InvalidSub, InvalidIssueTime
+        Success, Unknown, UnsupportedAlg, NoValidatorsConfigured, BeforeNotBefore, Expired, SignatureNotValid, TokenWasUsed, TokenStoreError, KeyNotFound,
+        TokenIsNotSigned, InvalidIssuer, InvalidSub, InvalidIssueTime
     }
 
     public static ValidationResult success() {
