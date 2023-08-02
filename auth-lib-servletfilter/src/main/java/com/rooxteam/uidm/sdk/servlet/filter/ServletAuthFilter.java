@@ -55,10 +55,10 @@ public class ServletAuthFilter implements Filter {
             Principal principal = servletAuthFilterHelper.authenticate(request, accToken);
             if (principal != null) {
                 request = new ServletAuthFilterHttpRequestWrapper(request, principal, headerNameOfTokenClaim, attributeNameOfTokenClaim);
-                AuthFilterLogger.LOG.infoSuccessAuthentication(LoggerUtils.trimAccessTokenForLogging(accToken));
+                AuthFilterLogger.LOG.infoSuccessAuthentication(accToken);
                 filterChain.doFilter(request, response);
             } else {
-                AuthFilterLogger.LOG.infoRedirectDueToBadToken(LoggerUtils.trimAccessTokenForLogging(accToken));
+                AuthFilterLogger.LOG.infoRedirectDueToBadToken(accToken);
                 response.sendRedirect(redirectLocation);
             }
         } else {

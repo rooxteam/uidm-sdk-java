@@ -69,8 +69,6 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
             return null;
         }
 
-        final String tokenForLogging = trimTokenForLogging(token);
-
         String url = config.getString(ConfigKeys.SSO_URL) + TOKEN_INFO_PATH;
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new BasicNameValuePair("access_token", token));
@@ -114,7 +112,7 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
             }
         } catch (IOException e) {
             LOG.errorOnTokenValidationIO(url,
-                    tokenForLogging,
+                    token,
                     ConfigKeys.HTTP_CONNECTION_TIMEOUT,
                     config.getInt(ConfigKeys.HTTP_CONNECTION_TIMEOUT, ConfigKeys.HTTP_CONNECTION_TIMEOUT_DEFAULT),
                     ConfigKeys.HTTP_SOCKET_TIMEOUT,
@@ -123,7 +121,7 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
             throw new NetworkErrorException("Failed to validate token because of communication or protocol error", e);
         } catch (RuntimeException e) {
             LOG.errorOnTokenValidationGeneric(url,
-                    tokenForLogging,
+                    token,
                     e);
             throw e;
         }
@@ -136,14 +134,5 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
             throw new ValidateException("Failed to parse json", e);
         }
     }
-
-    private String trimTokenForLogging(String token) {
-        if(token!=null){
-            return token.substring(0, Math.min(16, token.length()));
-        }else{
-            return "<none>";
-        }
-    }
-
 
 }

@@ -38,7 +38,7 @@ public class ServletAuthFilterServiceImpl implements ServletAuthFilterService {
         try {
             return aal.getPreAuthenticatedUserPrincipal(request, accessToken);
         } catch (AuthorizationException e) {
-            AuthFilterLogger.LOG.errorAuthentication(LoggerUtils.trimAccessTokenForLogging(accessToken), e);
+            AuthFilterLogger.LOG.errorAuthentication(accessToken, e);
             return null;
         }
     }
