@@ -104,8 +104,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
 # История изменений
 
 ## 3.29.0
-Добавлен новый механизм маскирования чувствительных данных (через '*'). Настройки можно задавать через logback.xml в самом приложении, использующем SDK. Пример 
-appender'а:
+Добавлен новый механизм маскирования чувствительных данных (через '*'). Настройки можно задавать через logback.xml в самом приложении, использующем SDK. Пример appender'а:
 ```xml
 <appender name="STDOUT_MASKED" class="ch.qos.logback.core.ConsoleAppender">
   <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
