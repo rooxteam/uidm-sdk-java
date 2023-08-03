@@ -28,14 +28,14 @@ public class JwksUrlKeyProvider implements KeyProvider {
     public JwksUrlKeyProvider(Configuration configuration) {
         String url = configuration.getString(ConfigKeys.JWKS_URL);
         if (url == null || url.isEmpty()) {
-            throw new IllegalArgumentException("JWK url is not configured properly");
+            throw new IllegalArgumentException("JWKS url is not configured properly");
         }
         JWKSetCache jwkSetCache = new DefaultJWKSetCache(
                 configuration.getInt(ConfigKeys.JWKS_CACHE_LIFESPAN, (int) DefaultJWKSetCache.DEFAULT_LIFESPAN_MINUTES),
                 configuration.getInt(ConfigKeys.JWKS_CACHE_REFRESH_TIME, (int) DefaultJWKSetCache.DEFAULT_REFRESH_TIME_MINUTES),
                 TimeUnit.MINUTES
         );
-        ResourceRetriever resourceRetriever = new DefaultResourceRetriever(
+        ResourceRetriever resourceRetriever = new JwksResourceRetriever(
                 configuration.getInt(ConfigKeys.JWKS_HTTP_CONNECT_TIMEOUT, RemoteJWKSet.DEFAULT_HTTP_CONNECT_TIMEOUT),
                 configuration.getInt(ConfigKeys.JWKS_HTTP_READ_TIMEOUT, RemoteJWKSet.DEFAULT_HTTP_READ_TIMEOUT));
         remoteJWKSet = new RemoteJWKSet<>(new URL(url), resourceRetriever, jwkSetCache);
