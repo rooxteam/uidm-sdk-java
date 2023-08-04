@@ -375,4 +375,14 @@ public interface ConfigKeys {
      */
     String JWKS_HTTP_READ_TIMEOUT = "com.rooxteam.aal.jwks.read.timeout";
 
+    /**
+     * Настройка включения/выключения старого способа маскирования чувствительных данных. 
+     * Значение по умолчанию берется из {@value #LEGACY_LOGGING_ENABLED_DEFAULT}
+     */
+    String LEGACY_LOGGING_ENABLED = "com.rooxteam.aal.legacyLoggingEnabled";
+
+    /**
+     * Значение по-умолчанию для настройки включения/выключения старого способа маскирования чувствительных данных.
+     */
+    boolean LEGACY_LOGGING_ENABLED_DEFAULT = true;
 }

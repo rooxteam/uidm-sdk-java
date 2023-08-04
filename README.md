@@ -120,6 +120,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
   </encoder>
 </appender>
 ```
+**Замечание**: после настройки нового механизма необходимо отключить старый способ маскирования - выставить в настройках параметр `com.rooxteam.aal.legacyLoggingEnabled=false`
 
 ## 3.28.0
 Добавлена возможность настраивать таймауты для запросов JWKS

@@ -83,6 +83,7 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
         if (token == null || token.isEmpty()) {
             return true;
         }
+        final String tokenForLogging = trimTokenForLogging(token);
         try {
             if (configuration.sendTokenInAuthorizationHeaderInValidationProcess()) {
                 final URI uri = UriComponentsBuilder.fromUri(tokenValidationEndpoint)
@@ -102,12 +103,12 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
             return false;
         } catch (HttpStatusCodeException e) {
             if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
-                LOG.traceOnValidatingTokenTokenExpired(token);
+                LOG.traceOnValidatingTokenTokenExpired(tokenForLogging);
             } else if (e.getStatusCode() == HttpStatus.FORBIDDEN) {
-                LOG.traceOnValidatingTokenTokenForbidden(token);
+                LOG.traceOnValidatingTokenTokenForbidden(tokenForLogging);
             } else {
                 LOG.errorOnValidatingTokenHttp(tokenValidationEndpoint,
-                        token,
+                        tokenForLogging,
                         e.getStatusCode(),
                         trimBodyForLogging(e.getResponseBodyAsString()),
                         e);
@@ -115,7 +116,7 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
             return true;
         } catch (ResourceAccessException e) {
             LOG.errorOnValidatingTokenIO(tokenValidationEndpoint,
-                    token,
+                    tokenForLogging,
                     ConfigKeys.HTTP_CONNECTION_TIMEOUT,
                     configuration.getConnectTimeout(),
                     ConfigKeys.HTTP_SOCKET_TIMEOUT,
@@ -123,7 +124,7 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
                     e);
             return true;
         } catch (Exception e) {
-            LOG.errorOnValidatingToken(tokenValidationEndpoint, token, e);
+            LOG.errorOnValidatingToken(tokenValidationEndpoint, tokenForLogging, e);
             return true;
         }
     }
@@ -134,44 +135,46 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
         mergedParams.putAll(this.defaultParameters);
         mergedParams.putAll(requestParameters);
 
-        LOG.traceGetToken(mergedParams);
+        MultiValueMap<String, String> paramsForLogging = clearParamsForLogging(mergedParams);
+
+        LOG.traceGetToken(paramsForLogging);
 
         ClientCredentialsTokenModel token = configuration.isTokensCacheEnabled() ? tokens.get(mergedParams) : null;
 
         if (token == null) {
-            LOG.traceNoTokenInStore(mergedParams);
+            LOG.traceNoTokenInStore(paramsForLogging);
             token = authorizeAndGetToken(mergedParams);
             if (configuration.isTokensCacheEnabled()) {
                 putToken(mergedParams, token);
             }
         } else {
-            String tokenForLogging = token.getValue();
+            String tokenForLogging = trimTokenForLogging(token.getValue());
             if (isExpired(token.getValue())) {
-                LOG.traceTokenExpired(mergedParams, tokenForLogging);
+                LOG.traceTokenExpired(paramsForLogging, tokenForLogging);
                 clearToken(mergedParams);
                 token = authorizeAndGetToken(mergedParams);
                 putToken(mergedParams, token);
             } else {
                 LocalDateTime expirationUpdateTime = LocalDateTime.now().plusSeconds(configuration.getUpdateTimeBeforeTokenExpiration());
                 if (expirationUpdateTime.isAfter(token.getExpiresIn())) {
-                    LOG.traceTokenExpired(mergedParams, tokenForLogging);
+                    LOG.traceTokenExpired(paramsForLogging, tokenForLogging);
                     clearToken(mergedParams);
                     token = authorizeAndGetToken(mergedParams);
                     putToken(mergedParams, token);
                 }
-                LOG.traceGotTokenFromStore(mergedParams, tokenForLogging);
+                LOG.traceGotTokenFromStore(paramsForLogging, tokenForLogging);
             }
         }
         return token.getValue();
     }
 
     private void putToken(MultiValueMap<String, String> params, ClientCredentialsTokenModel token) {
-        LOG.tracePutTokenInStore(params, token.getValue());
+        LOG.tracePutTokenInStore(clearParamsForLogging(params), trimTokenForLogging(token.getValue()));
         tokens.put(params, token);
     }
 
     private void clearToken(MultiValueMap<String, String> params) {
-        LOG.traceRemovedTokenFromStore(params);
+        LOG.traceRemovedTokenFromStore(clearParamsForLogging(params));
         tokens.remove(params);
     }
 
@@ -183,8 +186,9 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
         } else {
             params = new LinkedMultiValueMap<String, String>();
         }
+        MultiValueMap<String, String> paramsForLogging = clearParamsForLogging(params);
 
-        LOG.traceRequestNewToken(params);
+        LOG.traceRequestNewToken(paramsForLogging);
 
         LinkedMultiValueMap<String, String> requestBody = new LinkedMultiValueMap<String, String>();
         requestBody.putAll(this.defaultParameters);
@@ -195,7 +199,7 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
         try {
             responseEntity = restTemplate.postForEntity(accessTokenEndpoint, request, TokenResponse.class);
         } catch (HttpStatusCodeException e) {
-            LOG.errorOnGetTokenHttp(accessTokenEndpoint, params, e.getStatusCode(),
+            LOG.errorOnGetTokenHttp(accessTokenEndpoint, paramsForLogging, e.getStatusCode(),
                     trimBodyForLogging(e.getResponseBodyAsString()), e);
             if (e.getStatusCode().is5xxServerError()) {
                 throw new NetworkErrorException("Cannot get client_credentials token. SSO server error", e);
@@ -203,7 +207,7 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
                 throw new AuthenticationException("Cannot get client_credentials token", e);
             }
         } catch (ResourceAccessException e) {
-            LOG.errorOnGetTokenIO(accessTokenEndpoint, params,
+            LOG.errorOnGetTokenIO(accessTokenEndpoint, paramsForLogging,
                     ConfigKeys.HTTP_CONNECTION_TIMEOUT,
                     configuration.getConnectTimeout(),
                     ConfigKeys.HTTP_SOCKET_TIMEOUT,
@@ -211,7 +215,7 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
                     e);
             throw new AuthenticationException("Cannot get client_credentials token", e);
         } catch (Exception e) {
-            LOG.errorOnGetToken(accessTokenEndpoint, params, e);
+            LOG.errorOnGetToken(accessTokenEndpoint, paramsForLogging, e);
             throw new AuthenticationException("Cannot get client_credentials token", e);
         }
 
@@ -220,9 +224,19 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
         LocalDateTime issueDate = LocalDateTime.now();
         ClientCredentialsTokenModel tokenModel = new ClientCredentialsTokenModel(token, issueDate, issueDate.plusSeconds(body.getExpiresIn()));
 
-        LOG.traceGotToken(params, token);
+        LOG.traceGotToken(paramsForLogging, trimTokenForLogging(token));
 
         return tokenModel;
+    }
+
+    private String trimTokenForLogging(String token) {
+        if (token == null) {
+            return "<none>";
+        } else if (this.configuration.legacyLoggingEnabled()) {
+            return token.substring(0, Math.min(16, token.length()));
+        } else {
+            return token;
+        }
     }
 
     private String trimBodyForLogging(String body) {
@@ -231,6 +245,14 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
         } else {
             return body.substring(0, Math.min(200, body.length()));
         }
+    }
+
+    private MultiValueMap<String, String> clearParamsForLogging(MultiValueMap<String, String> params) {
+        LinkedMultiValueMap<String, String> ret = new LinkedMultiValueMap<String, String>(params);
+        if (this.configuration.legacyLoggingEnabled() && ret.containsKey("client_secret")) {
+            ret.set("client_secret", "***");
+        }
+        return ret;
     }
 
     private HttpEntity<MultiValueMap<String, String>> createEntity(MultiValueMap<String, String> params) {

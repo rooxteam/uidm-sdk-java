@@ -54,6 +54,8 @@ public class PrincipalTokenInfoProviderImpl implements PrincipalProvider {
             return null;
         }
 
+        final String tokenForLogging = trimTokenForLogging(token);
+
         String url = config.getString(ConfigKeys.SSO_URL) + TOKEN_INFO_PATH;
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new BasicNameValuePair("access_token", token));
@@ -92,7 +94,7 @@ public class PrincipalTokenInfoProviderImpl implements PrincipalProvider {
             return principal;
         } catch (IOException e) {
             LOG.errorOnTokenValidationIO(url,
-                    token,
+                    tokenForLogging,
                     ConfigKeys.HTTP_CONNECTION_TIMEOUT,
                     config.getInt(ConfigKeys.HTTP_CONNECTION_TIMEOUT, ConfigKeys.HTTP_CONNECTION_TIMEOUT_DEFAULT),
                     ConfigKeys.HTTP_SOCKET_TIMEOUT,
@@ -100,7 +102,7 @@ public class PrincipalTokenInfoProviderImpl implements PrincipalProvider {
                     e);
             throw new NetworkErrorException("Failed to validate token because of communication or protocol error", e);
         } catch (RuntimeException e) {
-            LOG.errorOnTokenValidationGeneric(url, token, e);
+            LOG.errorOnTokenValidationGeneric(url, tokenForLogging, e);
             throw e;
         }
     }
@@ -110,6 +112,16 @@ public class PrincipalTokenInfoProviderImpl implements PrincipalProvider {
             return mapper.readValue(json, Map.class);
         } catch (IOException e) {
             throw new ValidateException("Failed to parse json", e);
+        }
+    }
+
+    private String trimTokenForLogging(String token) {
+        if (token == null) {
+            return "<none>";
+        } else if (this.config.getBoolean(ConfigKeys.LEGACY_LOGGING_ENABLED, ConfigKeys.LEGACY_LOGGING_ENABLED_DEFAULT)) {
+            return token.substring(0, Math.min(16, token.length()));
+        } else {
+            return token;
         }
     }
 }

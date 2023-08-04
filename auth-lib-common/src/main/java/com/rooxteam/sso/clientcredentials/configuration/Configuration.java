@@ -33,4 +33,6 @@ public interface Configuration {
     int getUpdateTimeBeforeTokenExpiration();
 
     boolean sendTokenInAuthorizationHeaderInValidationProcess();
+
+    boolean legacyLoggingEnabled();
 }
