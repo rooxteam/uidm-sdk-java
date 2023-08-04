@@ -14,7 +14,7 @@ import static com.rooxteam.sso.aal.AalLogger.LOG;
 public class JwksResourceRetriever extends DefaultResourceRetriever {
 
     public JwksResourceRetriever(final int connectTimeout, final int readTimeout) {
-        super(connectTimeout, readTimeout, 0);
+        super(connectTimeout, readTimeout);
         LOG.debugv("JWKS retriever initialization. connectTimeout: {0}, readTimeout: {1}", connectTimeout, readTimeout);
     }
 
