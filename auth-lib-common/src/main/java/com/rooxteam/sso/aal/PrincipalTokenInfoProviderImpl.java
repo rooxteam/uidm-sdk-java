@@ -118,7 +118,7 @@ public class PrincipalTokenInfoProviderImpl implements PrincipalProvider {
     private String trimTokenForLogging(String token) {
         if (token == null) {
             return "<none>";
-        } else if (this.config.getBoolean(ConfigKeys.LEGACY_LOGGING_ENABLED, ConfigKeys.LEGACY_LOGGING_ENABLED_DEFAULT)) {
+        } else if (this.config.getBoolean(ConfigKeys.LEGACY_MASKING_ENABLED, ConfigKeys.LEGACY_MASKING_ENABLED_DEFAULT)) {
             return token.substring(0, Math.min(16, token.length()));
         } else {
             return token;

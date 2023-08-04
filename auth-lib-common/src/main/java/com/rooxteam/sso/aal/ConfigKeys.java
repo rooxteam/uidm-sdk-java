@@ -377,12 +377,12 @@ public interface ConfigKeys {
 
     /**
      * Настройка включения/выключения старого способа маскирования чувствительных данных. 
-     * Значение по умолчанию берется из {@value #LEGACY_LOGGING_ENABLED_DEFAULT}
+     * Значение по умолчанию берется из {@value #LEGACY_MASKING_ENABLED_DEFAULT}
      */
-    String LEGACY_LOGGING_ENABLED = "com.rooxteam.aal.legacyLoggingEnabled";
+    String LEGACY_MASKING_ENABLED = "com.rooxteam.aal.legacyMaskingEnabled";
 
     /**
      * Значение по-умолчанию для настройки включения/выключения старого способа маскирования чувствительных данных.
      */
-    boolean LEGACY_LOGGING_ENABLED_DEFAULT = true;
+    boolean LEGACY_MASKING_ENABLED_DEFAULT = true;
 }

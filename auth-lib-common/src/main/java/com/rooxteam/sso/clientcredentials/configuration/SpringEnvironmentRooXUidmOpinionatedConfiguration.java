@@ -16,8 +16,8 @@ import static com.rooxteam.sso.aal.ConfigKeys.HTTP_CONNECTION_TIMEOUT;
 import static com.rooxteam.sso.aal.ConfigKeys.HTTP_CONNECTION_TIMEOUT_DEFAULT;
 import static com.rooxteam.sso.aal.ConfigKeys.HTTP_SOCKET_TIMEOUT;
 import static com.rooxteam.sso.aal.ConfigKeys.HTTP_SOCKET_TIMEOUT_DEFAULT;
-import static com.rooxteam.sso.aal.ConfigKeys.LEGACY_LOGGING_ENABLED;
-import static com.rooxteam.sso.aal.ConfigKeys.LEGACY_LOGGING_ENABLED_DEFAULT;
+import static com.rooxteam.sso.aal.ConfigKeys.LEGACY_MASKING_ENABLED;
+import static com.rooxteam.sso.aal.ConfigKeys.LEGACY_MASKING_ENABLED_DEFAULT;
 import static com.rooxteam.sso.aal.ConfigKeys.REALM;
 import static com.rooxteam.sso.aal.ConfigKeys.REALM_DEFAULT;
 import static com.rooxteam.sso.aal.ConfigKeys.SSO_URL;
@@ -124,7 +124,7 @@ public final class SpringEnvironmentRooXUidmOpinionatedConfiguration implements 
     }
 
     @Override
-    public boolean legacyLoggingEnabled() {
-        return environment.getProperty(LEGACY_LOGGING_ENABLED, Boolean.class, LEGACY_LOGGING_ENABLED_DEFAULT);
+    public boolean legacyMaskingEnabled() {
+        return environment.getProperty(LEGACY_MASKING_ENABLED, Boolean.class, LEGACY_MASKING_ENABLED_DEFAULT);
     }
 }
