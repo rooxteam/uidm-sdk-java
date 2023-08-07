@@ -9,7 +9,6 @@ import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.exception.NetworkErrorException;
 import com.rooxteam.sso.aal.exception.ValidateException;
 import com.rooxteam.sso.aal.userIp.UserIpProviderFactory;
-import com.rooxteam.sso.aal.utils.DummyRequest;
 import com.rooxteam.util.HttpHelper;
 import lombok.SneakyThrows;
 import org.apache.http.HttpStatus;
@@ -138,12 +137,12 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
     }
 
     private String trimTokenForLogging(String token) {
-        if(token!=null){
-            return token.substring(0, Math.min(16, token.length()));
-        }else{
+        if (token == null) {
             return "<none>";
+        } else if (this.config.getBoolean(ConfigKeys.LEGACY_MASKING_ENABLED, ConfigKeys.LEGACY_MASKING_ENABLED_DEFAULT)) {
+            return token.substring(0, Math.min(16, token.length()));
+        } else {
+            return token;
         }
     }
-
-
 }

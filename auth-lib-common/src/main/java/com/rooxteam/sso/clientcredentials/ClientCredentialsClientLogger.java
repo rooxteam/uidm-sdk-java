@@ -78,14 +78,14 @@ interface ClientCredentialsClientLogger {
 
     @LogMessage(level = ERROR)
     @Message(id = 3010, format = MESSAGE_FORMAT,
-            value = "An error during validating token. {0} {1}")
+            value = "An error during validating token. URL: {0}, Token: {1}.")
     void errorOnValidatingToken(final URI accessTokenEndpoint,
                                 final String token,
                                 final @Cause Exception e);
 
     @LogMessage(level = ERROR)
     @Message(id = 3011, format = MESSAGE_FORMAT,
-            value = "HTTP error during validating token. {0} {1} {2} {3}")
+            value = "HTTP error during validating token. URL: {0}, Token: {1}, HTTP status: {2}, Body {3}.")
     void errorOnValidatingTokenHttp(final URI accessTokenEndpoint,
                                     final String token,
                                     final HttpStatus statusCode,
@@ -96,7 +96,7 @@ interface ClientCredentialsClientLogger {
     @Message(id = 3013, format = MESSAGE_FORMAT,
             value = "IO error during validating token. " +
                     "URL: {0}, " +
-                    "Token: {1}." +
+                    "Token: {1}. " +
                     "You can tune I/O timeouts if current are too low and service or network are not able to serve requests." +
                     "Connect timeout (affects connection establishment phase) `{2}` = {3} ms." +
                     "Read timeout (affects waiting for each inbound packet) `{4}` = {5} ms.")
@@ -110,52 +110,52 @@ interface ClientCredentialsClientLogger {
 
     @LogMessage(level = TRACE)
     @Message(id = 9001, format = MESSAGE_FORMAT,
-            value = "Requesting new token from server. {0}")
+            value = "Requesting new token from server. Params: {0}")
     void traceRequestNewToken(MultiValueMap<String, String> params);
 
     @LogMessage(level = TRACE)
     @Message(id = 9002, format = MESSAGE_FORMAT,
-            value = "Got new token. {0}. Token: {1}")
+            value = "Got new token. Params: {0}, Token: {1}.")
     void traceGotToken(MultiValueMap<String, String> params, String token);
 
     @LogMessage(level = TRACE)
     @Message(id = 9003, format = MESSAGE_FORMAT,
-            value = "Put token into store. {0}. Token: {1}")
+            value = "Put token into store. Params: {0}, Token: {1}.")
     void tracePutTokenInStore(MultiValueMap<String, String> params, String token);
 
     @LogMessage(level = TRACE)
     @Message(id = 9004, format = MESSAGE_FORMAT,
-            value = "Got valid token into store. {0}. Token: {1}")
+            value = "Got valid token into store. Params: {0}, Token: {1}.")
     void traceGotTokenFromStore(MultiValueMap<String, String> params, String token);
 
     @LogMessage(level = TRACE)
     @Message(id = 9005, format = MESSAGE_FORMAT,
-            value = "Removed token from store. {0}.")
+            value = "Removed token from store. Params: {0}.")
     void traceRemovedTokenFromStore(MultiValueMap<String, String> params);
 
     @LogMessage(level = TRACE)
     @Message(id = 9006, format = MESSAGE_FORMAT,
-            value = "No previous token in store. {0}.")
+            value = "No previous token in store. Params: {0}.")
     void traceNoTokenInStore(MultiValueMap<String, String> params);
 
     @LogMessage(level = TRACE)
     @Message(id = 9007, format = MESSAGE_FORMAT,
-            value = "Previous token expired. {0}. Token: {1}")
+            value = "Previous token expired. Params: {0}, Token: {1}.")
     void traceTokenExpired(MultiValueMap<String, String> params, String token);
 
     @LogMessage(level = TRACE)
     @Message(id = 9008, format = MESSAGE_FORMAT,
-            value = "Application requested token (from cache or new). {0}")
+            value = "Application requested token (from cache or new). Params: {0}.")
     void traceGetToken(MultiValueMap<String, String> params);
 
     @LogMessage(level = TRACE)
     @Message(id = 9009, format = MESSAGE_FORMAT,
-            value = "Got 401 response code, meaning token expired. {0}")
+            value = "Got 401 response code, meaning token expired. Token: {0}.")
     void traceOnValidatingTokenTokenExpired(String tokenForLogging);
 
     @LogMessage(level = TRACE)
     @Message(id = 9010, format = MESSAGE_FORMAT,
-            value = "Got 403 response code, meaning token not valid, but not expired. {0}")
+            value = "Got 403 response code, meaning token not valid, but not expired. Token: {0}.")
     void traceOnValidatingTokenTokenForbidden(String tokenForLogging);
 
 }

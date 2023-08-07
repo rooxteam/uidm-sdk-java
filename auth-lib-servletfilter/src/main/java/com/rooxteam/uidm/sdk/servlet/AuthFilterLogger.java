@@ -30,17 +30,17 @@ public interface AuthFilterLogger extends BasicLogger {
 
     @LogMessage(level = Level.ERROR)
     @Message(id = 3001, format = Format.MESSAGE_FORMAT,
-            value = "Authentication by access token {0} failed.")
+            value = "Authentication by access token failed. Token: {0}.")
     void errorAuthentication(String token, @Cause Exception e);
 
     @LogMessage(level = Level.INFO)
     @Message(id = 6001, format = Format.MESSAGE_FORMAT,
-            value = "The user with access token {0} is being redirected to authentication endpoint due to authentication failure.")
+            value = "The user with access token is being redirected to authentication endpoint due to authentication failure. Token: {0}")
     void infoRedirectDueToBadToken(String token);
 
     @LogMessage(level = Level.INFO)
     @Message(id = 6002, format = Format.MESSAGE_FORMAT,
-            value = "The user with access token {0} has been successfully authenticated. Token claims have been placed in http request.")
+            value = "The user with access token has been successfully authenticated. Token claims have been placed in http request. Token: {0}")
     void infoSuccessAuthentication(String token);
 
 

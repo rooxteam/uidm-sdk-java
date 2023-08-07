@@ -66,6 +66,7 @@ dependencies {
     testCompile("junit:junit:$junitVersion")
     testCompile("org.mockito:mockito-all:$mockitoVersion")
     testCompile('javax.servlet:servlet-api:2.5')
+    testCompile("ch.qos.logback:logback-classic:$logbackVersion")
 }
 
 javadoc {

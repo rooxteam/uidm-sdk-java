@@ -232,8 +232,10 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
     private String trimTokenForLogging(String token) {
         if (token == null) {
             return "<none>";
-        } else {
+        } else if (this.configuration.legacyMaskingEnabled()) {
             return token.substring(0, Math.min(16, token.length()));
+        } else {
+            return token;
         }
     }
 
@@ -247,7 +249,7 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
 
     private MultiValueMap<String, String> clearParamsForLogging(MultiValueMap<String, String> params) {
         LinkedMultiValueMap<String, String> ret = new LinkedMultiValueMap<String, String>(params);
-        if (ret.containsKey("client_secret")) {
+        if (this.configuration.legacyMaskingEnabled() && ret.containsKey("client_secret")) {
             ret.set("client_secret", "***");
         }
         return ret;

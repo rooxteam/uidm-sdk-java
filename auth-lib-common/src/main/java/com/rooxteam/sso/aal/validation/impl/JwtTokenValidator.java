@@ -50,7 +50,7 @@ public class JwtTokenValidator implements AccessTokenValidator {
 
     @Override
     public ValidationResult validate(String accessToken) {
-        LOG.debugv("validate {0}", accessToken);
+        LOG.tracev("JWT token validation. Token: {0}.", accessToken);
         try {
             JWT jwt = JWTParser.parse(accessToken);
             return runValidators(validators, jwt);

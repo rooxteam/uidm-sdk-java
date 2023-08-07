@@ -16,6 +16,8 @@ import static com.rooxteam.sso.aal.ConfigKeys.HTTP_CONNECTION_TIMEOUT;
 import static com.rooxteam.sso.aal.ConfigKeys.HTTP_CONNECTION_TIMEOUT_DEFAULT;
 import static com.rooxteam.sso.aal.ConfigKeys.HTTP_SOCKET_TIMEOUT;
 import static com.rooxteam.sso.aal.ConfigKeys.HTTP_SOCKET_TIMEOUT_DEFAULT;
+import static com.rooxteam.sso.aal.ConfigKeys.LEGACY_MASKING_ENABLED;
+import static com.rooxteam.sso.aal.ConfigKeys.LEGACY_MASKING_ENABLED_DEFAULT;
 import static com.rooxteam.sso.aal.ConfigKeys.REALM;
 import static com.rooxteam.sso.aal.ConfigKeys.REALM_DEFAULT;
 import static com.rooxteam.sso.aal.ConfigKeys.SSO_URL;
@@ -119,5 +121,10 @@ public final class SpringEnvironmentRooXUidmOpinionatedConfiguration implements 
     @Override
     public boolean sendTokenInAuthorizationHeaderInValidationProcess() {
         return environment.getProperty(SEND_TOKEN_IN_AUTHORIZATION_HEADER_IN_VALIDATION_ENABLED, Boolean.class, SEND_TOKEN_IN_AUTHORIZATION_HEADER_IN_VALIDATION_DEFAULT);
+    }
+
+    @Override
+    public boolean legacyMaskingEnabled() {
+        return environment.getProperty(LEGACY_MASKING_ENABLED, Boolean.class, LEGACY_MASKING_ENABLED_DEFAULT);
     }
 }

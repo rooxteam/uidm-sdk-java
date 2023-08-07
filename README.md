@@ -103,6 +103,25 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
 
 # История изменений
 
+## 3.29.0
+Добавлен новый механизм маскирования чувствительных данных (через '*'). Настройки можно задавать через logback.xml в самом приложении, использующем SDK. Пример appender'а:
+```xml
+<appender name="STDOUT_MASKED" class="ch.qos.logback.core.ConsoleAppender">
+  <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+    <layout class="com.rooxteam.util.MaskingPatternLayout">
+      <maskPattern>Authorization\s*:\s*(.*?)</maskPattern>
+      <maskPattern>"access_token"\s*:\s*(.*?)",</maskPattern>
+      <maskPattern>client_secret=\[\s*(.*?)\],</maskPattern>
+      <maskPattern>Token:\s*(.*)\.</maskPattern>
+      <maskPattern>Token:\s*(.*),</maskPattern>
+      <maskPattern>&amp;client_secret=\s*(.*?)&amp;</maskPattern>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </layout>
+  </encoder>
+</appender>
+```
+**Замечание**: после настройки нового механизма необходимо отключить старый способ маскирования - выставить в настройках параметр `com.rooxteam.aal.legacyMaskingEnabled=false`
+
 ## 3.28.0
 Добавлена возможность настраивать таймауты для запросов JWKS
 
