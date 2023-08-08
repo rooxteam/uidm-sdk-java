@@ -161,7 +161,7 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
     /**
      * Проверить валидность токена
      *
-     * @param JWT токен для проверки
+     * @param jwt токен для проверки
      * @return Результат валидации
      * @throws com.rooxteam.sso.aal.exception.AalException Может содержать в себе причины (cause):
      *                                                     {@link java.security.NoSuchAlgorithmException},
@@ -326,7 +326,7 @@ public interface AuthenticationAuthorizationLibrary extends AutoCloseable {
 
     /**
      * Получить обьект конфигурации, с помощью которой SDK была сконфигурирована
-     * @return
+     * @return объект конфигурации
      */
     Configuration getConfiguration();
 }

@@ -1,30 +1,10 @@
-buildscript {
-    repositories {
-        if (project.hasProperty('rooxExternalAccess')) {
-            mavenLocal()
-            mavenCentral()
-        } else {
-            maven { url 'https://nexus.rooxintra.net/content/repositories/releases' }
-            maven { url 'https://nexus.rooxintra.net/content/repositories/public' }
-        }
-    }
-    dependencies {
-        classpath("com.rooxteam.corporate:gradle-plugins:$rooxGradlePlugins")
-        classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
-    }
-}
-
-apply plugin: 'roox-jar'
 apply plugin: 'war'
-apply plugin: 'com.bmuschko.nexus'
+
 
 // give test dependencies access to compileOnly dependencies to emulate providedCompile
 configurations {
     testImplementation.extendsFrom compileOnly
 }
-
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
 
 dependencies {
 
@@ -37,61 +17,12 @@ dependencies {
     compileOnly("javax.servlet:servlet-api:${servletVersion}")
     
     // for testing
-    testCompile("junit:junit:$junitVersion")
-    testCompile("org.mockito:mockito-all:$mockitoVersion")
-    testCompile('javax.servlet:servlet-api:2.5')
+    test("junit:junit:$junitVersion")
+    test("org.mockito:mockito-all:$mockitoVersion")
+    test('javax.servlet:servlet-api:2.5')
 }
 
 javadoc {
     options.charSet = 'UTF-8'
     options.addStringOption('Xdoclint:none', '-quiet')
-}
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.10.2'
-}
-
-modifyPom {
-    project {
-        name 'auth-lib-servletfilter-test-webapp'
-        description 'uidm-sdk-java'
-        groupId 'com.rooxteam.uidm.sdk'
-        artifactId 'auth-lib-servletfilter-test-webapp'
-        url 'https://bitbucket.org/rooxteam/uidm-sdk-java'
-        packaging 'jar'
-
-        scm {
-            url 'https://bitbucket.org/rooxteam/uidm-sdk-java'
-            connection 'scm:https://bitbucket.org/rooxteam/uidm-sdk-java.git'
-            developerConnection 'scm:git://bitbucket.org/rooxteam/uidm-sdk-java.git'
-        }
-
-        licenses {
-            license {
-                name 'CDDL-1.1'
-                url 'https://javaee.github.io/glassfish/LICENSE'
-                distribution 'repo'
-            }
-        }
-
-        developers {
-            developer {
-                id 'roox'
-                name 'RooX Solutions'
-                email 'support@roox.ru'
-            }
-        }
-    }
-}
-
-extraArchive {
-    sources = true
-    tests = false
-    javadoc = false
-}
-
-nexus {
-    sign = true
-    repositoryUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
-    snapshotRepositoryUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
 }

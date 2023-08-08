@@ -1,13 +1,75 @@
 buildscript {
-
+    repositories {
+        maven { url = 'https://nexus.rooxintra.net/content/repositories/public' }
+        maven { url = 'https://nexus.rooxintra.net/content/repositories/releases' }
+    }
+    dependencies {
+        classpath("com.rooxteam.gradle.plugins:jar-plugin:$rooxGradlePlugins")
+        classpath("com.rooxteam.gradle.plugins:repositories-plugin:$rooxGradlePlugins")
+        classpath("com.rooxteam.gradle.plugins:corporate-plugin:$rooxGradlePlugins")
+        classpath('com.bmuschko:gradle-nexus-plugin:2.3.1')
+    }
 }
 
-plugins {
+subprojects {
+    apply(plugin: 'roox-jar')
+    apply(plugin: 'roox-repositories')
+    apply(plugin: 'java')
 
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+
+    configurations.test {
+        extendsFrom configurations.compileOnly
+    }
+
+    dependencies {
+        // for typed logging, ok for now
+        apt("org.jboss.logging:jboss-logging:$jbossLoggingVersion")
+        apt("org.jboss.logging:jboss-logging-processor:$jbossLoggingExtensionsVersion")
+        apt("org.jboss.logging:jboss-logging-annotations:$jbossLoggingExtensionsVersion")
+
+        // for lombok magic
+        apt("org.projectlombok:lombok:${lombokVersion}")
+    }
 }
 
-
-
-task wrapper(type: Wrapper) {
-    gradleVersion = '4.10.2'
+wrapper {
+    gradleVersion = '7.3.3'
 }
+
+/*
+modifyPom {
+    project {
+        name 'auth-lib-servletfilter'
+        description 'uidm-sdk-java'
+        groupId 'com.rooxteam.uidm.sdk'
+        artifactId 'auth-lib-servletfilter'
+        url 'https://bitbucket.org/rooxteam/uidm-sdk-java'
+        packaging 'jar'
+
+        scm {
+            url 'https://bitbucket.org/rooxteam/uidm-sdk-java'
+            connection 'scm:https://bitbucket.org/rooxteam/uidm-sdk-java.git'
+            developerConnection 'scm:git://bitbucket.org/rooxteam/uidm-sdk-java.git'
+        }
+
+        licenses {
+            license {
+                name 'CDDL-1.1'
+                url 'https://javaee.github.io/glassfish/LICENSE'
+                distribution 'repo'
+            }
+        }
+
+        developers {
+            developer {
+                id 'roox'
+                name 'RooX Solutions'
+                email 'support@roox.ru'
+            }
+        }
+    }
+}
+
+*/
