@@ -12,8 +12,8 @@ public interface ClientCredentialsClient {
 
     /**
      * Get valid token validating and refreshing previous if needed
-     * @param additionalRequestParameters
-     * @return
+     * @param additionalRequestParameters дополнительные параметры запроса
+     * @return токен
      */
     String getToken(MultiValueMap<String, String> additionalRequestParameters);
 
@@ -25,8 +25,8 @@ public interface ClientCredentialsClient {
 
     /**
      * Get valid token validating and refreshing previous if needed.*
-     * @param additionalRequestParameters
-     * @return
+     * @param additionalRequestParameters дополнительные параметры запроса
+     * @return токен
      */
     String getAuthHeaderValue(MultiValueMap<String, String> additionalRequestParameters);
 

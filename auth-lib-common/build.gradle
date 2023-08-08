@@ -1,51 +1,21 @@
-buildscript {
-    repositories {
-        if (project.hasProperty('rooxExternalAccess')) {
-            mavenLocal()
-            mavenCentral()
-            maven { url 'https://repo.springsource.org/plugins-release/' }
-        } else {
-            maven { url 'https://nexus.rooxintra.net/content/repositories/releases' }
-            maven { url 'https://nexus.rooxintra.net/content/repositories/public' }
-        }
-    }
-    dependencies {
-        classpath("com.rooxteam.corporate:gradle-plugins:$rooxGradlePlugins")
-        classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
-    }
-}
-
-apply plugin: 'roox-jar'
-apply plugin: 'com.bmuschko.nexus'
-
-
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
 
 dependencies {
 
     // TODO: for HttpStatus, needs fixing
     compileOnly(group: 'org.springframework', name: 'spring-web', version: springVersion)
-    testCompile(group: 'org.springframework', name: 'spring-web', version: springVersion)
 
     // for backward compat, ok to have it provided
     compileOnly("commons-configuration:commons-configuration:$apacheConfigurationVersion")
-    testCompile("commons-configuration:commons-configuration:$apacheConfigurationVersion")
 
     // for RooxconfigConfiguration, ok to have it provided
     compileOnly("com.rooxteam.commons:rooxconfig:$rooxconfigVersion")
 
     // for HttpClient, ok for now
     compile("org.apache.httpcomponents:httpclient:$apacheHttpClientVersion")
-    testCompile("org.apache.httpcomponents:httpclient:$apacheHttpClientVersion")
+    test("org.apache.httpcomponents:httpclient:$apacheHttpClientVersion")
 
     compileOnly("ch.qos.logback:logback-classic:$logbackVersion")
 
-    // for typed logging, ok for now
-    compile("org.jboss.logging:jboss-logging:$jbossLoggingVersion")
-    compileOnly("org.jboss.logging:jboss-logging-processor:$jbossLoggingExtensionsVersion")
-    compileOnly("org.jboss.logging:jboss-logging-annotations:$jbossLoggingExtensionsVersion")
-    
     // for micrometer metrics, optional
     compileOnly("io.micrometer:micrometer-core:$micrometerVersion")
 
@@ -59,14 +29,11 @@ dependencies {
     // for compiling upon servlet api
     compileOnly("javax.servlet:servlet-api:${servletVersion}")
 
-    // for lombok magic
-    compileOnly("org.projectlombok:lombok:${lombokVersion}")
-
     // for testing
-    testCompile("junit:junit:$junitVersion")
-    testCompile("org.mockito:mockito-all:$mockitoVersion")
-    testCompile('javax.servlet:servlet-api:2.5')
-    testCompile("ch.qos.logback:logback-classic:$logbackVersion")
+    test("junit:junit:$junitVersion")
+    test("org.mockito:mockito-all:$mockitoVersion")
+    test('javax.servlet:servlet-api:2.5')
+    test("ch.qos.logback:logback-classic:$logbackVersion")
 }
 
 javadoc {
@@ -81,49 +48,4 @@ tasks.withType(Test) {
         showCauses = true
         exceptionFormat = 'FULL'
     }
-}
-
-modifyPom {
-    project {
-        name 'auth-lib-common'
-        description 'uidm-sdk-java'
-        groupId 'com.rooxteam.uidm.sdk'
-        artifactId 'auth-lib-common'
-        url 'https://bitbucket.org/rooxteam/uidm-sdk-java'
-        packaging 'jar'
-
-        scm {
-            url 'https://bitbucket.org/rooxteam/uidm-sdk-java'
-            connection 'scm:https://bitbucket.org/rooxteam/uidm-sdk-java.git'
-            developerConnection 'scm:git://bitbucket.org/rooxteam/uidm-sdk-java.git'
-        }
-
-        licenses {
-            license {
-                name 'CDDL-1.1'
-                url 'https://javaee.github.io/glassfish/LICENSE'
-                distribution 'repo'
-            }
-        }
-
-        developers {
-            developer {
-                id 'roox'
-                name 'RooX Solutions'
-                email 'support@roox.ru'
-            }
-        }
-    }
-}
-
-extraArchive {
-    sources = true
-    tests = false
-    javadoc = false
-}
-
-nexus {
-    sign = true
-    repositoryUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
-    snapshotRepositoryUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
 }
