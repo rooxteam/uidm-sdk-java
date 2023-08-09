@@ -1,6 +1,7 @@
 package com.rooxteam.sso.clientcredentials.configuration;
 
 import com.rooxteam.compat.Objects;
+import com.rooxteam.sso.aal.ProviderType;
 import org.springframework.core.env.Environment;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -8,6 +9,8 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.rooxteam.sso.aal.ConfigKeys.CLIENT_CREDENTIALS_CACHE_ENABLED;
+import static com.rooxteam.sso.aal.ConfigKeys.CLIENT_CREDENTIALS_CACHE_ENABLED_DEFAULT;
 import static com.rooxteam.sso.aal.ConfigKeys.CLIENT_ID;
 import static com.rooxteam.sso.aal.ConfigKeys.CLIENT_SECRET;
 import static com.rooxteam.sso.aal.ConfigKeys.HTTP_CONNECTION_POOL_SIZE;
@@ -21,12 +24,8 @@ import static com.rooxteam.sso.aal.ConfigKeys.LEGACY_MASKING_ENABLED_DEFAULT;
 import static com.rooxteam.sso.aal.ConfigKeys.REALM;
 import static com.rooxteam.sso.aal.ConfigKeys.REALM_DEFAULT;
 import static com.rooxteam.sso.aal.ConfigKeys.SSO_URL;
-import static com.rooxteam.sso.aal.ConfigKeys.CLIENT_CREDENTIALS_CACHE_ENABLED;
-import static com.rooxteam.sso.aal.ConfigKeys.CLIENT_CREDENTIALS_CACHE_ENABLED_DEFAULT;
 import static com.rooxteam.sso.aal.ConfigKeys.UPDATE_TIME_BEFORE_TOKEN_EXPIRATION;
 import static com.rooxteam.sso.aal.ConfigKeys.UPDATE_TIME_BEFORE_TOKEN_EXPIRATION_DEFAULT;
-import static com.rooxteam.sso.aal.ConfigKeys.SEND_TOKEN_IN_AUTHORIZATION_HEADER_IN_VALIDATION_ENABLED;
-import static com.rooxteam.sso.aal.ConfigKeys.SEND_TOKEN_IN_AUTHORIZATION_HEADER_IN_VALIDATION_DEFAULT;
 
 /**
  * Implementation that instantiates configuration from Spring Env using required keys:
@@ -40,7 +39,6 @@ import static com.rooxteam.sso.aal.ConfigKeys.SEND_TOKEN_IN_AUTHORIZATION_HEADER
  * {@value com.rooxteam.sso.aal.ConfigKeys#HTTP_CONNECTION_POOL_SIZE} Pool size (defaults to {@value com.rooxteam.sso.aal.ConfigKeys#HTTP_CONNECTION_POOL_SIZE_DEFAULT})<p>
  * {@value com.rooxteam.sso.aal.ConfigKeys#CLIENT_CREDENTIALS_CACHE_ENABLED} Cache enabled (defaults to {@value com.rooxteam.sso.aal.ConfigKeys#CLIENT_CREDENTIALS_CACHE_ENABLED_DEFAULT})<p>
  * {@value com.rooxteam.sso.aal.ConfigKeys#UPDATE_TIME_BEFORE_TOKEN_EXPIRATION} Update time before expiration (defaults to {@value com.rooxteam.sso.aal.ConfigKeys#UPDATE_TIME_BEFORE_TOKEN_EXPIRATION_DEFAULT})<p>
- * {@value com.rooxteam.sso.aal.ConfigKeys#SEND_TOKEN_IN_AUTHORIZATION_HEADER_IN_VALIDATION_ENABLED} Send token in authorization header (defaults to {@value com.rooxteam.sso.aal.ConfigKeys#SEND_TOKEN_IN_AUTHORIZATION_HEADER_IN_VALIDATION_DEFAULT})<p>
  */
 public final class SpringEnvironmentRooXUidmOpinionatedConfiguration implements Configuration {
 
@@ -119,12 +117,12 @@ public final class SpringEnvironmentRooXUidmOpinionatedConfiguration implements 
     }
 
     @Override
-    public boolean sendTokenInAuthorizationHeaderInValidationProcess() {
-        return environment.getProperty(SEND_TOKEN_IN_AUTHORIZATION_HEADER_IN_VALIDATION_ENABLED, Boolean.class, SEND_TOKEN_IN_AUTHORIZATION_HEADER_IN_VALIDATION_DEFAULT);
+    public boolean legacyMaskingEnabled() {
+        return environment.getProperty(LEGACY_MASKING_ENABLED, Boolean.class, LEGACY_MASKING_ENABLED_DEFAULT);
     }
 
     @Override
-    public boolean legacyMaskingEnabled() {
-        return environment.getProperty(LEGACY_MASKING_ENABLED, Boolean.class, LEGACY_MASKING_ENABLED_DEFAULT);
+    public ProviderType getProviderType() {
+        return ProviderType.TOKENINFO;
     }
 }

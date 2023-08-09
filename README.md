@@ -103,6 +103,10 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
 
 # История изменений
 
+## 3.29.2
+Удалена настройка `com.rooxteam.auth.client_credentials.validation.enabledSendingTokenInHeader` (заложена более общая логика по проверке токена, полученного 
+из кэша)
+
 ## 3.29.0
 Добавлен новый механизм маскирования чувствительных данных (через '*'). Настройки можно задавать через logback.xml в самом приложении, использующем SDK. Пример appender'а:
 ```xml

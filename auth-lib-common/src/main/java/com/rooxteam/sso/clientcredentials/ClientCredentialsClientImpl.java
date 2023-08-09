@@ -1,5 +1,7 @@
 package com.rooxteam.sso.clientcredentials;
 
+import com.nimbusds.jwt.JWT;
+import com.nimbusds.jwt.JWTParser;
 import com.rooxteam.compat.Objects;
 import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
@@ -20,8 +22,10 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.rooxteam.sso.clientcredentials.ClientCredentialsClientLogger.LOG;
@@ -85,20 +89,39 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
         }
         final String tokenForLogging = trimTokenForLogging(token);
         try {
-            if (configuration.sendTokenInAuthorizationHeaderInValidationProcess()) {
-                final URI uri = UriComponentsBuilder.fromUri(tokenValidationEndpoint)
-                        .build().toUri();
-                RequestEntity.HeadersBuilder<?> requestBuilder = RequestEntity.get(uri)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE);
-                requestBuilder.header(AUTHORIZATION, TokenUtils.wrapBearerToken(token));
-                RequestEntity<Void> requestEntity = requestBuilder.build();
-                restTemplate.exchange(requestEntity, Object.class);
-            } else {
-                final URI uri = UriComponentsBuilder.fromUri(tokenValidationEndpoint)
-                        .queryParam("access_token", token)
-                        .build().toUri();
-                restTemplate.getForEntity(uri, Object.class);
+            switch (configuration.getProviderType()) {
+                case ACCESS_TOKEN:
+                    URI uri = UriComponentsBuilder.fromUri(tokenValidationEndpoint)
+                                                        .build().toUri();
+                    RequestEntity.HeadersBuilder<?> requestBuilder = RequestEntity.get(uri)
+                                                                                  .accept(MediaType.APPLICATION_JSON)
+                                                                                  .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE);
+                    requestBuilder.header(AUTHORIZATION, TokenUtils.wrapBearerToken(token));
+                    RequestEntity<Void> requestEntity = requestBuilder.build();
+                    restTemplate.exchange(requestEntity, Object.class);
+                    break;
+                    
+                case JWT:
+                    JWT jwt = JWTParser.parse(token);
+                    Date exp = jwt.getJWTClaimsSet().getExpirationTime();
+                    if (exp != null) {
+                        Date now = new Date(Clock.systemUTC().millis());
+                        LOG.traceExpAndCurrentTime(exp, now);
+                        if (now.after(exp)) {
+                            return true;
+                        }
+                    } else {
+                        LOG.traceMessage("No exp. Skipping check");
+                    }
+                    break;
+                    
+                default:
+                case TOKENINFO:
+                    uri = UriComponentsBuilder.fromUri(tokenValidationEndpoint)
+                                              .queryParam("access_token", token)
+                                              .build().toUri();
+                    restTemplate.getForEntity(uri, Object.class);
+                    break;
             }
             return false;
         } catch (HttpStatusCodeException e) {

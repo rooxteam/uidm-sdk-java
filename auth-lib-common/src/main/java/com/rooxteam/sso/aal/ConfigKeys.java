@@ -69,17 +69,6 @@ public interface ConfigKeys {
     int UPDATE_TIME_BEFORE_TOKEN_EXPIRATION_DEFAULT = 60;
 
     /**
-     * {@value} - Отправлять токен в заголовке Authorization в процессе валидации токена
-     * По умолчанию: {@value #SEND_TOKEN_IN_AUTHORIZATION_HEADER_IN_VALIDATION_DEFAULT}
-     */
-    String SEND_TOKEN_IN_AUTHORIZATION_HEADER_IN_VALIDATION_ENABLED = "com.rooxteam.auth.client_credentials.validation.enabledSendingTokenInHeader";
-
-    /**
-     * Значение ClientCredentialsCacheEnabled для clientCredentials аутентификации по умолчанию
-     */
-    boolean SEND_TOKEN_IN_AUTHORIZATION_HEADER_IN_VALIDATION_DEFAULT = false;
-
-    /**
      * {@value} - Имя цепочки аутентификации в Customer SSO для AAL.
      * По умолчанию: {@value #AUTH_SERVICE_DEFAULT}
      */
