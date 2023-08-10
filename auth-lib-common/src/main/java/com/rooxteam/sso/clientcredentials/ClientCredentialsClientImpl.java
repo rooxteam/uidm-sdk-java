@@ -89,8 +89,8 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
         }
         final String tokenForLogging = trimTokenForLogging(token);
         try {
-            switch (configuration.getTokenProviderType()) {
-                case ACCESS_TOKEN:
+            switch (configuration.getValidationType()) {
+                case USERINFO:
                     URI uri = UriComponentsBuilder.fromUri(tokenValidationEndpoint)
                                                         .build().toUri();
                     RequestEntity.HeadersBuilder<?> requestBuilder = RequestEntity.get(uri)

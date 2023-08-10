@@ -1,6 +1,6 @@
 package com.rooxteam.sso.clientcredentials.configuration;
 
-import com.rooxteam.sso.aal.ProviderType;
+import com.rooxteam.sso.clientcredentials.ValidationType;
 
 import java.net.URI;
 import java.util.Map;
@@ -36,5 +36,5 @@ public interface Configuration {
 
     boolean legacyMaskingEnabled();
 
-    ProviderType getTokenProviderType();
+    ValidationType getValidationType();
 }

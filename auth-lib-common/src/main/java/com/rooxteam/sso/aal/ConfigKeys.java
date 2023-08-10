@@ -1,5 +1,7 @@
 package com.rooxteam.sso.aal;
 
+import com.rooxteam.sso.clientcredentials.ValidationType;
+
 /**
  * Справочник ключей конфигурации.
  */
@@ -247,13 +249,16 @@ public interface ConfigKeys {
      * Новое значение переменной com.rooxteam.aal.filter.principal_provider_type
      */
     @Deprecated
-    String VALIDATION_TYPE = "com.rooxteam.aal.validation_type";
+    String AAL_VALIDATION_TYPE = "com.rooxteam.aal.validation_type";
 
     String PRINCIPAL_PROVIDER_TYPE = "com.rooxteam.aal.filter.principal_provider_type";
 
     String PRINCIPAL_PROVIDER_TYPE_DEFAULT = ProviderType.TOKENINFO.toString();
 
+    String CLIENT_CREDENTIALS_VALIDATION_TYPE = "com.rooxteam.client_credentials.validation_type";
 
+    String CLIENT_CREDENTIALS_VALIDATION_TYPE_DEFAULT = ValidationType.TOKENINFO.toString();
+    
     String CONNECTION_REUSE_STRATEGY = "com.rooxteam.aal.connection_reuse_strategy";
 
     String CONNECTION_REUSE_STRATEGY_DEFAULT = ConnectionReuseStrategy.KEEP_ALIVE.name();

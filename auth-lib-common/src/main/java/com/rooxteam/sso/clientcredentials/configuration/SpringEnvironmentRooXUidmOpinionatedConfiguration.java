@@ -1,7 +1,7 @@
 package com.rooxteam.sso.clientcredentials.configuration;
 
 import com.rooxteam.compat.Objects;
-import com.rooxteam.sso.aal.ProviderType;
+import com.rooxteam.sso.clientcredentials.ValidationType;
 import org.springframework.core.env.Environment;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -11,6 +11,8 @@ import java.util.Map;
 
 import static com.rooxteam.sso.aal.ConfigKeys.CLIENT_CREDENTIALS_CACHE_ENABLED;
 import static com.rooxteam.sso.aal.ConfigKeys.CLIENT_CREDENTIALS_CACHE_ENABLED_DEFAULT;
+import static com.rooxteam.sso.aal.ConfigKeys.CLIENT_CREDENTIALS_VALIDATION_TYPE;
+import static com.rooxteam.sso.aal.ConfigKeys.CLIENT_CREDENTIALS_VALIDATION_TYPE_DEFAULT;
 import static com.rooxteam.sso.aal.ConfigKeys.CLIENT_ID;
 import static com.rooxteam.sso.aal.ConfigKeys.CLIENT_SECRET;
 import static com.rooxteam.sso.aal.ConfigKeys.HTTP_CONNECTION_POOL_SIZE;
@@ -122,7 +124,7 @@ public final class SpringEnvironmentRooXUidmOpinionatedConfiguration implements 
     }
 
     @Override
-    public ProviderType getTokenProviderType() {
-        return ProviderType.TOKENINFO;
+    public ValidationType getValidationType() {
+        return ValidationType.valueOf(environment.getProperty(CLIENT_CREDENTIALS_VALIDATION_TYPE, CLIENT_CREDENTIALS_VALIDATION_TYPE_DEFAULT));
     }
 }
