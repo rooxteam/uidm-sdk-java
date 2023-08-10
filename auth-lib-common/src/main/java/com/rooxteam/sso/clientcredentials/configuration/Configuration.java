@@ -36,5 +36,5 @@ public interface Configuration {
 
     boolean legacyMaskingEnabled();
 
-    ProviderType getProviderType();
+    ProviderType getTokenProviderType();
 }

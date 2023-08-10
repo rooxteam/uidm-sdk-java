@@ -122,7 +122,7 @@ public final class SpringEnvironmentRooXUidmOpinionatedConfiguration implements 
     }
 
     @Override
-    public ProviderType getProviderType() {
+    public ProviderType getTokenProviderType() {
         return ProviderType.TOKENINFO;
     }
 }
