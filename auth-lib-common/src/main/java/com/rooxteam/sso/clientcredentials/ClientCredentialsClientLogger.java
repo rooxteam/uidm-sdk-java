@@ -13,6 +13,7 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
 
 import java.net.URI;
+import java.util.Date;
 
 import static org.jboss.logging.Logger.Level.ERROR;
 import static org.jboss.logging.Logger.Level.TRACE;
@@ -158,4 +159,13 @@ interface ClientCredentialsClientLogger {
             value = "Got 403 response code, meaning token not valid, but not expired. Token: {0}.")
     void traceOnValidatingTokenTokenForbidden(String tokenForLogging);
 
+    @LogMessage(level = TRACE)
+    @Message(id = 9011, format = MESSAGE_FORMAT,
+             value = "exp: {0}, current time: {1}")
+    void traceExpAndCurrentTime(Date exp, Date currentTime);
+
+    @LogMessage(level = TRACE)
+    @Message(id = 9012, format = MESSAGE_FORMAT,
+             value = "{0}")
+    void traceMessage(String message);
 }

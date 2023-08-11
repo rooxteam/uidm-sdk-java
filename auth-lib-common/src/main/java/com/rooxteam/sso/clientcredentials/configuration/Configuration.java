@@ -1,5 +1,7 @@
 package com.rooxteam.sso.clientcredentials.configuration;
 
+import com.rooxteam.sso.clientcredentials.ValidationType;
+
 import java.net.URI;
 import java.util.Map;
 
@@ -32,7 +34,7 @@ public interface Configuration {
 
     int getUpdateTimeBeforeTokenExpiration();
 
-    boolean sendTokenInAuthorizationHeaderInValidationProcess();
-
     boolean legacyMaskingEnabled();
+
+    ValidationType getValidationType();
 }
