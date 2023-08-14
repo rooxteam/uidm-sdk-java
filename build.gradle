@@ -8,6 +8,7 @@ buildscript {
         classpath("com.rooxteam.gradle.plugins:repositories-plugin:$rooxGradlePlugins")
         classpath("com.rooxteam.gradle.plugins:corporate-plugin:$rooxGradlePlugins")
         classpath('com.bmuschko:gradle-nexus-plugin:2.3.1')
+        classpath("org.owasp:dependency-check-gradle:$dependencyCheckGradleVersion")
     }
 }
 
@@ -64,4 +65,23 @@ subprojects {
 
 wrapper {
     gradleVersion = '7.3.3'
+}
+
+allprojects {
+    apply plugin: 'org.owasp.dependencycheck'
+
+    dependencyCheck {
+        cveValidForHours = 4
+        failOnError = false
+        formats = ["HTML", "CSV", "XML", "JSON"]
+        analyzers {
+                centralEnabled = false
+                nexusEnabled = true
+                nexusUrl = "https://nexus.rooxintra.net/service/local/"
+                retirejs {
+                    enabled = false
+                }
+        }
+        suppressionFile = "dependency-check-suppressions.xml"
+    }
 }
