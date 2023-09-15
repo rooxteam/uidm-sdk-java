@@ -103,6 +103,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
 
 # История изменений
 
+## 3.29.3
+Версия com.nimbusds:nimbus-jose-jwt поднята до 9.32
+
 ## 3.29.2
 1. Удалена настройка `com.rooxteam.auth.client_credentials.validation.enabledSendingTokenInHeader`
 2. Добавлена настройка по типу валидации клиентского токена `com.rooxteam.client_credentials.validation_type`
