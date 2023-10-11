@@ -1,13 +1,13 @@
 
-# Как начать использовать
+# How to use
 
-## 1. Подключить репозиторий RooX Solutions
+## 1. Configure maven repository
 
-С мая 2021 года SDK располагается в Maven Central. Никакие дополнительные репозитории подключать не надо.
+Since May 2021 the SDK has been published to Maven Central. No any additional repositories needed.
 
-## 2. Подключить библиотеку
+## 2. Add the library to your project
 
-1. Добавить зависимость
+1. Add dependencies
 
 ```
 repositories {
@@ -17,10 +17,11 @@ repositories {
 dependencies {
 	implementation "com.rooxteam.uidm.sdk:auth-lib-spring:$uidmSdkVersion"
 }
-
 ```
 
-2. Добавить импорт класса конфигурации
+where `$uidmSdkVersion` should be set to the library version  
+
+2. Import configuration class
 
 ```java
 @SpringBootApplication
@@ -31,7 +32,7 @@ public class DemoApplication {
 	}
 }
 ```
-3. Добавить фильтр в конфигурацию SpringSecurity
+3. Add filter to SpringSecurity configuration
 
 ```java
 @Configuration
@@ -51,27 +52,27 @@ public class CustomWebSecurityConfigurerAdapter extends WebSecurityConfigurerAda
 }
 ```
 
-Смотреть полный пример https://bitbucket.org/rooxteam/uidm-sdk-java-samples/src/master/spring/
+See full source code of sample application at https://bitbucket.org/rooxteam/uidm-sdk-java-samples/src/master/spring/
 
-## Известные проблемы
+## Known issues
 
-Для Spring Boot версии ниже 2.0 выявлена проблема инициализации Spring Security.
+With SpringBoot 2.0 or older there's an issue with Spring Security initialization.
 
-Версии Spring Boot для которых подтвердилась проблема:
+Spring Boot versions confirmed to have the problem:
 * 1.5.10.RELEASE
 * 1.3.5.RELEASE
 
-#### Как проявляется:
+#### The problem appearance:
 
-Приложение не стартует, в логах присутствуют следующие записи:
+The application fails to start. Log-files contain the following messages:
 
 ```
 Initialization of bean failed; nested exception is org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'methodSecurityInterceptor' defined in class path resource [org/springframework/security/config/annotation/method/configuration/GlobalMethodSecurityConfiguration.class]: Invocation of init method failed; nested exception is java.lang.IllegalArgumentException: An AuthenticationManager is required
 ```
 
-#### Решение
+#### The solution:
 
-Добавить в конфигурацию Spring Security следующие методы:
+Add to Spring Security configuration the following methods:
 
 ```java
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Override
@@ -103,7 +104,9 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
 }
 ```
 
-# История изменений
+# Version history
+
+_Not yet translated._
 
 ## 3.29.3
 Версия com.nimbusds:nimbus-jose-jwt поднята до 9.32
