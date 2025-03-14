@@ -3,13 +3,13 @@ package com.rooxteam.sso.aal.client;
 import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.util.HttpHelper;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.message.BasicNameValuePair;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.HttpStatus;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -69,10 +69,10 @@ public class SsoTokenClient {
     }
 
     private static boolean success(HttpResponse r) {
-        return r.getStatusLine().getStatusCode() == HttpStatus.SC_OK;
+        return r.getCode() == HttpStatus.SC_OK;
     }
 
     private static boolean notFound(HttpResponse r) {
-        return r.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_FOUND;
+        return r.getCode() == HttpStatus.SC_NOT_FOUND;
     }
 }

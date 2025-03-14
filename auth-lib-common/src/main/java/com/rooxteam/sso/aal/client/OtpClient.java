@@ -22,22 +22,22 @@ import com.rooxteam.sso.aal.otp.ValidateOtpParameter;
 import com.rooxteam.sso.aal.userIp.UserIpProvider;
 import com.rooxteam.sso.aal.utils.StringUtils;
 import lombok.SneakyThrows;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpHeaders;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.CookieStore;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.cookie.Cookie;
-import org.apache.http.entity.ContentType;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.cookie.BasicClientCookie;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.cookie.BasicCookieStore;
+import org.apache.hc.client5.http.cookie.Cookie;
+import org.apache.hc.client5.http.cookie.CookieStore;
+import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.cookie.BasicClientCookie;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.message.BasicHeader;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -187,7 +187,7 @@ public class OtpClient {
     private OtpResponse makeOtpRequest(List<NameValuePair> params, OtpFlowState otpState) {
         HttpPost post = new HttpPost(config.getString(ConfigKeys.SSO_URL) + OAUTH2_ACCESS_TOKEN_PATH);
         post.addHeader(new BasicHeader(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON.getMimeType()));
-        post.setEntity(new UrlEncodedFormEntity(params, StandardCharsets.UTF_8));
+        post.setEntity(new UrlEncodedFormEntity(params, java.nio.charset.StandardCharsets.UTF_8));
 
         CookieStore basicCookieStore = new BasicCookieStore();
         HttpClientContext context = new HttpClientContext();
@@ -197,11 +197,11 @@ public class OtpClient {
             CookieStore cookieStore = context.getCookieStore();
             if (otpState != null) {
                 BasicClientCookie cookie = new BasicClientCookie(SESSION_ID_COOKIE_NAME, otpState.getSessionId());
-                cookie.setDomain(post.getURI().getHost());
+                cookie.setDomain(post.getUri().getHost());
                 cookieStore.addCookie(cookie);
             }
             response = httpClient.execute(post, context);
-            int status = response.getStatusLine().getStatusCode();
+            int status = response.getCode();
             String sessionIdCookie = getSessionIdCookie(cookieStore);
 
             HttpEntity entity = response.getEntity();

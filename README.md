@@ -1,4 +1,3 @@
-
 # Как начать использовать
 
 ## 1. Подключить репозиторий RooX Solutions
@@ -23,17 +22,20 @@ dependencies {
 2. Добавить импорт класса конфигурации
 
 ```java
+
 @SpringBootApplication
 @Import(UidmSpringSecurityFilterConfiguration.class)
 public class DemoApplication {
-	public static void main(String[] args) {
-		SpringApplication.run(DemoApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(DemoApplication.class, args);
+    }
 }
 ```
+
 3. Добавить фильтр в конфигурацию SpringSecurity
 
 ```java
+
 @Configuration
 @EnableGlobalMethodSecurity(
         prePostEnabled = true,
@@ -58,6 +60,7 @@ public class CustomWebSecurityConfigurerAdapter extends WebSecurityConfigurerAda
 Для Spring Boot версии ниже 2.0 выявлена проблема инициализации Spring Security.
 
 Версии Spring Boot для которых подтвердилась проблема:
+
 * 1.5.10.RELEASE
 * 1.3.5.RELEASE
 
@@ -74,28 +77,29 @@ Initialization of bean failed; nested exception is org.springframework.beans.fac
 Добавить в конфигурацию Spring Security следующие методы:
 
 ```java
-public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Override
+public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+    @Override
 
   ...
-  
+
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.authenticationProvider(new AuthenticationProvider() {
             @Override
             public Authentication authenticate(Authentication authentication) throws AuthenticationException {
                 return authentication;
             }
-    
+
             @Override
             public boolean supports(Class<?> authentication) {
                 return true;
             }
         });
     }
-    
+
     @Bean
     @Override
     public AuthenticationManager authenticationManagerBean() throws Exception {
-      return super.authenticationManagerBean();
+        return super.authenticationManagerBean();
     }
   
   ...
@@ -105,46 +109,163 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
 
 # История изменений
 
+## 24.2
+
+- Обновлена политика версионирования
+- Добавлены методы toString() для EvaluationRequest и EvaluationResponse чтобы улучшить логирование
+- Spring RestTemplate заменен на Apache HttpClient в auth-lib-common
+- Apache HttpClient обновлен до версии 5.4 в auth-lib-common
+- com.rooxteam.sso.clientcredentials.ClientCredentialsClient добавлены новые методы версии методов getAuthHeaderValue и
+  getToken, которые используют java.util.Map вместо org.springframework.util.MultiValueMap. Старые версии
+  методов отмечены как устаревшие. Быструю миграцию на новые версии методов можно выполнить, инициализировав новый
+  объект-имплементацию Map вокруг ранее
+  созданных параметров.
+- Отключен cookie management в HTTP клиенте
+- Добавлен необязательный параметр realm в запрос для Token Exchange
+- Добавлен конфиг для указания разрешенных client id для валидаторов токена ClientIdValidator, AudValidator
+
+## 3.37.0
+Добавлен TokenExchangeClient
+
+## 3.36.0
+Добавлена возможность указать AuthorizationType и ProviderType при конфигурации библиотеки
+
+## 3.35.0 
+Добавлен M2MClient 
+
+## 3.34.1
+- Валидатор AudValidator добавлен по-умолчанию в список валидаторов JWT, 
+- Исправлена опечатка в конфигурационном ключе для настройки списка валидаторов JWT-токена, 
+вместо 'com.rooxteam.all.jwt.validators' используется 'com.rooxteam.aal.jwt.validators'.
+Старое значение ключа оставлено для обратной совместимости с пометкой @deprecated.
+- Исправлена опечатка в конфигурационном ключе для настройки списка валидаторов клеймов токена
+вместо 'com.rooxteam.all.claims.validators' используется 'com.rooxteam.aal.claims.validators'
+Использование старого значения не предусмотрено.
+
+
+ВНИМАНИЕ! При использовании конфига 'com.rooxteam.aal.filter.principal_provider_type=JWT' или 
+'com.rooxteam.aal.filter.principal_provider_type=USERINFO'!
+После обновления на версию >= 3.34.1 при отсутствии настройки 'com.rooxteam.all.jwt.validators' 
+и 'com.rooxteam.aal.jwt.validators' будет по-умолчанию подключаться AudValidator, который сверяет значение клейма 'aud' 
+в JWT-токене со значением из конфига 'com.rooxteam.aal.auth.client', в случае не совпадения или отсутствия клейма 'aud'
+будет ошибка валидации JWT токена. 
+Возврат к прежнему поведению возможен добавлением конфигурации 'com.rooxteam.aal.jwt.validators=' (пустое значение).
+
+
+ВНИМАНИЕ! При использовании конфига 'com.rooxteam.aal.filter.principal_provider_type=TOKENINFO' или 
+отсутствия данного конфига!
+После обновления на версию >= 3.34.0 при отсутствии настройки 'com.rooxteam.aal.claims.validators' 
+будет по-умолчанию подключаться ClientIdValidator, который сверяет значение клейма 'client_id' 
+в ответе метода tokeninfo со значением из конфига 'com.rooxteam.aal.auth.client', в случае не совпадения или отсутствия 
+клейма 'client_id' будет ошибка валидации клеймов токена. 
+Возврат к прежнему поведению возможен добавлением конфигурации 'com.rooxteam.aal.claims.validators=' (пустое значение).
+
+
+## 3.34.0
+- Добавлен валидатор JWT-токена AudValidator для проверки клейма aud;
+- Добавлен валидатор клеймов токена ClientIdValidator для проверки клейма client_id, в случае если токен валидируется 
+через эндпоинт TOKENINFO;
+- Добавлено использование валидаторов JWT для случая валидации токена через OIDC эндпоинт userinfo.
+
+## 3.33.0
+SignatureValidator помечен как deprecated. 
+Добавлены валидаторы HsSignatureValidator, EsSignatureValidator, RsSignatureValidator для использования вместо SignatureValidator
+
+### Migration Guide
+
+- Если  SignatureValidator использовался для валидации подписи у алгоритмов семейства RS, 
+то его стоит заменить новым классом RsSignatureValidator.
+- Если  SignatureValidator использовался для валидации подписи у алгоритмов семейства ES,
+  то его стоит заменить новым классом EsSignatureValidator.
+
+## 3.32.0
+
+Добавлен Verifier для алгоритмов семейства HS (HS256, HS384, HS512) в SignatureValidator
+
+## 3.31.1
+
+Исправлена ошибка NullPointerException в случае валидации невалидного JWT-токена
+
+## 3.31.0
+
+Добавлена поддержали UserInfo OpenID Connect Core 1.0 (реализация PrincipalProvider)
+
+## 3.30.0
+
+1. Добавлены валидаторы: SubNotEmpty, Issuer, IssueTime
+   Добавлена возможность:
+2. при валидации iat, exp, настраивать clock skew(погрешность) в секундах
+3. отключить валидацию токена (ValidationType.None) в механизме кэширования при ClientCredentials авторизации в
+   Configuration клиента
+
+```properties
+# допустимый интервал времени в секундах, в пределах которого допускается небольшое расхождение между
+# временем на сервере, создавшем токен, и временем на сервере, который проверяет токен
+com.rooxteam.aal.jwt.validation.clockSkew=5
+```
+
+4. Добавлен AlgValidator с возможностью настроить допустимые алгоритмы цифровой подписи токена
+
+```properties
+# допустимые алгоритмы цифровой подписи токена
+com.rooxteam.aal.jwt.validation.allowedAlgorithms=RS256,ES256,ES512
+```
+
 ## 3.29.3
+
 Версия com.nimbusds:nimbus-jose-jwt поднята до 9.32
 
 ## 3.29.2
+
 1. Удалена настройка `com.rooxteam.auth.client_credentials.validation.enabledSendingTokenInHeader`
 2. Добавлена настройка по типу валидации клиентского токена `com.rooxteam.client_credentials.validation_type`
 
 ## 3.29.0
-Добавлен новый механизм маскирования чувствительных данных (через '*'). Настройки можно задавать через logback.xml в самом приложении, использующем SDK. Пример appender'а:
+
+Добавлен новый механизм маскирования чувствительных данных (через '*'). Настройки можно задавать через logback.xml в
+самом приложении, использующем SDK. Пример appender'а:
+
 ```xml
+
 <appender name="STDOUT_MASKED" class="ch.qos.logback.core.ConsoleAppender">
-  <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
-    <layout class="com.rooxteam.util.MaskingPatternLayout">
-      <maskPattern>Authorization\s*:\s*(.*?)</maskPattern>
-      <maskPattern>"access_token"\s*:\s*(.*?)",</maskPattern>
-      <maskPattern>client_secret=\[\s*(.*?)\],</maskPattern>
-      <maskPattern>Token:\s*(.*)\.</maskPattern>
-      <maskPattern>Token:\s*(.*),</maskPattern>
-      <maskPattern>&amp;client_secret=\s*(.*?)&amp;</maskPattern>
-      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
-    </layout>
-  </encoder>
+    <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+        <layout class="com.rooxteam.util.MaskingPatternLayout">
+            <maskPattern>Authorization\s*:\s*(.*?)</maskPattern>
+            <maskPattern>"access_token"\s*:\s*(.*?)",</maskPattern>
+            <maskPattern>client_secret=\[\s*(.*?)\],</maskPattern>
+            <maskPattern>Token:\s*(.*)\.</maskPattern>
+            <maskPattern>Token:\s*(.*),</maskPattern>
+            <maskPattern>&amp;client_secret=\s*(.*?)&amp;</maskPattern>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </layout>
+    </encoder>
 </appender>
 ```
-**Замечание**: после настройки нового механизма необходимо отключить старый способ маскирования - выставить в настройках параметр `com.rooxteam.aal.legacyMaskingEnabled=false`
+
+**Замечание**: после настройки нового механизма необходимо отключить старый способ маскирования - выставить в настройках
+параметр `com.rooxteam.aal.legacyMaskingEnabled=false`
 
 ## 3.28.0
+
 Добавлена возможность настраивать таймауты для запросов JWKS
 
 ## 3.27.0
-1. Исправлена ошибка в AbstractUserPreAuthenticatedProcessingFilter, приводящая к многократному обращению к ssо-server для валидации access_token, что сказывается на производительности.
-2. В сервлет-фильтре UidmUserPreAuthenticationFilter для названия куки используется шаблонизированный конфигурационный параметр.
-3. AbstractUserPreAuthenticatedProcessingFilter - deprecated, используем BaseUserPreAuthenticatedProcessingFilter вместо него.
+
+1. Исправлена ошибка в AbstractUserPreAuthenticatedProcessingFilter, приводящая к многократному обращению к ssо-server
+   для валидации access_token, что сказывается на производительности.
+2. В сервлет-фильтре UidmUserPreAuthenticationFilter для названия куки используется шаблонизированный конфигурационный
+   параметр.
+3. AbstractUserPreAuthenticatedProcessingFilter - deprecated, используем BaseUserPreAuthenticatedProcessingFilter вместо
+   него.
 
 ## 3.26.0
+
 Добавлена возможность настраивать кэш JWKS
 
 ## 3.25.0
+
 1. Добавлен метод валидации JWT в AalAuthorizationClient и RooxAuthenticationAuthorizationLibrary с ValidationResult-ом
-2. Переименована системная настройка com.rooxteam.aal.validation_type -> com.rooxteam.aal.filter.principal_provider_type   
+2. Переименована системная настройка com.rooxteam.aal.validation_type -> com.rooxteam.aal.filter.principal_provider_type
 
 ## 3.24.0
 
@@ -155,10 +276,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
 ```properties
 # Отключаем кэширование токенов
 com.rooxteam.auth.client_credentials.cacheEnabled=false
-
 # Задаем в секундах (с) время за сколько до ExpirationTime, следует обновить токен в кэше
 com.rooxteam.auth.client_credentials.updateTimeBeforeTokenExpiration=60
-
 # Отправлять access_token в Authorization header-е
 com.rooxteam.auth.client_credentials.validation.enabledSendingTokenInHeader=true
 ```
@@ -191,14 +310,11 @@ com.rooxteam.auth.client_credentials.validation.enabledSendingTokenInHeader=true
 
 Убрана поддержка кеша принципалов, так как это никогда хорошо не работало и не востребовано.
 
-
-
-
 ## 3.20.0
 
 Частичная поддержка нескольких реалмов для одного приложения.
 
-Реалм запроса выделяется из токена для авторизованных запросов и используется для определения агента OAuth для 
+Реалм запроса выделяется из токена для авторизованных запросов и используется для определения агента OAuth для
 последующей передачи в запросы к SSO-server.
 
 ```properties
@@ -222,10 +338,8 @@ com.rooxteam.realms.{realm}.aal.auth.password=secure_password
 ```properties
 # Эндпойнт вычислителя
 com.rooxteam.aal.opa.data_api.endpoint=http://localhost:8181/v1/data
-
 # Переключаем вызовы isAllowed на OPA с Legacy OpenAM
 com.rooxteam.aal.authorization_type=OPA
-
 # Опционально указать OPA-пакет с политиками
 com.rooxteam.aal.opa.package=authz
 
@@ -237,16 +351,16 @@ com.rooxteam.aal.opa.package=authz
 
 ## 3.17.1
 
-По соображениям безопасности изменено значение по-умолчанию для конфигурационного параметра 
-`com.rooxteam.aal.policy.cache.expire_after_write`. Новое значение: 3 (секунды). 
+По соображениям безопасности изменено значение по-умолчанию для конфигурационного параметра
+`com.rooxteam.aal.policy.cache.expire_after_write`. Новое значение: 3 (секунды).
 
 ## 3.17.0
 
 Фильтр аутентификации по токену:
 
 - вынесли конфигурируемые настройки:
-  - для задания имени куки, в которой ищется токен;
-  - список свойств Принципала, которые сохраняются в MDC;
+    - для задания имени куки, в которой ищется токен;
+    - список свойств Принципала, которые сохраняются в MDC;
 
 ## 3.16.1
 
@@ -256,27 +370,27 @@ com.rooxteam.aal.opa.package=authz
 
 Поддерживается улучшенный сценарий подписания операций через контроллер /sign-operation
 
-
 ## 3.15.3
 
 SDK поддерживает токены с и без легаси-префикса `sso_1.0_`.
 
-
 ## 3.15.2
 
-- Результат последнего вызова Evaluate Policy содержащий эдвайсы политики автоматически добавляется в атрибуты аутентификации. 
-  
-  Чтобы получить информацию, которая возвращается в эдвайсах, нужно инжектировать AuthenticationState 
+- Результат последнего вызова Evaluate Policy содержащий эдвайсы политики автоматически добавляется в атрибуты
+  аутентификации.
+
+  Чтобы получить информацию, которая возвращается в эдвайсах, нужно инжектировать AuthenticationState
   в метод контроллера и получить значение атрибута `evaluationAdvices`.
-  
+
 ```java
+
 @RequestMapping(method = RequestMethod.POST, value = "/payment")
 @PreAuthorize("@uidmAuthz.isAllowed('/payment', 'POST')")
-public PaymentResponseDto makePayment(@RequestBody PaymentRequestDto requestDto, 
-        AuthenticationState authenticationState) {
+public PaymentResponseDto makePayment(@RequestBody PaymentRequestDto requestDto,
+                                      AuthenticationState authenticationState) {
 
     Map<String, Object> evaluationAdvices = (Map<String, Object>) authenticationState.getAttributes()
-        .get("evaluationAdvices");
+            .get("evaluationAdvices");
 
     // your code here
 }
@@ -284,19 +398,20 @@ public PaymentResponseDto makePayment(@RequestBody PaymentRequestDto requestDto,
 
 ## 3.15.1
 
-- Результат последнего вызова Evaluate Policy содержащий клеймы автоматически добавляется в атрибуты аутентификации. 
-  
-  Чтобы получить информацию, которая возвращается в клеймах Policy Evaluation, нужно инжектировать AuthenticationState 
+- Результат последнего вызова Evaluate Policy содержащий клеймы автоматически добавляется в атрибуты аутентификации.
+
+  Чтобы получить информацию, которая возвращается в клеймах Policy Evaluation, нужно инжектировать AuthenticationState
   в метод контроллера и получить значение атрибута `evaluationClaims`.
-  
+
 ```java
+
 @RequestMapping(method = RequestMethod.POST, value = "/payment")
 @PreAuthorize("@uidmAuthz.isAllowed('/payment', 'POST')")
-public PaymentResponseDto makePayment(@RequestBody PaymentRequestDto requestDto, 
-        AuthenticationState authenticationState) {
+public PaymentResponseDto makePayment(@RequestBody PaymentRequestDto requestDto,
+                                      AuthenticationState authenticationState) {
 
     Map<String, Object> evaluationClaims = (Map<String, Object>) authenticationState.getAttributes()
-        .get("evaluationClaims");
+            .get("evaluationClaims");
 
     // your code here
 }
@@ -306,24 +421,24 @@ public PaymentResponseDto makePayment(@RequestBody PaymentRequestDto requestDto,
 
 - Добавлен сервис PermissionsEvaluationService.
   Метод `evaluate` сервиса возвращает список разрешенных операций для заданного пользователя.
-  
+
 ## 3.14.0
 
-- Успешный ответ на запрос Evaluate Policy поддерживает передачу клеймов токена. 
+- Успешный ответ на запрос Evaluate Policy поддерживает передачу клеймов токена.
   Sso-server должен быть сконфигурирован на формирование списка клеймов для передачи в ответе.
-  
+
   см. конфигурационный параметр `com.rooxteam.sso.policy-evaluation.response.claims`
 
 - Поддержка передачи IP-адреса пользователя в запросы на получение/верификацию OTP под операцию.
-  
-  Источник IP-адреса пользователя определяется конфигурационными параметрами: 
+
+  Источник IP-адреса пользователя определяется конфигурационными параметрами:
   `com.rooxteam.aal.user-context.ip-source` и `com.rooxteam.aal.user-context.ip-header`
 
 ## 3.13.0
 
 - Запрос на Evaluate Policy поддерживает передачу контекста исходного запроса.
-- Конфигурируемый источник IP-адреса пользователя. Конфигурационные параметры `com.rooxteam.aal.user-context.ip-source` 
-и `com.rooxteam.aal.user-context.ip-header`
+- Конфигурируемый источник IP-адреса пользователя. Конфигурационные параметры `com.rooxteam.aal.user-context.ip-source`
+  и `com.rooxteam.aal.user-context.ip-header`
 
 ## 3.12.2
 
@@ -331,12 +446,13 @@ public PaymentResponseDto makePayment(@RequestBody PaymentRequestDto requestDto,
 
 ## 3.12.1
 
-- ClientCredentialsClientFactory теперь выбрасывает исключение, если в него передается RestTemplate с настроенным обработчиком ошибок,
-поскольку это ломает логику обработки ответов по UIDM, и в результате токен может не обновляться вовремя
+- ClientCredentialsClientFactory теперь выбрасывает исключение, если в него передается RestTemplate с настроенным
+  обработчиком ошибок,
+  поскольку это ломает логику обработки ответов по UIDM, и в результате токен может не обновляться вовремя
 
 ## 3.12.0
 
-- Библиотека совместима с Java6 
+- Библиотека совместима с Java6
 - Убрана зависимость на request-cookie-store, классы перенесены в библиотеку UIDM SDK
 - Зависимость на Micrometer теперь опциональна. Если Micrometer нет в classpath - никакие метрики не пишутся
 
@@ -344,12 +460,15 @@ public PaymentResponseDto makePayment(@RequestBody PaymentRequestDto requestDto,
 
 - Упрощена работа фильтров, они теперь не подвержены сессионным оптимизациям Spring.
 - Улучшено логирование в фильтрах
-- Убраны методы setContinueFilterChainOnUnsuccessfulAuthentication, setCheckForPrincipalChanges, setInvalidateSessionOnPrincipalChange поскольку фильтр теперь работает более прямолинейно, всегда пытаясь аутентифицировать запрос (если один из предыдущих фильтров в цепочке его еще не аутентифицировал)
+- Убраны методы setContinueFilterChainOnUnsuccessfulAuthentication, setCheckForPrincipalChanges,
+  setInvalidateSessionOnPrincipalChange поскольку фильтр теперь работает более прямолинейно, всегда пытаясь
+  аутентифицировать запрос (если один из предыдущих фильтров в цепочке его еще не аутентифицировал)
 
 ### Migration Guide
 
-- Если использовались методы setContinueFilterChainOnUnsuccessfulAuthentication, setCheckForPrincipalChanges, setInvalidateSessionOnPrincipalChange на фильтрах из библиотеки, то убрать их использование.
-Правильная работа приложения не пострадает.    
+- Если использовались методы setContinueFilterChainOnUnsuccessfulAuthentication, setCheckForPrincipalChanges,
+  setInvalidateSessionOnPrincipalChange на фильтрах из библиотеки, то убрать их использование.
+  Правильная работа приложения не пострадает.
 
 ## 3.10.0
 
@@ -359,18 +478,20 @@ public PaymentResponseDto makePayment(@RequestBody PaymentRequestDto requestDto,
 
 ### Migration Guide
 
-При работе с ClientCredentialsClient для обработки исключений следует использовать следующие классы: 
+При работе с ClientCredentialsClient для обработки исключений следует использовать следующие классы:
+
 - AuthenticationException - ошибки аутентификации
 - NetworkErrorException - сетевые ошибки или ошибки SSO-server
 
-При работе с SsoAuthenticationClient и SsoAuthorizationClient 
-- если для обработки исключений использовались классы AuthenticationException и AuthorizationException, 
-то необходимо добавить обработку исключения NetworkErrorException;
-- если для обработки исключений использовался класс AalException, дополнительных действий не требуется. 
+При работе с SsoAuthenticationClient и SsoAuthorizationClient
+
+- если для обработки исключений использовались классы AuthenticationException и AuthorizationException,
+  то необходимо добавить обработку исключения NetworkErrorException;
+- если для обработки исключений использовался класс AalException, дополнительных действий не требуется.
 
 ## 3.9.1
 
-- Ошибки при I/O таймауте получили более friendly описание. 
+- Ошибки при I/O таймауте получили более friendly описание.
 
 ## 3.9.x
 
@@ -378,11 +499,11 @@ public PaymentResponseDto makePayment(@RequestBody PaymentRequestDto requestDto,
 
 ## 3.8.x
 
-- Добавлена поддержка Legacy варианта системной аутентификации через shared secret в конфигурации. По умолчанию выключена.
+- Добавлена поддержка Legacy варианта системной аутентификации через shared secret в конфигурации. По умолчанию
+  выключена.
 - `com.rooxteam.aal.jwt.issuer` теперь задавать не обязательно при работе без локальной валидации
-- Удалено конфигурационное свойство `com.rooxteam.aal.token.info.forward.attributes`. 
-Теперь все клеймы, которые были возвращены из UIDM в /tokeninfo будут выставляться в атрибуты. 
-
+- Удалено конфигурационное свойство `com.rooxteam.aal.token.info.forward.attributes`.
+  Теперь все клеймы, которые были возвращены из UIDM в /tokeninfo будут выставляться в атрибуты.
 
 ## 3.7.x
 
@@ -398,6 +519,7 @@ public PaymentResponseDto makePayment(@RequestBody PaymentRequestDto requestDto,
 ### Migration Guide
 
 Инициализацию AAL следует производить через билдер конфига:
+
 - ConfigurationBuilder.fromApacheCommonsConfiguration(config)
 - ConfigurationBuilder.fromMap(map)
 

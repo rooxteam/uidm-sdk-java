@@ -2,10 +2,11 @@ package com.rooxteam.sso.aal.client;
 
 import com.rooxteam.sso.aal.configuration.Configuration;
 import lombok.Setter;
-import org.apache.http.HttpException;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.core5.http.EntityDetails;
+import org.apache.hc.core5.http.HttpException;
+import org.apache.hc.core5.http.HttpRequest;
+import org.apache.hc.core5.http.HttpRequestInterceptor;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.jboss.logging.MDC;
 
 import java.io.IOException;
@@ -31,10 +32,10 @@ public class MonitoringHttpClientRequestInterceptor implements HttpRequestInterc
     }
 
     @Override
-    public void process(HttpRequest request, HttpContext context) throws HttpException, IOException {
+    public void process(HttpRequest httpRequest, EntityDetails entityDetails, HttpContext httpContext) {
         Map<String, String> forwardingHeaders = getForwardingHeaders();
         for (Map.Entry<String, String> header : forwardingHeaders.entrySet()) {
-            request.setHeader(header.getKey(), header.getValue());
+            httpRequest.setHeader(header.getKey(), header.getValue());
         }
     }
 

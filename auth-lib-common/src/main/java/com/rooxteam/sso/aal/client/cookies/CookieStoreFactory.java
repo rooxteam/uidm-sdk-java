@@ -1,7 +1,8 @@
 package com.rooxteam.sso.aal.client.cookies;
 
-import org.apache.http.client.CookieStore;
-import org.apache.http.impl.client.BasicCookieStore;
+
+import org.apache.hc.client5.http.cookie.BasicCookieStore;
+import org.apache.hc.client5.http.cookie.CookieStore;
 
 /**
  * @author Ivan Volynkin

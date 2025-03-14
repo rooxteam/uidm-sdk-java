@@ -1,11 +1,12 @@
 package com.rooxteam.sso.clientcredentials;
 
 import com.rooxteam.sso.clientcredentials.configuration.Configuration;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 
 import java.net.URI;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -15,23 +16,23 @@ import java.util.Map;
 final class ClientCredentialsClientBuilder {
     private final URI accessTokenEndpoint;
     private final URI tokenValidationEndpoint;
-    private final RestTemplate restTemplate;
+    private final CloseableHttpClient httpClient;
     private final Configuration configuration;
-    private MultiValueMap<String, String> params = new LinkedMultiValueMap<String, String>();
+    private final Map<String, List<String>> params = new LinkedHashMap<>();
     private String headerPrefix = "";
 
-    ClientCredentialsClientBuilder(final RestTemplate restTemplate,
+    ClientCredentialsClientBuilder(final CloseableHttpClient httpClient,
                                    final URI accessTokenEndpoint,
                                    final URI tokenValidationEndpoint,
                                    final Configuration configuration) {
         this.accessTokenEndpoint = accessTokenEndpoint;
         this.tokenValidationEndpoint = tokenValidationEndpoint;
-        this.restTemplate = restTemplate;
+        this.httpClient = httpClient;
         this.configuration = configuration;
     }
 
     ClientCredentialsClientBuilder params(String key, String value) {
-        params.add(key, value);
+        add(key, value);
         return this;
     }
 
@@ -41,7 +42,7 @@ final class ClientCredentialsClientBuilder {
     }
 
     ClientCredentialsClientImpl build() {
-        return new ClientCredentialsClientImpl(restTemplate,
+        return new ClientCredentialsClientImpl(httpClient,
                 accessTokenEndpoint,
                 tokenValidationEndpoint,
                 params,
@@ -51,8 +52,14 @@ final class ClientCredentialsClientBuilder {
 
     ClientCredentialsClientBuilder params(final Map<String, String> additionalRequestParameters) {
         for (Map.Entry<String, String> entry : additionalRequestParameters.entrySet()) {
-            this.params.add(entry.getKey(), entry.getValue());
+           add(entry.getKey(), entry.getValue());
         }
         return this;
+    }
+
+    private void add(String key, String value) {
+        List<String> values = this.params.computeIfAbsent(key, k -> new LinkedList<>());
+
+        values.add(value);
     }
 }

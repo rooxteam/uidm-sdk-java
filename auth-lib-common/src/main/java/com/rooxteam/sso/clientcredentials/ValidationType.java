@@ -7,4 +7,5 @@ public enum ValidationType {
     USERINFO,
     TOKENINFO,
     JWT,
+    NONE,
 }

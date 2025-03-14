@@ -5,24 +5,29 @@ import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.validation.jwt.JwtValidatorSPI;
 import com.rooxteam.sso.aal.validation.jwt.ValidationResult;
 import lombok.SneakyThrows;
-import org.apache.http.impl.client.CloseableHttpClient;
+import lombok.ToString;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 
 import java.time.Clock;
 import java.util.Date;
 
 import static com.rooxteam.sso.aal.AalLogger.LOG;
+import static com.rooxteam.sso.aal.ConfigKeys.JWT_VALIDATION_CLOCK_SKEW;
 
 /**
  * Validates nbf and exp if present;
  */
+@ToString(exclude = "clock")
 @SuppressWarnings("unused")
 public class TimeIntervalValidator implements JwtValidatorSPI {
 
     private final Clock clock;
 
+    private int clockSkew;
+
     /**
      * Special constructor for tests
-     * @param clock
+     * @param clock class
      */
     public TimeIntervalValidator(Clock clock) {
         this.clock = clock;
@@ -37,7 +42,7 @@ public class TimeIntervalValidator implements JwtValidatorSPI {
 
     @Override
     public void configure(Configuration configuration, CloseableHttpClient httpClient) {
-
+        this.clockSkew = configuration.getInt(JWT_VALIDATION_CLOCK_SKEW, 0) * 1000;
     }
 
     @SneakyThrows
@@ -53,10 +58,12 @@ public class TimeIntervalValidator implements JwtValidatorSPI {
         } else {
             LOG.debug("No nbf. Skipping check");
         }
+
+        Date nowWithClockSkew = new Date(clock.millis() + clockSkew);
         Date exp = signedJwt.getJWTClaimsSet().getExpirationTime();
         if (exp != null) {
-            LOG.debugv("exp: {0}, current time: {1}", exp, now);
-            if (now.after(exp)) {
+            LOG.debugv("exp: {0}, current time with clockSkew: {1} clockSkew: {2}", exp, nowWithClockSkew, clockSkew);
+            if (exp.before(nowWithClockSkew)) {
                 return ValidationResult.fail(ValidationResult.Reason.Expired);
             }
         } else {

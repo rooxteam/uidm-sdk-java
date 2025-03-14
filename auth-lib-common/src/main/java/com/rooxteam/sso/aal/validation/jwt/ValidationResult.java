@@ -17,7 +17,7 @@ public final class ValidationResult {
 
     public enum Reason {
         Success, Unknown, UnsupportedAlg, NoValidatorsConfigured, BeforeNotBefore, Expired, SignatureNotValid, TokenWasUsed, TokenStoreError, KeyNotFound,
-        TokenIsNotSigned, InvalidIssuer, InvalidSub, InvalidIssueTime
+        TokenIsNotSigned, InvalidIssuer, InvalidSub, InvalidIssueTime, NotValidJwt, InvalidAudience
     }
 
     public static ValidationResult success() {

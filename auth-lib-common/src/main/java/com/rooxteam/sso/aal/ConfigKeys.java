@@ -15,6 +15,27 @@ public interface ConfigKeys {
     String SSO_URL = "com.rooxteam.aal.sso.endpoint";
 
     /**
+     * {@value} - Путь к oauth2 access token endpoint
+     */
+    String ACCESS_TOKEN_PATH = "com.rooxteam.aal.sso.access_token.endpoint";
+
+    String ACCESS_TOKEN_PATH_DEFAULT = "/oauth2/access_token";
+
+    /**
+     * {@value} - Путь к oauth2 access token exchange endpoint
+     */
+    String TOKEN_EXCHANGE_PATH = "com.rooxteam.aal.sso.token_exchange.endpoint";
+
+    String TOKEN_EXCHANGE_PATH_DEFAULT = "/oauth2/access_token";
+
+    /**
+     * {@value} - Путь к oauth2 token info endpoint
+     */
+    String TOKEN_INFO_PATH = "com.rooxteam.aal.sso.token_info.endpoint";
+
+    String TOKEN_INFO_PATH_DEFAULT = "/oauth2/tokeninfo";
+
+    /**
      * {@value} - Имя OAuth клиента для аутентификации в Customer SSO из AAL
      */
     String CLIENT_ID = "com.rooxteam.aal.auth.client";
@@ -23,6 +44,11 @@ public interface ConfigKeys {
      * {@value} - Пароль OAuth клиента для аутентификации в Customer SSO из AAL
      */
     String CLIENT_SECRET = "com.rooxteam.aal.auth.password";
+
+    /**
+     * {@value} - Имя OAuth клиента для аутентификации в Customer SSO из AAL
+     */
+    String ALLOWED_CLIENT_IDS = "com.rooxteam.aal.auth.allowed-clients";
 
     /**
      * {@value} - JWT shared key
@@ -232,6 +258,10 @@ public interface ConfigKeys {
 
     int HTTP_CONNECTION_TIMEOUT_DEFAULT = 10000;
 
+    String COOKIE_STORE_ENABLE_PER_REQUEST = "com.rooxteam.sso.aal.client.cookie.store.enablePerRequest";
+
+    boolean COOKIE_STORE_ENABLE_PER_REQUEST_DEFAULT = true;
+
     /**
      * Authentication type can be:
      * <li>
@@ -341,8 +371,39 @@ public interface ConfigKeys {
     String CLIENT_SECRET_FOR_REALM = "com.rooxteam.realms.{realm}.aal.auth.password";
 
     String JWKS_URL = "com.rooxteam.aal.jwks.url";
-    String JWT_VALIDATORS = "com.rooxteam.all.jwt.validators";
+
+    /**
+     * Список классов валидаторов для JWT токенов через запятую.
+     *
+     * Неотключаемые валидаторы (используются всегда, нельзя отключить)
+     *  - com.rooxteam.sso.aal.validation.jwt.impl.AlgNoneValidator - проверка что не используется JWT токен без подписи
+     *  - com.rooxteam.sso.aal.validation.jwt.impl.TimeIntervalValidator - валидация клеймов nbf и exp
+     *
+     * Возможные значения:
+     *  - com.rooxteam.sso.aal.validation.jwt.impl.AudValidator - проверка клейма aud - включен по-умолчанию
+     *  - com.rooxteam.sso.aal.validation.jwt.impl.AlgValidator - проверка алгоритма
+     *  - com.rooxteam.sso.aal.validation.jwt.impl.SignatureValidator - @deprecated проверка подписи ECDSA и RSASSA
+     *  - com.rooxteam.sso.aal.validation.jwt.impl.EsSignatureValidator - проверка подписи ECDSA
+     *  - com.rooxteam.sso.aal.validation.jwt.impl.HsSignatureValidator - проверка подписи HMAC
+     *  - com.rooxteam.sso.aal.validation.jwt.impl.RsSignatureValidator - проверка подписи RSASSA
+     *  - com.rooxteam.sso.aal.validation.jwt.impl.IssuerValidator - проверка клейма iss
+     *  - com.rooxteam.sso.aal.validation.jwt.impl.IssueTimeValidator - проверка клейма iat
+     *  - com.rooxteam.sso.aal.validation.jwt.impl.SubNotEmptyValidator - проверка на не пустой клейм sub
+     */
+    String JWT_VALIDATORS = "com.rooxteam.aal.jwt.validators";
+    String JWT_VALIDATORS_DEFAULT = "com.rooxteam.sso.aal.validation.jwt.impl.AudValidator";
+
     String REQUEST_SIGNATURE_HEADER = "X-Request-Signature";
+
+    /**
+     * Список валидаторов для клеймов токена через запятую.
+     * Используется при валидации через TOKENINFO.
+     *
+     * Возможные значения:
+     *  - com.rooxteam.sso.aal.validation.claims.impl.ClientIdValidator - валидация клейма 'client_id'
+     */
+    String CLAIM_VALIDATORS = "com.rooxteam.aal.claims.validators";
+    String CLAIM_VALIDATORS_DEFAULT = "com.rooxteam.sso.aal.validation.claims.impl.ClientIdValidator";
 
     /**
      * Время жизни JWKS в кэше (в минутах). В случае значения -1 время жизни не лимитируется.
@@ -379,4 +440,25 @@ public interface ConfigKeys {
      * Значение по-умолчанию для настройки включения/выключения старого способа маскирования чувствительных данных.
      */
     boolean LEGACY_MASKING_ENABLED_DEFAULT = true;
+
+    /**
+     * {@value} - допустимый интервал времени в секундах, в пределах которого допускается небольшое расхождение между
+     * временем на сервере, создавшем токен, и временем на сервере, который проверяет токен.
+     */
+    String JWT_VALIDATION_CLOCK_SKEW = "com.rooxteam.aal.jwt.validation.clockSkew";
+
+    /**
+     * {@value} - допустимые алгоритмы цифровой подписи токена.
+     */
+    String JWT_VALIDATION_ALLOWED_ALGORITHMS = "com.rooxteam.aal.jwt.validation.allowedAlgorithms";
+
+    /**
+     *  Внешний URL для userinfo (например, используется в PrincipalUserInfoProviderImpl)
+     */
+    String USERINFO_URL = "com.rooxteam.aal.userinfo.endpoint";
+
+    /**
+     * Secret для валидации HS алгоритмов у JWS
+     */
+    String JWT_VALIDATION_HS_SHARED_SECRET = "com.rooxteam.aal.jwt.validation.HSsharedSecret";
 }

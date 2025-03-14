@@ -1,7 +1,7 @@
 package com.rooxteam.sso.aal;
 
 import com.rooxteam.sso.aal.otp.OtpFlowState;
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.HttpResponse;
 import org.jboss.logging.BasicLogger;
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.Cause;
@@ -12,8 +12,13 @@ import org.jboss.logging.annotations.ValidIdRange;
 import org.jboss.logging.annotations.ValidIdRanges;
 
 import java.io.IOException;
+import java.text.ParseException;
 
-import static org.jboss.logging.Logger.Level.*;
+import static org.jboss.logging.Logger.Level.DEBUG;
+import static org.jboss.logging.Logger.Level.ERROR;
+import static org.jboss.logging.Logger.Level.INFO;
+import static org.jboss.logging.Logger.Level.TRACE;
+import static org.jboss.logging.Logger.Level.WARN;
 import static org.jboss.logging.annotations.Message.Format.MESSAGE_FORMAT;
 
 @MessageLogger(projectCode = "RX_UIDM_AAL___", length = 4)
@@ -171,6 +176,11 @@ public interface AalLogger extends BasicLogger {
                                   final @Cause IOException e);
 
     @LogMessage(level = ERROR)
+    @Message(id = 3042, format = MESSAGE_FORMAT,
+            value = "Parsing error during token info response parsing. URL: {0}")
+    void errorOnParsingUserInfoResponse(final String tokenInfoEndpoint, final @Cause ParseException e);
+
+    @LogMessage(level = ERROR)
     @Message(id = 3034, format = MESSAGE_FORMAT,
             value = "Got error while authentication. Unexpected status after authentication in SSO: ''{0}''")
     void errorUnexpectedStateAfterAuthenticationInSso(String status);
@@ -186,7 +196,15 @@ public interface AalLogger extends BasicLogger {
             value = "Got error while user authentication. For details see cause.")
     void errorAuthentication(@Cause Exception e);
 
+    @LogMessage(level = ERROR)
+    @Message(id = 3044, format = MESSAGE_FORMAT,
+            value = "Required subjectTokenType is missing")
+    void errorRequiredSubjectTokenTypeMissing();
 
+    @LogMessage(level = ERROR)
+    @Message(id = 3045, format = MESSAGE_FORMAT,
+            value = "Required subjectToken is missing")
+    void errorRequiredSubjectTokenMissing();
 
     @LogMessage(level = WARN)
     @Message(id = 4001, format = MESSAGE_FORMAT,
@@ -224,6 +242,35 @@ public interface AalLogger extends BasicLogger {
     @Message(id = 4007, format = MESSAGE_FORMAT, value = "Request cookie store context is not defined!")
     void warnRequestCookieStoreContextIsNotDefined();
 
+
+    @LogMessage(level = WARN)
+    @Message(id = 4008, format = MESSAGE_FORMAT,
+            value = "Userinfo endpoint is null.")
+    void warnNullUserInfoEndpoint();
+
+    @LogMessage(level = WARN)
+    @Message(id = 4009, format = MESSAGE_FORMAT, value = "Token claims validation failed.")
+    void warnInvalidValidationTokenClaims();
+
+    @LogMessage(level = WARN)
+    @Message(id = 4010, format = MESSAGE_FORMAT, value = "Client id ''{0}'' is not allowed by config (allowed list: {1})")
+    void warnClientIdIsNotAllowed(String value, Object allowedClientIds);
+
+    @LogMessage(level = WARN)
+    @Message(id = 4011, format = MESSAGE_FORMAT, value = "No ''client_id'' in claims provided")
+    void warnNoClientId();
+
+    @LogMessage(level = WARN)
+    @Message(id = 4012, format = MESSAGE_FORMAT, value = "Audience ''{0}'' is not allowed by config (allowed list: {1})")
+    void warnAudienceIsNotAllowed(Object value, Object allowedClientIds);
+
+    @LogMessage(level = WARN)
+    @Message(id = 4013, format = MESSAGE_FORMAT, value = "No audience in token provided")
+    void warnNoAudience();
+
+    @LogMessage(level = INFO)
+    @Message(id = 6001, format = MESSAGE_FORMAT, value = "Validator {0} failed validation with result {1}")
+    void infoFailedValidator(Object validator, Object result);
 
     @LogMessage(level = DEBUG)
     @Message(id = 7001, format = MESSAGE_FORMAT,
@@ -307,6 +354,4 @@ public interface AalLogger extends BasicLogger {
     @Message(id = 9021, format = MESSAGE_FORMAT,
             value = "Failed to authenticate because IP not in pool.")
     void traceIpNotInPool();
-
-
 }

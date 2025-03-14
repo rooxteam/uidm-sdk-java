@@ -1,48 +1,65 @@
 package com.rooxteam.sso.clientcredentials;
 
 import com.rooxteam.compat.Objects;
+import com.rooxteam.sso.aal.client.HttpClientFactory;
+import com.rooxteam.sso.aal.client.MonitoringHttpClientRequestInterceptor;
+import com.rooxteam.sso.aal.client.configuration.ClientConfiguration;
+import com.rooxteam.sso.aal.client.configuration.ClientConfigurationFactory;
 import com.rooxteam.sso.aal.utils.StringUtils;
-import com.rooxteam.sso.clientcredentials.configuration.Configuration;
-import org.springframework.web.client.DefaultResponseErrorHandler;
-import org.springframework.web.client.RestTemplate;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.core5.http.HttpRequestInterceptor;
 
 
 @SuppressWarnings("unused")
 public final class ClientCredentialsClientFactory {
 
-    /**
-     * Instantiate new instance of ClientCredentialsClient.
-     * Use one instance of ClientCredentialsClient for each client_id.
-     *
-     * @param config configuration. Use Configuration Factory for instantiation from different sources
-     * @return ClientCredentialsClient
-     */
-    public static ClientCredentialsClient create(final Configuration config) {
-        return create(config, RestTemplateFactory.getDefaultConfiguredRestTemplate(config));
+    public static ClientCredentialsClient create(
+            final com.rooxteam.sso.clientcredentials.configuration.Configuration config
+    ) {
+        CloseableHttpClient defaultClient = HttpClientFactory.createWithDefaultConfiguration();
+
+        return create(config, defaultClient);
     }
 
     /**
      * Instantiate new instance of ClientCredentialsClient.
      * Use one instance of ClientCredentialsClient for each client_id.
      *
-     * @param config       configuration. Use Configuration Factory for instantiation from different sources
-     * @param restTemplate RestTemplate used for makng requests. When using this signature it's caller responsibility
-     *                     to configure it properly. Otherwise use ClientCredentialsClient create(final Configuration
-     *                     config) signature
+     * @param aalConfig     AAL configuration.
+     * @param configuration Client configuration.
+     * @return ClientCredentialsClient
+     */
+    public static ClientCredentialsClient create(
+            final com.rooxteam.sso.aal.configuration.Configuration aalConfig,
+            final com.rooxteam.sso.clientcredentials.configuration.Configuration configuration
+    ) {
+        ClientConfiguration clientConfiguration = ClientConfigurationFactory.create(aalConfig);
+        HttpRequestInterceptor interceptor = new MonitoringHttpClientRequestInterceptor(aalConfig);
+        CloseableHttpClient httpClient = HttpClientFactory.create(clientConfiguration, interceptor);
+
+        return create(configuration, httpClient);
+    }
+
+    /**
+     * Instantiate new instance of ClientCredentialsClient.
+     * Use one instance of ClientCredentialsClient for each client_id.
+     *
+     * @param config     Client configuration.
+     * @param httpClient HttpClient used for making requests. When using this signature it's caller responsibility
+     *                   to configure it properly. Otherwise use ClientCredentialsClient create(final Configuration
+     *                   config) signature
      * @return ClientCredentialsClient
      */
     @SuppressWarnings("WeakerAccess")
-    public static ClientCredentialsClient create(final Configuration config,
-                                                 final RestTemplate restTemplate) {
+    public static ClientCredentialsClient create(
+            final com.rooxteam.sso.clientcredentials.configuration.Configuration config,
+            final CloseableHttpClient httpClient
+    ) {
         Objects.requireNonNull(config, "config");
-        Objects.requireNonNull(config, "restTemplate");
-        if (restTemplate.getErrorHandler() != null && !(restTemplate.getErrorHandler() instanceof DefaultResponseErrorHandler)) {
-            throw new IllegalArgumentException("restTemplate can't have non-default error handler because this will fail " +
-                    "client credentials token refresh");
-        }
+        Objects.requireNonNull(config, "httpClient");
 
         final ClientCredentialsClientBuilder builder = new ClientCredentialsClientBuilder(
-                restTemplate,
+                httpClient,
                 config.getAccessTokenEndpoint(),
                 config.getTokenValidationEndpoint(),
                 config);
@@ -67,6 +84,4 @@ public final class ClientCredentialsClientFactory {
 
         return builder.build();
     }
-
-
 }

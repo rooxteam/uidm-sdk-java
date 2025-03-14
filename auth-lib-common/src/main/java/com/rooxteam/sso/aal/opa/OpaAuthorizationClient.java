@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.Principal;
 import com.rooxteam.sso.aal.PrincipalImpl;
-import com.rooxteam.sso.aal.PropertyScope;
 import com.rooxteam.sso.aal.client.CommonSsoAuthorizationClient;
 import com.rooxteam.sso.aal.client.EvaluationContext;
 import com.rooxteam.sso.aal.client.model.Decision;
@@ -20,12 +19,13 @@ import com.rooxteam.sso.aal.exception.NetworkErrorException;
 import com.rooxteam.sso.aal.utils.StringUtils;
 import com.rooxteam.util.HttpHelper;
 import lombok.SneakyThrows;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.util.EntityUtils;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.cookie.BasicCookieStore;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.core5.http.ParseException;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -196,7 +196,7 @@ public class OpaAuthorizationClient extends CommonSsoAuthorizationClient {
         try {
             result = EntityUtils.toString(response.getEntity());
 
-            if (response.getStatusLine().getStatusCode() != 200) {
+            if (response.getCode() != 200) {
                 try {
                     ObjectNode jsonResult = (ObjectNode) jsonMapper.readTree(result);
                     if (jsonResult.has("error")) {
@@ -206,9 +206,11 @@ public class OpaAuthorizationClient extends CommonSsoAuthorizationClient {
                         return result;
                     }
                 } catch (IOException e) {
-                    throw new NetworkErrorException("Failed to read a response from the server:" + response.getStatusLine(), e);
+                    throw new NetworkErrorException("Failed to read a response from the server:" + response.getCode(), e);
                 }
             }
+        } catch (ParseException e) {
+            throw new NetworkErrorException("Empty response from the server");
         } finally {
             response.close();
         }

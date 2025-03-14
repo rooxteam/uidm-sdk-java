@@ -1,73 +1,86 @@
 package com.rooxteam.sso.clientcredentials;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTParser;
 import com.rooxteam.compat.Objects;
 import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.exception.AuthenticationException;
 import com.rooxteam.sso.aal.exception.NetworkErrorException;
+import com.rooxteam.sso.aal.exception.ValidateException;
 import com.rooxteam.sso.clientcredentials.configuration.Configuration;
+import com.rooxteam.util.HttpHelper;
 import com.rooxteam.util.TokenUtils;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.RequestEntity;
-import org.springframework.http.ResponseEntity;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.HttpStatusCodeException;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.HttpException;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.HttpStatus;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.ParseException;
+import org.apache.hc.core5.http.io.HttpClientResponseHandler;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
+import org.apache.hc.core5.net.URIBuilder;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.rooxteam.sso.clientcredentials.ClientCredentialsClientLogger.LOG;
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 
 final class ClientCredentialsClientImpl implements ClientCredentialsClient {
-    private final RestTemplate restTemplate;
+    private final CloseableHttpClient httpClient;
     private final URI accessTokenEndpoint;
     private final URI tokenValidationEndpoint;
-    private final MultiValueMap<String, String> defaultParameters;
+    private final Map<String, List<String>> defaultParameters;
     private final String headerPrefix;
     private final Configuration configuration;
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private final ConcurrentHashMap<MultiValueMap<String, String>, ClientCredentialsTokenModel> tokens = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Map<String, List<String>>, ClientCredentialsTokenModel> tokens = new ConcurrentHashMap<>();
 
-    ClientCredentialsClientImpl(final RestTemplate restTemplate,
+    ClientCredentialsClientImpl(final CloseableHttpClient httpClient,
                                 final URI accessTokenEndpoint,
                                 final URI tokenValidationEndpoint,
-                                final MultiValueMap<String, String> defaultParameters,
+                                final Map<String, List<String>> defaultParameters,
                                 final String headerPrefix,
                                 final Configuration configuration) {
-        this.restTemplate = Objects.requireNonNull(restTemplate, "restTemplate");
+        this.httpClient = Objects.requireNonNull(httpClient, "httpClient");
         this.accessTokenEndpoint = Objects.requireNonNull(accessTokenEndpoint, "accessTokenEndpoint");
         this.tokenValidationEndpoint = Objects.requireNonNull(tokenValidationEndpoint, "tokenValidationEndpoint");
         if (defaultParameters != null) {
             this.defaultParameters = defaultParameters;
         } else {
-            this.defaultParameters = new LinkedMultiValueMap<String, String>();
+            this.defaultParameters = new LinkedHashMap<>();
         }
         this.headerPrefix = headerPrefix;
         this.configuration = configuration;
     }
 
     @Override
-    public String getAuthHeaderValue(MultiValueMap<String, String> params) {
+    public String getAuthHeaderValue(Map<String, List<String>> params) {
         String token = getTokenValidating(params);
         return headerPrefix + token;
     }
 
     @Override
-    public String getToken(MultiValueMap<String, String> params) {
+    public String getToken(Map<String, List<String>> params) {
         return getTokenValidating(params);
     }
 
@@ -82,7 +95,6 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
         return getTokenValidating(defaultParameters);
     }
 
-
     private boolean isExpired(String token) {
         if (token == null || token.isEmpty()) {
             return true;
@@ -90,75 +102,91 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
         final String tokenForLogging = trimTokenForLogging(token);
         try {
             switch (configuration.getValidationType()) {
-                case USERINFO:
-                    URI uri = UriComponentsBuilder.fromUri(tokenValidationEndpoint)
-                                                        .build().toUri();
-                    RequestEntity.HeadersBuilder<?> requestBuilder = RequestEntity.get(uri)
-                                                                                  .accept(MediaType.APPLICATION_JSON)
-                                                                                  .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE);
-                    requestBuilder.header(AUTHORIZATION, TokenUtils.wrapBearerToken(token));
-                    RequestEntity<Void> requestEntity = requestBuilder.build();
-                    restTemplate.exchange(requestEntity, Object.class);
-                    break;
-                    
+                case USERINFO: {
+                    HttpClientContext context = new HttpClientContext();
+                    HttpPost httpPost = new HttpPost(tokenValidationEndpoint);
+                    httpPost.setHeader(HttpHeaders.AUTHORIZATION, TokenUtils.wrapBearerToken(token));
+                    httpPost.setHeader(HttpHeaders.ACCEPT, ContentType.APPLICATION_JSON);
+                    httpPost.setHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON);
+
+                    return isTokenExpired(httpPost, context, tokenForLogging);
+                }
+
                 case JWT:
                     JWT jwt = JWTParser.parse(token);
                     Date exp = jwt.getJWTClaimsSet().getExpirationTime();
                     if (exp != null) {
                         Date now = new Date(Clock.systemUTC().millis());
                         LOG.traceExpAndCurrentTime(exp, now);
-                        if (now.after(exp)) {
-                            return true;
-                        }
+                        return now.after(exp);
                     } else {
                         LOG.traceMessage("No exp. Skipping check");
                     }
-                    break;
-                    
-                default:
-                case TOKENINFO:
-                    uri = UriComponentsBuilder.fromUri(tokenValidationEndpoint)
-                                              .queryParam("access_token", token)
-                                              .build().toUri();
-                    restTemplate.getForEntity(uri, Object.class);
-                    break;
+                    return false;
+
+                case NONE:
+                    return false;
+
+                case TOKENINFO: {
+                    HttpClientContext context = new HttpClientContext();
+
+                    URI uri = new URIBuilder(tokenValidationEndpoint)
+                            .addParameter("access_token", token)
+                            .build();
+
+                    return isTokenExpired(new HttpGet(uri), context, tokenForLogging);
+                }
+
             }
+
             return false;
-        } catch (HttpStatusCodeException e) {
-            if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
-                LOG.traceOnValidatingTokenTokenExpired(tokenForLogging);
-            } else if (e.getStatusCode() == HttpStatus.FORBIDDEN) {
-                LOG.traceOnValidatingTokenTokenForbidden(tokenForLogging);
-            } else {
-                LOG.errorOnValidatingTokenHttp(tokenValidationEndpoint,
-                        tokenForLogging,
-                        e.getStatusCode(),
-                        trimBodyForLogging(e.getResponseBodyAsString()),
-                        e);
-            }
-            return true;
-        } catch (ResourceAccessException e) {
-            LOG.errorOnValidatingTokenIO(tokenValidationEndpoint,
-                    tokenForLogging,
-                    ConfigKeys.HTTP_CONNECTION_TIMEOUT,
-                    configuration.getConnectTimeout(),
-                    ConfigKeys.HTTP_SOCKET_TIMEOUT,
-                    configuration.getReadTimeout(),
-                    e);
-            return true;
         } catch (Exception e) {
             LOG.errorOnValidatingToken(tokenValidationEndpoint, tokenForLogging, e);
             return true;
         }
     }
 
-    private String getTokenValidating(MultiValueMap<String, String> requestParameters) {
+    private boolean isTokenExpired(HttpUriRequestBase request, HttpClientContext context, String token) {
+        try {
+            return httpClient.execute(request, context, response -> {
+                int code = response.getCode();
+                if (code == HttpStatus.SC_UNAUTHORIZED) {
+                    LOG.traceOnValidatingTokenTokenExpired(token);
+                    return true;
+                } else if (code == HttpStatus.SC_FORBIDDEN) {
+                    LOG.traceOnValidatingTokenTokenForbidden(token);
+                    return true;
+                } else if (code != HttpStatus.SC_OK) {
+                    LOG.errorOnValidatingTokenHttp(tokenValidationEndpoint,
+                            token,
+                            code,
+                            trimBodyForLogging(EntityUtils.toString(response.getEntity())),
+                            new HttpException("Got unexpected response code: " + code)
+                    );
+                    return true;
+                }
+                return false;
+            });
+        } catch (IOException e) {
+            LOG.errorOnValidatingTokenIO(tokenValidationEndpoint,
+                    token,
+                    ConfigKeys.HTTP_CONNECTION_TIMEOUT,
+                    configuration.getConnectTimeout(),
+                    ConfigKeys.HTTP_SOCKET_TIMEOUT,
+                    configuration.getReadTimeout(),
+                    e);
 
-        MultiValueMap<String, String> mergedParams = new LinkedMultiValueMap<String, String>();
+            return true;
+        }
+    }
+
+    private String getTokenValidating(Map<String, List<String>> requestParameters) {
+
+        Map<String, List<String>> mergedParams = new LinkedHashMap<>();
         mergedParams.putAll(this.defaultParameters);
         mergedParams.putAll(requestParameters);
 
-        MultiValueMap<String, String> paramsForLogging = clearParamsForLogging(mergedParams);
+        Map<String, List<String>> paramsForLogging = clearParamsForLogging(mergedParams);
 
         LOG.traceGetToken(paramsForLogging);
 
@@ -191,45 +219,34 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
         return token.getValue();
     }
 
-    private void putToken(MultiValueMap<String, String> params, ClientCredentialsTokenModel token) {
+    private void putToken(Map<String, List<String>> params, ClientCredentialsTokenModel token) {
         LOG.tracePutTokenInStore(clearParamsForLogging(params), trimTokenForLogging(token.getValue()));
         tokens.put(params, token);
     }
 
-    private void clearToken(MultiValueMap<String, String> params) {
+    private void clearToken(Map<String, List<String>> params) {
         LOG.traceRemovedTokenFromStore(clearParamsForLogging(params));
         tokens.remove(params);
     }
 
-    private ClientCredentialsTokenModel authorizeAndGetToken(MultiValueMap<String, String> additionalRequestParameters) {
-
-        final MultiValueMap<String, String> params;
+    private ClientCredentialsTokenModel authorizeAndGetToken(Map<String, List<String>> additionalRequestParameters) {
+        final List<NameValuePair> params = new ArrayList<>();
         if (additionalRequestParameters != null) {
-            params = additionalRequestParameters;
-        } else {
-            params = new LinkedMultiValueMap<String, String>();
+            for (Map.Entry<String, List<String>> entry : additionalRequestParameters.entrySet()) {
+                entry.getValue().forEach(v -> params.add(new BasicNameValuePair(entry.getKey(), v)));
+            }
         }
-        MultiValueMap<String, String> paramsForLogging = clearParamsForLogging(params);
 
+        List<NameValuePair> paramsForLogging = clearParamsForLogging(params);
         LOG.traceRequestNewToken(paramsForLogging);
 
-        LinkedMultiValueMap<String, String> requestBody = new LinkedMultiValueMap<String, String>();
-        requestBody.putAll(this.defaultParameters);
-        requestBody.putAll(params);
-        HttpEntity<MultiValueMap<String, String>> request = createEntity(requestBody);
-
-        final ResponseEntity<TokenResponse> responseEntity;
+        ClientCredentialsTokenModel model;
         try {
-            responseEntity = restTemplate.postForEntity(accessTokenEndpoint, request, TokenResponse.class);
-        } catch (HttpStatusCodeException e) {
-            LOG.errorOnGetTokenHttp(accessTokenEndpoint, paramsForLogging, e.getStatusCode(),
-                    trimBodyForLogging(e.getResponseBodyAsString()), e);
-            if (e.getStatusCode().is5xxServerError()) {
-                throw new NetworkErrorException("Cannot get client_credentials token. SSO server error", e);
-            } else {
-                throw new AuthenticationException("Cannot get client_credentials token", e);
-            }
-        } catch (ResourceAccessException e) {
+            HttpClientContext context = new HttpClientContext();
+            HttpPost httpPost = HttpHelper.getHttpPostWithEntity(accessTokenEndpoint, params);
+
+            model = httpClient.execute(httpPost, context, new TokenPostHandler());
+        } catch (IOException e) {
             LOG.errorOnGetTokenIO(accessTokenEndpoint, paramsForLogging,
                     ConfigKeys.HTTP_CONNECTION_TIMEOUT,
                     configuration.getConnectTimeout(),
@@ -242,14 +259,38 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
             throw new AuthenticationException("Cannot get client_credentials token", e);
         }
 
-        final TokenResponse body = responseEntity.getBody();
-        final String token = body.getAccessToken();
-        LocalDateTime issueDate = LocalDateTime.now();
-        ClientCredentialsTokenModel tokenModel = new ClientCredentialsTokenModel(token, issueDate, issueDate.plusSeconds(body.getExpiresIn()));
+        return model;
+    }
 
-        LOG.traceGotToken(paramsForLogging, trimTokenForLogging(token));
+    private class TokenPostHandler implements HttpClientResponseHandler<ClientCredentialsTokenModel> {
+        @Override
+        public ClientCredentialsTokenModel handleResponse(ClassicHttpResponse response) throws IOException, ParseException {
+            int code = response.getCode();
+            if (code == HttpStatus.SC_OK) {
+                String responseJson = EntityUtils.toString(response.getEntity());
+                TokenResponse tokenResponse = parseTokenResponseJson(responseJson);
 
-        return tokenModel;
+                final String token = tokenResponse.getAccessToken();
+                LocalDateTime issueDate = LocalDateTime.now();
+                return new ClientCredentialsTokenModel(
+                        token,
+                        issueDate,
+                        issueDate.plusSeconds(tokenResponse.getExpiresIn())
+                );
+
+            } else if (is5xxServerError(code)) {
+                throw new NetworkErrorException("Cannot get client_credentials token. SSO server error",
+                        new HttpException("Response code: " + code + ", body: "
+                                + ClientCredentialsClientImpl.this.trimBodyForLogging(EntityUtils.toString(response.getEntity())))
+                );
+            } else {
+                throw new AuthenticationException("Cannot get client_credentials token");
+            }
+        }
+
+        private boolean is5xxServerError(int code) {
+            return code >= 500;
+        }
     }
 
     private String trimTokenForLogging(String token) {
@@ -270,20 +311,33 @@ final class ClientCredentialsClientImpl implements ClientCredentialsClient {
         }
     }
 
-    private MultiValueMap<String, String> clearParamsForLogging(MultiValueMap<String, String> params) {
-        LinkedMultiValueMap<String, String> ret = new LinkedMultiValueMap<String, String>(params);
+    private Map<String, List<String>> clearParamsForLogging(Map<String, List<String>> params) {
+        Map<String, List<String>> ret = new LinkedHashMap<>(params);
         if (this.configuration.legacyMaskingEnabled() && ret.containsKey("client_secret")) {
-            ret.set("client_secret", "***");
+            ret.put("client_secret", Collections.singletonList("***"));
         }
         return ret;
     }
 
-    private HttpEntity<MultiValueMap<String, String>> createEntity(MultiValueMap<String, String> params) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+    private List<NameValuePair> clearParamsForLogging(List<NameValuePair> params) {
+        List<NameValuePair> ret = new ArrayList<>();
 
-        return new HttpEntity<MultiValueMap<String, String>>(params, headers);
+        params.forEach(item -> {
+            if (this.configuration.legacyMaskingEnabled() && item.getName().equals("client_secret")) {
+                ret.add(new BasicNameValuePair("client_secret", "***"));
+            } else {
+                ret.add(item);
+            }
+        });
+
+        return ret;
     }
 
+    private static TokenResponse parseTokenResponseJson(String json) {
+        try {
+            return MAPPER.readValue(json, TokenResponse.class);
+        } catch (IOException e) {
+            throw new ValidateException("Failed to parse json", e);
+        }
+    }
 }

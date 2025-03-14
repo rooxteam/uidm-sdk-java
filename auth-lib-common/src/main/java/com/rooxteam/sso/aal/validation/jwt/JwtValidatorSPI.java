@@ -2,7 +2,7 @@ package com.rooxteam.sso.aal.validation.jwt;
 
 import com.nimbusds.jwt.JWT;
 import com.rooxteam.sso.aal.configuration.Configuration;
-import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 
 
 /**

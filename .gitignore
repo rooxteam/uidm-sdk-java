@@ -12,3 +12,6 @@ out
 
 */.idea/
 */.gradle/
+*/effective_version.properties
+
+effective_version.properties

@@ -12,8 +12,7 @@ import com.rooxteam.sso.aal.client.model.EvaluationResponse;
 import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.exception.AalException;
 import com.rooxteam.sso.aal.exception.AuthorizationException;
-import com.rooxteam.sso.aal.utils.DummyRequest;
-import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;

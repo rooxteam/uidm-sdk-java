@@ -11,14 +11,15 @@ import com.rooxteam.sso.aal.exception.ErrorSubtypes;
 import com.rooxteam.sso.aal.exception.NetworkErrorException;
 import com.rooxteam.util.HttpHelper;
 import lombok.SneakyThrows;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.cookie.BasicCookieStore;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.ParseException;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -130,6 +131,8 @@ public class SsoAuthenticationClient {
         CloseableHttpResponse response = httpClient.execute(post, context);
         try {
             result = EntityUtils.toString(response.getEntity());
+        } catch (ParseException e) {
+            throw new NetworkErrorException("Failed to read response from server", e);
         } finally {
             response.close();
         }

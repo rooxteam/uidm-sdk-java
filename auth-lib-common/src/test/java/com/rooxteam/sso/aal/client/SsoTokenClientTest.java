@@ -3,20 +3,22 @@ package com.rooxteam.sso.aal.client;
 import com.rooxteam.sso.aal.ConfigKeys;
 import com.rooxteam.sso.aal.configuration.ConfigurationBuilder;
 import org.apache.commons.configuration.Configuration;
-import org.apache.http.HttpStatus;
-import org.apache.http.ProtocolVersion;
-import org.apache.http.StatusLine;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.message.BasicStatusLine;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 public class SsoTokenClientTest {
 
@@ -27,18 +29,15 @@ public class SsoTokenClientTest {
     public void testQueryExistenceFound() throws Exception {
 
         CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
-        CloseableHttpResponse response = mock(CloseableHttpResponse.class);
-        StatusLine status = new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), HttpStatus.SC_OK, "Ok");
+        CloseableHttpResponse response = CloseableHttpResponse.adapt(mock(ClassicHttpResponse.class));
 
-        when(response.getStatusLine())
-                .thenReturn(status);
-        when(httpClient.execute(requestMatcher(TOKEN_ID)))
-                .thenReturn(response);
+        when(response.getCode()).thenReturn(200);
+
+        when(httpClient.execute(requestMatcher(TOKEN_ID))).thenReturn(response);
 
         testQueryExistenceBase(httpClient, true);
 
-        verify(httpClient, times(1))
-                .execute(requestMatcher(TOKEN_ID));
+        verify(httpClient, times(1)).execute(requestMatcher(TOKEN_ID));
         verifyNoMoreInteractions(httpClient);
     }
 
@@ -46,18 +45,14 @@ public class SsoTokenClientTest {
     public void testQueryExistenceNotFound() throws Exception {
 
         CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
-        CloseableHttpResponse response = mock(CloseableHttpResponse.class);
-        StatusLine status = new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1), HttpStatus.SC_NOT_FOUND, "Not Found");
+        CloseableHttpResponse response = CloseableHttpResponse.adapt(mock(ClassicHttpResponse.class));
 
-        when(response.getStatusLine())
-                .thenReturn(status);
-        when(httpClient.execute(requestMatcher(TOKEN_ID)))
-                .thenReturn(response);
+        when(response.getCode()).thenReturn(404);
+        when(httpClient.execute(requestMatcher(TOKEN_ID))).thenReturn(response);
 
         testQueryExistenceBase(httpClient, false);
 
-        verify(httpClient, times(1))
-                .execute(requestMatcher(TOKEN_ID));
+        verify(httpClient, times(1)).execute(requestMatcher(TOKEN_ID));
         verifyNoMoreInteractions(httpClient);
     }
 
@@ -65,19 +60,14 @@ public class SsoTokenClientTest {
     public void testQueryExistenceHttpError() throws Exception {
 
         CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
-        CloseableHttpResponse response = mock(CloseableHttpResponse.class);
-        StatusLine status = new BasicStatusLine(new ProtocolVersion("HTTP", 1, 1),
-                HttpStatus.SC_INTERNAL_SERVER_ERROR, "Internal Server Error");
+        CloseableHttpResponse response = CloseableHttpResponse.adapt(mock(ClassicHttpResponse.class));
 
-        when(response.getStatusLine())
-                .thenReturn(status);
-        when(httpClient.execute(requestMatcher(TOKEN_ID)))
-                .thenReturn(response);
+        when(response.getCode()).thenReturn(500);
+        when(httpClient.execute(requestMatcher(TOKEN_ID))).thenReturn(response);
 
         testQueryExistenceBase(httpClient, false);
 
-        verify(httpClient, times(1))
-                .execute(requestMatcher(TOKEN_ID));
+        verify(httpClient, times(1)).execute(requestMatcher(TOKEN_ID));
         verifyNoMoreInteractions(httpClient);
     }
 
@@ -108,13 +98,13 @@ public class SsoTokenClientTest {
         assertEquals(expectedExistence, exists);
     }
 
-    private static HttpGet requestMatcher(final String tokenId) throws Exception {
+    private static HttpGet requestMatcher(final String tokenId) {
         return argThat(new ArgumentMatcher<HttpGet>() {
 
             @Override
             public boolean matches(Object argument) {
                 HttpGet get = (HttpGet) argument;
-                String uri = get.getRequestLine().getUri();
+                String uri = get.getRequestUri();
                 String expectedParam = SsoTokenClient.TOKEN_ID_PARAM_NAME + "=" + tokenId;
                 return uri.contains(expectedParam);
             }

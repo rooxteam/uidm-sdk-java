@@ -5,13 +5,12 @@ import com.rooxteam.sso.aal.otp.OtpResponse;
 import com.rooxteam.sso.aal.otp.OtpStatus;
 import com.rooxteam.sso.aal.userIp.UserIpProvider;
 import org.apache.commons.configuration.BaseConfiguration;
-import org.apache.http.HttpEntity;
-import org.apache.http.ProtocolVersion;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.message.BasicStatusLine;
-import org.apache.http.protocol.HttpContext;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.protocol.HttpContext;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -101,10 +100,10 @@ public class OtpClientTest {
 
     @Test
     public void send_otp_correctly() throws IOException {
-        CloseableHttpResponse mockHttpResponse = mock(CloseableHttpResponse.class);
+        CloseableHttpResponse mockHttpResponse = CloseableHttpResponse.adapt(mock(ClassicHttpResponse.class));
         HttpEntity mockHttpEntity = mock(HttpEntity.class);
         when(mockHttpResponse.getEntity()).thenReturn(mockHttpEntity);
-        when(mockHttpResponse.getStatusLine()).thenReturn(new BasicStatusLine(new ProtocolVersion("1.1", 1, 1), 200, ""));
+        when(mockHttpResponse.getCode()).thenReturn(200);
         ByteArrayInputStream inputStream = new ByteArrayInputStream(ENTER_OTP_FORM_JSON.getBytes());
         when(mockHttpEntity.getContent()).thenReturn(inputStream);
         when(mockHttpClient.execute(any(HttpPost.class), any(HttpContext.class))).thenReturn(mockHttpResponse);
@@ -119,10 +118,10 @@ public class OtpClientTest {
 
     @Test
     public void send_otp_without_errors() throws IOException {
-        CloseableHttpResponse mockHttpResponse = mock(CloseableHttpResponse.class);
+        CloseableHttpResponse mockHttpResponse = CloseableHttpResponse.adapt(mock(ClassicHttpResponse.class));
         HttpEntity mockHttpEntity = mock(HttpEntity.class);
         when(mockHttpResponse.getEntity()).thenReturn(mockHttpEntity);
-        when(mockHttpResponse.getStatusLine()).thenReturn(new BasicStatusLine(new ProtocolVersion("1.1", 1, 1), 200, ""));
+        when(mockHttpResponse.getCode()).thenReturn(200);
         ByteArrayInputStream inputStream = new ByteArrayInputStream(ENTER_OTP_FORM_WITHOUT_ERRORS_JSON.getBytes());
         when(mockHttpEntity.getContent()).thenReturn(inputStream);
         when(mockHttpClient.execute(any(HttpPost.class), any(HttpContext.class))).thenReturn(mockHttpResponse);
@@ -137,10 +136,10 @@ public class OtpClientTest {
 
     @Test
     public void handle_unknown_response_from_sso_while_sending_otp() throws IOException {
-        CloseableHttpResponse mockHttpResponse = mock(CloseableHttpResponse.class);
+        CloseableHttpResponse mockHttpResponse = CloseableHttpResponse.adapt(mock(ClassicHttpResponse.class));
         HttpEntity mockHttpEntity = mock(HttpEntity.class);
         when(mockHttpResponse.getEntity()).thenReturn(mockHttpEntity);
-        when(mockHttpResponse.getStatusLine()).thenReturn(new BasicStatusLine(new ProtocolVersion("1.1", 1, 1), 200, ""));
+        when(mockHttpResponse.getCode()).thenReturn(200);
 
         ByteArrayInputStream inputStream = new ByteArrayInputStream(UNKNOWN_JSON.getBytes());
         when(mockHttpEntity.getContent()).thenReturn(inputStream);

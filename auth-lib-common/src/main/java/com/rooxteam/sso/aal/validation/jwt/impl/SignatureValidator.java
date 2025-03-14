@@ -13,13 +13,16 @@ import com.rooxteam.sso.aal.configuration.Configuration;
 import com.rooxteam.sso.aal.validation.jwt.JwtValidatorSPI;
 import com.rooxteam.sso.aal.validation.jwt.KeyProvider;
 import com.rooxteam.sso.aal.validation.jwt.ValidationResult;
-import org.apache.http.impl.client.CloseableHttpClient;
+import lombok.ToString;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 
 import static com.rooxteam.sso.aal.AalLogger.LOG;
 
 /**
- * Validates signature cryptographically
+ * Validates signature cryptographically,  Deprecated, use RsSignatureValidator, EsSignatureValidator, HsSignatureValidator instead.
  */
+@ToString(exclude = "keyProvider")
+@Deprecated
 @SuppressWarnings("unused")
 public class SignatureValidator implements JwtValidatorSPI {
 

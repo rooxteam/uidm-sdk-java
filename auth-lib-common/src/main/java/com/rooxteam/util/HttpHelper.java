@@ -1,22 +1,25 @@
 package com.rooxteam.util;
 
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpRequest;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.message.BasicHeader;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.HttpRequest;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.http.message.BasicHeader;
+import org.apache.hc.core5.net.URLEncodedUtils;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public final class HttpHelper {
 
-    private static final String REQUEST_BODY_CHARSET = "UTF-8";
-    private static final String REQUEST_PARAMS_CHARSET = "UTF-8";
+    private static final Charset REQUEST_BODY_CHARSET = StandardCharsets.UTF_8;
+    private static final Charset REQUEST_PARAMS_CHARSET = StandardCharsets.UTF_8;
     private static final String JSON_CONTENT_TYPE = "application/json";
     private static final String X_WWW_FORM_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
@@ -24,11 +27,11 @@ public final class HttpHelper {
     }
 
     public static HttpPost getHttpPostWithEntity(String url, List<NameValuePair> params) throws UnsupportedEncodingException {
-        HttpPost post = new HttpPost(url);
-        restPrepare(post);
-        post.addHeader(new BasicHeader(HttpHeaders.CONTENT_TYPE, X_WWW_FORM_CONTENT_TYPE));
-        post.setEntity(new UrlEncodedFormEntity(params, REQUEST_BODY_CHARSET));
-        return post;
+        return buildPost(new HttpPost(url), params);
+    }
+
+    public static HttpPost getHttpPostWithEntity(URI uri, List<NameValuePair> params) throws UnsupportedEncodingException {
+        return buildPost(new HttpPost(uri), params);
     }
 
     public static HttpPost getHttpPostWithJsonBody(String url, String body) {
@@ -57,5 +60,12 @@ public final class HttpHelper {
 
     private static String uniformURLParams(List<NameValuePair> params) {
         return "?" + URLEncodedUtils.format(params, REQUEST_PARAMS_CHARSET);
+    }
+
+    private static HttpPost buildPost(HttpPost post, List<NameValuePair> params) throws UnsupportedEncodingException {
+        restPrepare(post);
+        post.addHeader(new BasicHeader(HttpHeaders.CONTENT_TYPE, X_WWW_FORM_CONTENT_TYPE));
+        post.setEntity(new UrlEncodedFormEntity(params, REQUEST_BODY_CHARSET));
+        return post;
     }
 }

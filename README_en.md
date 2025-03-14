@@ -106,7 +106,87 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {@Overri
 
 # Version history
 
+## 24.2
+- Versioning Policy was updated
+- Spring RestTemplate was replaced by Apache HttpClient in auth-lib-common
+- Apache HttpClient updated to version 5.4 in auth-lib-common
+- Cookie management disabled in HTTP client
+- Added an optional ream parameter in Token Exchange request
+- Added config key for allowed client ids for token validators ClientIdValidator, AudValidator
+
+## 3.37.0
+Added TokenExchangeClient
+
+## 3.36.0
+Added the ability to specify AuthorizationType and ProviderType when configuring the library
+
+## 3.35.0
+Added M2MClient
+
+## 3.34.1
+- AudValidator has been added by default in JWT-validators list,
+- Fixed type in config key for JWT-validators list,
+  Before: 'com.rooxteam.all.jwt.validators', after: 'com.rooxteam.aal.jwt.validators'.
+  Old key was kept for backward compatibility with @deprecated mark.
+- Fixed type in config key for token claims validators list,
+  Before: 'com.rooxteam.all.claims.validators', after: 'com.rooxteam.aal.claims.validators'
+  The old key value cannot be used.
+
+
+IMPORTANT! Read it if you use config 'com.rooxteam.aal.filter.principal_provider_type=JWT' or
+'com.rooxteam.aal.filter.principal_provider_type=USERINFO'!
+After upgrade to SDK version >= 3.34.1 and if you don't use config 'com.rooxteam.aal.jwt.validators', 
+the AudValidator will be used by default, which check 'aud' JWT token claim with the value from config 
+'com.rooxteam.aal.auth.client', if they not match - it will be token validation error.
+Reverting to the previous behavior is possible by adding the configuration 'com.rooxteam.aal.jwt.validators=' (empty value).
+
+
+IMPORTANT! Read it if you use config 'com.rooxteam.aal.filter.principal_provider_type=TOKENINFO' or you don't use this config!
+After upgrade to SDK version >= 3.34.1 and if you don't use config 'com.rooxteam.aal.claims.validators'
+the ClientIdValidator will be used by default, which check claim 'client_id' from tokeninfo response
+with the value from config 'com.rooxteam.aal.auth.client', if they not match - it will be token validation error.
+Reverting to the previous behavior is possible by adding the configuration 'com.rooxteam.aal.claims.validators=' (empty value).
+
+## 3.34.0
+
+- AudValidator has been added to validate `aud` claim in JWT tokens.
+- ClientIdValidator has been added to validate `client_id` claim in tokens provided by tokeninfo-endpoint.
+- Added JWT token validators to tokens provided by OIDC userinfo-endpoint.
+- In com.rooxteam.sso.clientcredentials.ClientCredentialsClient were added new versions of methods getAuthHeaderValue
+  and getToken. New methods use java.util.Map instead of org.springframework.util.MultiValueMap. Old versions of methods
+  marked as deprecated. Quick migration can be done by initializing a new Map implementation object around previously
+  created parameters.
+
+## 3.33.0
+SignatureValidator is made deprecated. Added HsSignatureValidator, EsSignatureValidator, RsSignatureValidator instead
+
+## 3.32.0
+
+Added Verifier for HS like algorithms (HS256, HS384, HS512) in SignatureValidator
+
+## 3.31.1
+Fixed NullPointerException for invalid JWT
+
 _Not yet translated._
+
+## 3.31.0
+Добавлена поддержали UserInfo OpenID Connect Core 1.0 (реализация PrincipalProvider)
+
+## 3.30.0
+1. Добавлены валидаторы: SubNotEmpty, Issuer, IssueTime
+   Добавлена возможность:
+2. при валидации iat, exp, настраивать clock skew(погрешность) в секундах
+3. отключить валидацию токена (ValidationType.None) в механизме кэширования при ClientCredentials авторизации в Configuration клиента
+```properties
+# допустимый интервал времени в секундах, в пределах которого допускается небольшое расхождение между
+# временем на сервере, создавшем токен, и временем на сервере, который проверяет токен
+com.rooxteam.aal.jwt.validation.clockSkew=5
+```
+4. Добавлен AlgValidator с возможностью настроить допустимые алгоритмы цифровой подписи токена
+```properties
+# допустимые алгоритмы цифровой подписи токена
+com.rooxteam.aal.jwt.validation.allowedAlgorithms=RS256,ES256,ES512
+```
 
 ## 3.29.3
 Версия com.nimbusds:nimbus-jose-jwt поднята до 9.32

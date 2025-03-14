@@ -11,16 +11,17 @@ import com.rooxteam.sso.aal.exception.ValidateException;
 import com.rooxteam.sso.aal.userIp.UserIpProviderFactory;
 import com.rooxteam.util.HttpHelper;
 import lombok.SneakyThrows;
-import org.apache.http.HttpStatus;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.util.EntityUtils;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.HttpStatus;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.ParseException;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -79,7 +80,7 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
         try {
             CloseableHttpResponse response = httpClient.execute(post, context);
             try {
-                int statusCode = response.getStatusLine().getStatusCode();
+                int statusCode = response.getCode();
                 Principal principal = null;
 
                 if (statusCode == HttpStatus.SC_OK) {
@@ -90,7 +91,7 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
                     // legacy style claim for subject
                     properties.put("prn", sub);
                     for (Map.Entry<String, Object> entry : tokenClaims.entrySet()) {
-                        properties.put(entry.getKey(),entry.getValue());
+                        properties.put(entry.getKey(), entry.getValue());
                     }
 
                     // this is for backward compat because by some legacy nonsense authLevel has been defined as list
@@ -118,6 +119,11 @@ abstract public class CommonSsoAuthorizationClient implements SsoAuthorizationCl
                     config.getInt(ConfigKeys.HTTP_CONNECTION_TIMEOUT, ConfigKeys.HTTP_CONNECTION_TIMEOUT_DEFAULT),
                     ConfigKeys.HTTP_SOCKET_TIMEOUT,
                     config.getInt(ConfigKeys.HTTP_SOCKET_TIMEOUT, ConfigKeys.HTTP_SOCKET_TIMEOUT_DEFAULT),
+                    e);
+            throw new NetworkErrorException("Failed to validate token because of communication or protocol error", e);
+        } catch (ParseException e) {
+            LOG.errorOnTokenValidationGeneric(url,
+                    tokenForLogging,
                     e);
             throw new NetworkErrorException("Failed to validate token because of communication or protocol error", e);
         } catch (RuntimeException e) {

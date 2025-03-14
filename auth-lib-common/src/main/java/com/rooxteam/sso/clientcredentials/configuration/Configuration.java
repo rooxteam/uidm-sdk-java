@@ -1,11 +1,12 @@
 package com.rooxteam.sso.clientcredentials.configuration;
 
+import com.rooxteam.sso.aal.client.configuration.ClientConfiguration;
 import com.rooxteam.sso.clientcredentials.ValidationType;
 
 import java.net.URI;
 import java.util.Map;
 
-public interface Configuration {
+public interface Configuration extends ClientConfiguration {
 
     String ACCESS_TOKEN_URL = "/oauth2/access_token";
     String TOKEN_INFO_URL = "/oauth2/tokeninfo";
