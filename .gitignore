@@ -1,0 +1,17 @@
+/*.iml
+/.idea
+*.iml
+build
+out
+/.gradle
+
+.idea/libraries
+.idea/codeStyles/Project.xml
+.idea/*.xml
+.idea/artifacts
+
+*/.idea/
+*/.gradle/
+*/effective_version.properties
+
+effective_version.properties

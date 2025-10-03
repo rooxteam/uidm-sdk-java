@@ -1,0 +1,135 @@
+package com.rooxteam.sso.aal.client;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.NullNode;
+import com.rooxteam.sso.aal.ConfigKeys;
+import com.rooxteam.sso.aal.Principal;
+import com.rooxteam.sso.aal.client.model.Decision;
+import com.rooxteam.sso.aal.client.model.EvaluationRequest;
+import com.rooxteam.sso.aal.client.model.EvaluationResponse;
+import com.rooxteam.sso.aal.configuration.Configuration;
+import com.rooxteam.sso.aal.exception.AalException;
+import com.rooxteam.sso.aal.exception.AuthorizationException;
+import com.rooxteam.sso.aal.realms.RealmDetermineService;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * @author Dmitry Tikhonov
+ */
+public class SsoAuthorizationClientByConfig extends CommonSsoAuthorizationClient {
+
+    private final ObjectMapper jsonMapper = new ObjectMapper();
+
+    private JsonNode localPolicies = NullNode.getInstance();
+
+    public SsoAuthorizationClientByConfig(Configuration rooxConfig,
+                                          CloseableHttpClient httpClient) {
+        super(rooxConfig, httpClient);
+        initPolicies();
+    }
+
+    /**
+     * Создание экземпляра SsoAuthorizationClient с поддержкой нескольких рилмов в одном компоненте.
+     */
+    public SsoAuthorizationClientByConfig(Configuration rooxConfig,
+                                          CloseableHttpClient httpClient,
+                                          RealmDetermineService realmDetermineService) {
+        super(rooxConfig, httpClient, realmDetermineService);
+        initPolicies();
+    }
+
+    private void initPolicies() {
+        String policiesStr = config.getString(ConfigKeys.LOCAL_POLICIES);
+        try {
+            if (policiesStr != null) {
+                localPolicies = jsonMapper.readTree(policiesStr);
+            }
+        } catch (IOException e) {
+            throw new AuthorizationException("Failed to read config property '" + ConfigKeys.LOCAL_POLICIES + "'", e);
+        }
+    }
+
+    @Override
+    public EvaluationResponse isActionOnResourceAllowedByPolicy(Principal subject,
+                                                                String resource,
+                                                                String method,
+                                                                Map<String, ?> env) {
+
+        Integer requiredLevel = getRequiredLevel(resource, method);
+
+        if (requiredLevel != null && requiredLevel == 0) {
+            // special handling for 0 level - allow unauthorized access
+            return new EvaluationResponse(Decision.Permit);
+        }
+
+        int userAuthLevel;
+
+        if (subject.isAnonymous()) {
+            userAuthLevel = 0;
+        } else {
+            List<String> authLevels = (List<String>) subject.getProperty("authLevel");
+            if (authLevels == null || authLevels.isEmpty()) {
+                userAuthLevel = 0;
+            } else {
+                userAuthLevel = Integer.valueOf(authLevels.get(0));
+            }
+        }
+
+        boolean result;
+        if (requiredLevel == null) {
+            result = config.getBoolean(ConfigKeys.ALLOW_ACCESS_WITHOUT_POLICY,
+                    ConfigKeys.ALLOW_ACCESS_WITHOUT_POLICY_DEFAULT);
+        } else {
+            result = userAuthLevel >= requiredLevel;
+        }
+        return new EvaluationResponse(Decision.fromAllow(result));
+    }
+
+    @Override
+    public Map<EvaluationRequest, EvaluationResponse> whichActionAreAllowed(Principal subject,
+                                                                            List<EvaluationRequest> policies) {
+        Map<EvaluationRequest, EvaluationResponse> result = new LinkedHashMap<EvaluationRequest, EvaluationResponse>();
+
+        for (EvaluationRequest decisionKey : policies) {
+            result.put(decisionKey, isActionOnResourceAllowedByPolicy(subject, decisionKey.getResourceName(),
+                    decisionKey.getActionName(), decisionKey.getEnvParameters()));
+        }
+
+        return result;
+    }
+
+    @Override
+    public String postprocess(Principal subject, String resourceName, String actionName, Map<String, ?> envParameters, String response) {
+        throw new AalException("postprocess is implemented in OPA mode only");
+    }
+
+    private Integer getRequiredLevel(String resourceName,
+                                     String actionName) {
+        JsonNode policyAuthLevelNode = getAuthLevelFromLocalPolicies(resourceName, actionName);
+        if (policyAuthLevelNode != null && policyAuthLevelNode.isInt()) {
+            return policyAuthLevelNode.asInt();
+        } else {
+            return null;
+        }
+    }
+
+    private JsonNode getAuthLevelFromLocalPolicies(String resourceName,
+                                                   String actionName) {
+        JsonNode resourcePolicies = localPolicies.get(resourceName);
+        JsonNode policyAuthLevelNode = null;
+        if (resourcePolicies != null) {
+            JsonNode actionPolicy = resourcePolicies.get(actionName);
+            if (actionPolicy != null) {
+                policyAuthLevelNode = actionPolicy.get("authLevel");
+            }
+        }
+        return policyAuthLevelNode;
+    }
+
+}
